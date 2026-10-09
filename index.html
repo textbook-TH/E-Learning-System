@@ -585,7 +585,9 @@
 
                 supabaseClient.auth.onAuthStateChange(async (event, session) => {
                     if (event === 'SIGNED_IN' && session?.user) {
-                        await loadUserProfile(session.user);
+                        if (!currentUser || currentUser.id !== session.user.id) {
+                            await loadUserProfile(session.user);
+                        }
                     } else if (event === 'SIGNED_OUT') {
                         currentUser = null;
                         updateUserInterface();
@@ -599,6 +601,7 @@
         async function loadUserProfile(authUser) {
             let role = 'student';
             let name = authUser.user_metadata?.full_name || authUser.email.split('@')[0];
+            let userRecordFound = false;
 
             if (supabaseClient) {
                 try {
@@ -609,12 +612,23 @@
                         .maybeSingle();
 
                     if (!error && data) {
+                        userRecordFound = true;
                         role = (data.role === 'admin' || data.is_admin) ? 'staff' : 'student';
                         if (data.full_name) name = data.full_name;
                     }
                 } catch (e) {
                     console.warn("Error loading user profile:", e);
                 }
+            }
+
+            // CRITICAL CHECK: If user record does not exist in elearning_users, deny access & sign out
+            if (!userRecordFound) {
+                if (supabaseClient) {
+                    await supabaseClient.auth.signOut();
+                }
+                currentUser = null;
+                updateUserInterface();
+                return false;
             }
 
             currentUser = {
@@ -625,6 +639,7 @@
             };
 
             updateUserInterface();
+            return true;
         }
 
         function updateUserInterface() {
@@ -690,7 +705,6 @@
             }
         }
 
-        // Rule 1: Student cannot click Home button while logged in
         function handleBrandLogoClick() {
             if (currentUser && currentUser.role === 'student') {
                 return; // Disabled for logged-in students
@@ -1274,7 +1288,10 @@
                             });
                         } catch(e) { console.warn("User table record warning:", e); }
 
-                        await loadUserProfile(data.user);
+                        const success = await loadUserProfile(data.user);
+                        if (!success) {
+                            throw new Error("ไม่สามารถบันทึกข้อมูลสมาชิกในระบบได้ กรุณาลองใหม่อีกครั้ง");
+                        }
                         showToast(`สมัครสมาชิกสำเร็จ! ยินดีต้อนรับคุณ ${displayName}`, 'success');
                     }
                 } else {
@@ -1286,16 +1303,20 @@
                     if (error) throw error;
 
                     if (data.user) {
-                        await loadUserProfile(data.user);
+                        // Check if user exists in elearning_users table
+                        const success = await loadUserProfile(data.user);
+                        if (!success) {
+                            throw new Error("ไม่พบข้อมูลสมาชิกในระบบ (กรุณาสมัครสมาชิกก่อนเข้าใช้งาน หรือบัญชีของคุณถูกลบ)");
+                        }
                         showToast(`เข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ ${currentUser.name}`, 'success');
                     }
                 }
 
                 closeLoginModal();
 
-                if (currentUser.role === 'staff') {
+                if (currentUser && currentUser.role === 'staff') {
                     switchTab('staffView');
-                } else {
+                } else if (currentUser && currentUser.role === 'student') {
                     switchTab('studentView');
                 }
             } catch (err) {
