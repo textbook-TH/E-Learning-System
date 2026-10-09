@@ -133,9 +133,6 @@
                     </div>
                     <select id="filterCategory" onchange="handleSearch()" class="px-4 py-2.5 rounded-xl text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm font-medium">
                         <option value="ALL">📚 ทุกหมวดหมู่</option>
-                        <option value="COMP">💻 วิทยาการคอมพิวเตอร์</option>
-                        <option value="ENG">⚙️ วิศวกรรมศาสตร์</option>
-                        <option value="GEN">📖 วิชาทั่วไป</option>
                     </select>
                 </div>
             </div>
@@ -761,7 +758,41 @@
             }
 
             filteredUnits = [...allUnits];
+            updateCategoryDropdownOptions();
             renderCurrentView();
+        }
+
+        function updateCategoryDropdownOptions() {
+            const select = document.getElementById('filterCategory');
+            if (!select) return;
+
+            const selectedValue = select.value;
+
+            // Extract unique categories from actual units data
+            const uniqueCategories = [];
+            allUnits.forEach(unit => {
+                if (unit.category && !uniqueCategories.includes(unit.category)) {
+                    uniqueCategories.push(unit.category);
+                }
+            });
+
+            let htmlOptions = '<option value="ALL">📚 ทุกหมวดหมู่</option>';
+
+            uniqueCategories.forEach(cat => {
+                let emoji = '📖';
+                if (cat.includes('คอมพิวเตอร์') || cat.includes('COMP')) emoji = '💻';
+                else if (cat.includes('วิศวกรรม') || cat.includes('ENG')) emoji = '⚙️';
+                
+                htmlOptions += `<option value="${cat}">${emoji} ${cat}</option>`;
+            });
+
+            select.innerHTML = htmlOptions;
+
+            if (uniqueCategories.includes(selectedValue) || selectedValue === 'ALL') {
+                select.value = selectedValue;
+            } else {
+                select.value = 'ALL';
+            }
         }
 
         function detectCategory(title) {
@@ -813,9 +844,12 @@
                 const matchQuery = unit.title.toLowerCase().includes(query) || (unit.description && unit.description.toLowerCase().includes(query));
                 
                 let matchCategory = true;
-                if (category === 'COMP') matchCategory = unit.category.includes('คอมพิวเตอร์') || unit.category === 'COMP';
-                else if (category === 'ENG') matchCategory = unit.category.includes('วิศวกรรม') || unit.category === 'ENG';
-                else if (category === 'GEN') matchCategory = unit.category.includes('ทั่วไป') || unit.category === 'GEN';
+                if (category !== 'ALL') {
+                    if (category === 'COMP') matchCategory = unit.category.includes('คอมพิวเตอร์') || unit.category === 'COMP';
+                    else if (category === 'ENG') matchCategory = unit.category.includes('วิศวกรรม') || unit.category === 'ENG';
+                    else if (category === 'GEN') matchCategory = unit.category.includes('ทั่วไป') || unit.category === 'GEN';
+                    else matchCategory = (unit.category === category);
+                }
 
                 return matchQuery && matchCategory;
             });
