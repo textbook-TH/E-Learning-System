@@ -116,13 +116,13 @@
             <div class="max-w-7xl mx-auto text-center relative z-10">
                 <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 text-amber-300 text-xs sm:text-sm mb-4 border border-white/15">
                     <i class="fa-solid fa-graduation-cap"></i>
-                    <span>ศูนย์รวมคลังบทเรียนและตำราเรียนดิจิทัล</span>
+                    <span>ศูนย์รวมบทเรียนออนไลน์ คณะวิศวกรรมศาสตร์ สจล.</span>
                 </span>
                 <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
                     สืบค้นและเรียนรู้บทเรียนออนไลน์
                 </h1>
                 <p class="text-blue-100/80 text-sm sm:text-base max-w-2xl mx-auto mb-6">
-                    รวบรวมสื่อการสอน วิดีโอคลิป และแบบทดสอบก่อน-หลังเรียน พร้อมประเมินผลได้ทันที
+                    รวบรวมสื่อการสอนคลิปวิดีโอ และแบบทดสอบก่อน/หลังเรียน พร้อมประเมินผลได้ทันที
                 </p>
 
                 <!-- Search & Category Filters -->
@@ -193,7 +193,6 @@
                         <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-700">Staff Portal</span>
                         <h2 class="text-xl font-bold text-slate-800">ระบบจัดการบทเรียนและแบบทดสอบ</h2>
                     </div>
-                    <p class="text-xs text-slate-500 mt-1">เพิ่ม แก้ไข ลบ บทเรียน วิดีโอ YouTube และแบบทดสอบก่อน-หลังเรียน ใน Supabase</p>
                 </div>
                 <button onclick="openUnitFormModal()" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-sm shadow-md transition flex items-center justify-center space-x-2">
                     <i class="fa-solid fa-plus-circle"></i>
@@ -207,12 +206,11 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-100/80 text-slate-700 text-xs uppercase tracking-wider border-b border-slate-200">
-                                <th class="py-3.5 px-4 font-semibold">รหัสบทเรียน</th>
-                                <th class="py-3.5 px-4 font-semibold">ชื่อบทเรียน / รายละเอียด</th>
-                                <th class="py-3.5 px-4 font-semibold">หมวดหมู่</th>
-                                <th class="py-3.5 px-4 font-semibold text-center">วิดีโอ</th>
-                                <th class="py-3.5 px-4 font-semibold text-center">ข้อสอบ Pre/Post</th>
-                                <th class="py-3.5 px-4 font-semibold text-center">จัดการ</th>
+                                <th class="py-3.5 px-4 font-semibold whitespace-nowrap">รหัสบทเรียน</th>
+                                <th class="py-3.5 px-4 font-semibold whitespace-nowrap">ชื่อบทเรียน</th>
+                                <th class="py-3.5 px-4 font-semibold whitespace-nowrap">หมวดหมู่</th>
+                                <th class="py-3.5 px-4 font-semibold text-center whitespace-nowrap">วิดีโอ</th>
+                                <th class="py-3.5 px-4 font-semibold text-center whitespace-nowrap">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody id="staffTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
@@ -809,11 +807,7 @@
             let htmlOptions = '<option value="ALL">📚 ทุกหมวดหมู่</option>';
 
             uniqueCategories.forEach(cat => {
-                let emoji = '📖';
-                if (cat.includes('คอมพิวเตอร์') || cat.includes('COMP')) emoji = '💻';
-                else if (cat.includes('วิศวกรรม') || cat.includes('ENG')) emoji = '⚙️';
-                
-                htmlOptions += `<option value="${cat}">${emoji} ${cat}</option>`;
+                htmlOptions += `<option value="${cat}">${cat}</option>`;
             });
 
             select.innerHTML = htmlOptions;
@@ -1043,7 +1037,7 @@
             if (allUnits.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="py-8 text-center text-slate-400">
+                        <td colspan="5" class="py-8 text-center text-slate-400">
                             ยังไม่มีบทเรียนในระบบ Supabase กดปุ่ม "+ เพิ่มบทเรียนใหม่" ด้านบนเพื่อเริ่มสร้าง
                         </td>
                     </tr>`;
@@ -1054,35 +1048,29 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/80 transition border-b border-slate-100";
 
-                const preCount = unit.pre_test ? unit.pre_test.length : 0;
-                const postCount = unit.post_test ? unit.post_test.length : 0;
                 const videoCount = unit.videos ? unit.videos.length : (unit.youtube_url ? 1 : 0);
 
                 tr.innerHTML = `
-                    <td class="py-3 px-4">
-                        <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">${unit.unit_code}</span>
+                    <td class="py-3 px-4 whitespace-nowrap">
+                        <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 inline-block whitespace-nowrap">${unit.unit_code}</span>
                     </td>
-                    <td class="py-3 px-4">
-                        <p class="font-semibold text-slate-800 line-clamp-1">${unit.title}</p>
-                        <p class="text-xs text-slate-400 line-clamp-1">${unit.description || '-'}</p>
+                    <td class="py-3 px-4 whitespace-nowrap">
+                        <p class="font-semibold text-slate-800 line-clamp-1 whitespace-nowrap">${unit.title}</p>
                     </td>
-                    <td class="py-3 px-4">
-                        <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                    <td class="py-3 px-4 whitespace-nowrap">
+                        <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 inline-block whitespace-nowrap">
                             ${unit.category}
                         </span>
                     </td>
-                    <td class="py-3 px-4 text-center">
+                    <td class="py-3 px-4 text-center whitespace-nowrap">
                         ${videoCount > 0 ? `
-                            <span class="inline-flex items-center space-x-1 text-xs text-red-600 font-medium bg-red-50 px-2 py-0.5 rounded border border-red-100">
+                            <span class="inline-flex items-center space-x-1 text-xs text-red-600 font-medium bg-red-50 px-2 py-0.5 rounded border border-red-100 whitespace-nowrap">
                                 <i class="fa-brands fa-youtube text-sm"></i>
                                 <span>${videoCount} คลิป</span>
                             </span>
-                        ` : '<span class="text-xs text-slate-400">-</span>'}
+                        ` : '<span class="text-xs text-slate-400 whitespace-nowrap">-</span>'}
                     </td>
-                    <td class="py-3 px-4 text-center">
-                        <span class="text-xs font-semibold text-slate-600">Pre: ${preCount} ข้อ | Post: ${postCount} ข้อ</span>
-                    </td>
-                    <td class="py-3 px-4 text-center">
+                    <td class="py-3 px-4 text-center whitespace-nowrap">
                         <div class="flex items-center justify-center space-x-2">
                             <button onclick="editUnit('${unit.id}')" class="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 text-xs font-semibold transition" title="แก้ไข">
                                 <i class="fa-solid fa-pen"></i>
