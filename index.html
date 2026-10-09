@@ -65,7 +65,7 @@
     <header class="sticky top-0 z-40 bg-slate-900 text-white shadow-md border-b border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <!-- Brand Logo & Title -->
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('publicHome')">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="handleBrandLogoClick()">
                 <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-2xl shadow-inner">
                     <i class="fa-solid fa-book-bookmark"></i>
                 </div>
@@ -81,7 +81,7 @@
             <!-- Right Nav Links (Capsule Menu Dynamic State) -->
             <nav id="navMenu" class="flex items-center space-x-3 sm:space-x-4">
                 <!-- Home Button -->
-                <button id="navHomeBtn" onclick="switchTab('publicHome')" class="px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition flex items-center space-x-2 text-slate-200 hover:text-white">
+                <button id="navHomeBtn" onclick="handleNavHomeClick()" class="px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition flex items-center space-x-2 text-slate-200 hover:text-white">
                     <i class="fa-solid fa-house"></i>
                     <span class="hidden sm:inline">หน้าหลัก</span>
                 </button>
@@ -110,8 +110,8 @@
     <!-- MAIN CONTENT AREA -->
     <main class="flex-grow">
         
-        <!-- HERO BANNER SECTION -->
-        <section class="bg-catalog-gradient text-white pt-8 pb-14 px-4 sm:px-6 relative overflow-hidden">
+        <!-- HERO BANNER SECTION (Hidden when viewing lesson detail) -->
+        <section id="heroBannerSection" class="bg-catalog-gradient text-white pt-8 pb-14 px-4 sm:px-6 relative overflow-hidden">
             <div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
             <div class="max-w-7xl mx-auto text-center relative z-10">
                 <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 text-amber-300 text-xs sm:text-sm mb-4 border border-white/15">
@@ -144,9 +144,9 @@
                 <div>
                     <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
                         <i class="fa-solid fa-layer-group text-amber-600"></i>
-                        <span>บทเรียนใหม่ พร้อมให้คุณเรียนรู้</span>
+                        <span>คลังบทเรียนออนไลน์สำหรับนักศึกษา</span>
                     </h2>
-                    <p class="text-xs text-slate-500 mt-0.5">บทเรียนออนไลน์ อัปสกิลได้ทุกที่ผ่านการเข้าชมคลิปวิดีโอ</p>
+                    <p class="text-xs text-slate-500 mt-0.5">กรุณา Login เพื่อเลือกบทเรียนที่ต้องการรับชม</p>
                 </div>
             </div>
 
@@ -171,10 +171,6 @@
                         <span>คลังบทเรียนสำหรับนักศึกษา</span>
                     </h2>
                     <p class="text-xs text-slate-500 mt-0.5">เลือกบทเรียนที่ต้องการเพื่อรับชมวิดีโอและทำแบบทดสอบประเมินผล</p>
-                </div>
-                <div class="flex items-center space-x-2 text-sm text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
-                    <span>แสดงผล:</span>
-                    <span class="font-bold text-slate-800">9 เรื่อง / หน้า</span>
                 </div>
             </div>
 
@@ -220,6 +216,106 @@
                         </thead>
                         <tbody id="staffTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
                     </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 4: FULL PAGE UNIT DETAIL VIEWER (RESPONSIVE NO POPUP) -->
+        <section id="unitDetailView" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-20 pb-16">
+            <div class="mb-4 flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <button onclick="closeUnitDetailView()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>ย้อนกลับ</span>
+                </button>
+                <span class="px-3 py-1 bg-amber-500/10 text-amber-700 border border-amber-500/20 text-xs rounded-lg font-bold" id="detailUnitCategory">COMP</span>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-catalog border border-slate-200 overflow-hidden">
+                <div class="bg-slate-900 text-white p-5 px-6 border-b border-slate-800">
+                    <h2 class="text-lg sm:text-2xl font-bold text-amber-100" id="detailUnitTitle">ชื่อบทเรียน</h2>
+                </div>
+
+                <div class="p-4 sm:p-6">
+                    <!-- Tabs Header -->
+                    <div class="flex border-b border-slate-200 mb-6 space-x-2 overflow-x-auto">
+                        <button onclick="switchViewerTab('video')" id="tabBtnVideo" class="py-2.5 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center space-x-2 whitespace-nowrap">
+                            <i class="fa-solid fa-video"></i>
+                            <span>วิดีโอบทเรียน</span>
+                        </button>
+                        <button onclick="switchViewerTab('pretest')" id="tabBtnPretest" class="py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2 whitespace-nowrap">
+                            <i class="fa-solid fa-clipboard-question"></i>
+                            <span>แบบทดสอบก่อนเรียน</span>
+                        </button>
+                        <button onclick="switchViewerTab('posttest')" id="tabBtnPosttest" class="py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2 whitespace-nowrap">
+                            <i class="fa-solid fa-square-check"></i>
+                            <span>แบบทดสอบหลังเรียน</span>
+                        </button>
+                    </div>
+
+                    <!-- Tab 1: Video Player & Info -->
+                    <div id="viewerTabVideo" class="space-y-4">
+                        <!-- Multi-video Playlist Selector (Ordered Grid Rows) -->
+                        <div id="videoPlaylistContainer" class="hidden p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                            <div class="text-xs font-bold text-slate-700 flex items-center space-x-1">
+                                <i class="fa-solid fa-film text-amber-600"></i>
+                                <span>เลือกคลิปวิดีโอ:</span>
+                            </div>
+                            <div id="videoPlaylistButtons" class="flex flex-wrap gap-2 items-center"></div>
+                        </div>
+
+                        <!-- Embedded YouTube Player -->
+                        <div class="aspect-video w-full bg-slate-900 rounded-2xl overflow-hidden shadow-inner border border-slate-800">
+                            <iframe id="youtubeIframe" class="w-full h-full" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                        </div>
+
+                        <!-- Active Episode Title -->
+                        <div class="pt-2">
+                            <h3 id="detailActiveVideoTitle" class="font-bold text-slate-800 text-base sm:text-lg text-amber-700 flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-play text-amber-600 text-sm"></i>
+                                <span>ตอนที่ 1</span>
+                            </h3>
+                        </div>
+
+                        <!-- Lesson Description Section -->
+                        <div class="bg-amber-50/50 p-4 sm:p-5 rounded-2xl border border-amber-200/60">
+                            <h4 class="font-bold text-slate-800 text-sm mb-1">รายละเอียดบทเรียน</h4>
+                            <p id="detailUnitDescription" class="text-xs sm:text-sm text-slate-600 leading-relaxed"></p>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Pre-test -->
+                    <div id="viewerTabPretest" class="hidden space-y-6">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-xs sm:text-sm text-blue-800 flex justify-between items-center">
+                            <div>
+                                <span class="font-bold">📝 แบบทดสอบก่อนเรียน (Pre-test)</span>
+                                <p class="text-xs text-blue-600 mt-0.5">ตอบคำถามเพื่อวัดความรู้พื้นฐานก่อนเข้าสู่เนื้อหา</p>
+                            </div>
+                            <div id="pretestScoreBadge" class="hidden px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold"></div>
+                        </div>
+                        <form id="pretestForm" class="space-y-6">
+                            <div id="pretestQuestionsContainer" class="space-y-6"></div>
+                            <button type="button" onclick="gradeQuiz('pretest')" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm shadow-md transition">
+                                ส่งแบบทดสอบก่อนเรียน
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Tab 3: Post-test -->
+                    <div id="viewerTabPosttest" class="hidden space-y-6">
+                        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-xs sm:text-sm text-emerald-800 flex justify-between items-center">
+                            <div>
+                                <span class="font-bold">🎯 แบบทดสอบหลังเรียน (Post-test)</span>
+                                <p class="text-xs text-emerald-600 mt-0.5">วัดระดับความเข้าใจหลังจากเรียนจบเรียบร้อยแล้ว</p>
+                            </div>
+                            <div id="posttestScoreBadge" class="hidden px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold"></div>
+                        </div>
+                        <form id="posttestForm" class="space-y-6">
+                            <div id="posttestQuestionsContainer" class="space-y-6"></div>
+                            <button type="button" onclick="gradeQuiz('posttest')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm shadow-md transition">
+                                ส่งแบบทดสอบหลังเรียน
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </section>
@@ -321,87 +417,7 @@
         </div>
     </div>
 
-    <!-- MODAL 3: STUDENT UNIT VIEWER -->
-    <div id="unitViewerModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-        <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col my-auto border border-slate-100">
-            <div class="bg-slate-900 text-white p-4 px-6 flex items-center justify-between border-b border-slate-800">
-                <div class="flex items-center space-x-3">
-                    <span class="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs rounded font-medium" id="modalUnitCategory">COMP</span>
-                    <h3 class="text-base sm:text-lg font-bold text-amber-100 truncate max-w-md" id="modalUnitTitle">ชื่อบทเรียน</h3>
-                </div>
-                <button onclick="closeUnitViewerModal()" class="text-slate-400 hover:text-white text-xl">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div class="flex-grow overflow-y-auto p-4 sm:p-6">
-                <div class="flex border-b border-slate-200 mb-6 space-x-2">
-                    <button onclick="switchViewerTab('video')" id="tabBtnVideo" class="py-2.5 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center space-x-2">
-                        <i class="fa-solid fa-video"></i>
-                        <span>วิดีโอบทเรียน</span>
-                    </button>
-                    <button onclick="switchViewerTab('pretest')" id="tabBtnPretest" class="py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2">
-                        <i class="fa-solid fa-clipboard-question"></i>
-                        <span>แบบทดสอบก่อนเรียน</span>
-                    </button>
-                    <button onclick="switchViewerTab('posttest')" id="tabBtnPosttest" class="py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2">
-                        <i class="fa-solid fa-square-check"></i>
-                        <span>แบบทดสอบหลังเรียน</span>
-                    </button>
-                </div>
-
-                <div id="viewerTabVideo" class="space-y-4">
-                    <!-- Multi-video Playlist Selector (Shown when >1 videos exist) -->
-                    <div id="videoPlaylistContainer" class="hidden flex flex-wrap gap-2 p-3 bg-slate-100 rounded-xl border border-slate-200 items-center">
-                        <span class="text-xs font-bold text-slate-700 mr-2"><i class="fa-solid fa-film text-amber-600 mr-1"></i>เลือกคลิปวิดีโอ:</span>
-                        <div id="videoPlaylistButtons" class="flex flex-wrap gap-2"></div>
-                    </div>
-
-                    <div class="aspect-video w-full bg-slate-900 rounded-xl overflow-hidden shadow-inner border border-slate-800">
-                        <iframe id="youtubeIframe" class="w-full h-full" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                    </div>
-                    <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-200/60">
-                        <h4 class="font-bold text-slate-800 text-sm mb-1">รายละเอียดบทเรียน</h4>
-                        <p id="modalUnitDescription" class="text-xs sm:text-sm text-slate-600 leading-relaxed"></p>
-                    </div>
-                </div>
-
-                <div id="viewerTabPretest" class="hidden space-y-6">
-                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-xs sm:text-sm text-blue-800 flex justify-between items-center">
-                        <div>
-                            <span class="font-bold">📝 แบบทดสอบก่อนเรียน (Pre-test)</span>
-                            <p class="text-xs text-blue-600 mt-0.5">ตอบคำถามเพื่อวัดความรู้พื้นฐานก่อนเข้าสู่เนื้อหา</p>
-                        </div>
-                        <div id="pretestScoreBadge" class="hidden px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold"></div>
-                    </div>
-                    <form id="pretestForm" class="space-y-6">
-                        <div id="pretestQuestionsContainer" class="space-y-6"></div>
-                        <button type="button" onclick="gradeQuiz('pretest')" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm shadow-md transition">
-                            ส่งแบบทดสอบก่อนเรียน
-                        </button>
-                    </form>
-                </div>
-
-                <div id="viewerTabPosttest" class="hidden space-y-6">
-                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-xs sm:text-sm text-emerald-800 flex justify-between items-center">
-                        <div>
-                            <span class="font-bold">🎯 แบบทดสอบหลังเรียน (Post-test)</span>
-                            <p class="text-xs text-emerald-600 mt-0.5">วัดระดับความเข้าใจหลังจากเรียนจบเรียบร้อยแล้ว</p>
-                        </div>
-                        <div id="posttestScoreBadge" class="hidden px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold"></div>
-                    </div>
-                    <form id="posttestForm" class="space-y-6">
-                        <div id="posttestQuestionsContainer" class="space-y-6"></div>
-                        <button type="button" onclick="gradeQuiz('posttest')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm shadow-md transition">
-                            ส่งแบบทดสอบหลังเรียน
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL 4: STAFF ADD/EDIT UNIT MODAL -->
+    <!-- MODAL 3: STAFF ADD/EDIT UNIT MODAL -->
     <div id="unitFormModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
         <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col my-auto border border-slate-100">
             <div class="bg-catalog-gradient text-white p-4 px-6 flex items-center justify-between">
@@ -456,7 +472,7 @@
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">URL รูปภาพปก</label>
-                            <input type="url" id="unitCoverInput" placeholder="ใส่ URL ของ YouTube" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <input type="url" id="unitCoverInput" placeholder="ใส่ URL ของ รูปภาพ หรือ YouTube" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                         </div>
 
                         <div>
@@ -567,7 +583,6 @@
                     await loadUserProfile(session.user);
                 }
 
-                // Listen for authentication changes
                 supabaseClient.auth.onAuthStateChange(async (event, session) => {
                     if (event === 'SIGNED_IN' && session?.user) {
                         await loadUserProfile(session.user);
@@ -620,21 +635,21 @@
             const logoutBtn = document.getElementById('logoutBtn');
 
             if (currentUser) {
-                loginBtn.classList.add('hidden');
-                roleTabBtn.classList.remove('hidden');
-                logoutBtn.classList.remove('hidden');
+                if (loginBtn) loginBtn.classList.add('hidden');
+                if (roleTabBtn) roleTabBtn.classList.remove('hidden');
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
 
                 if (currentUser.role === 'staff') {
-                    roleTabText.innerText = 'เจ้าหน้าที่';
-                    roleTabIcon.className = 'fa-solid fa-user-gear';
+                    if (roleTabText) roleTabText.innerText = 'เจ้าหน้าที่';
+                    if (roleTabIcon) roleTabIcon.className = 'fa-solid fa-user-gear';
                 } else {
-                    roleTabText.innerText = 'นักศึกษา';
-                    roleTabIcon.className = 'fa-solid fa-user-graduate';
+                    if (roleTabText) roleTabText.innerText = 'นักศึกษา';
+                    if (roleTabIcon) roleTabIcon.className = 'fa-solid fa-user-graduate';
                 }
             } else {
-                loginBtn.classList.remove('hidden');
-                roleTabBtn.classList.add('hidden');
-                logoutBtn.classList.add('hidden');
+                if (loginBtn) loginBtn.classList.remove('hidden');
+                if (roleTabBtn) roleTabBtn.classList.add('hidden');
+                if (logoutBtn) logoutBtn.classList.add('hidden');
             }
 
             updateNavButtonStyles();
@@ -650,17 +665,30 @@
             const activeBtnClasses = "px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-md transition flex items-center space-x-2";
             const inactiveBtnClasses = "px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition flex items-center space-x-2 text-slate-200 hover:text-white bg-transparent shadow-none";
 
-            if (currentTabState === 'publicHome') {
-                if (currentUser) {
-                    navHomeBtn.className = activeBtnClasses;
-                    if (roleTabBtn) roleTabBtn.className = inactiveBtnClasses;
+            navHomeBtn.className = inactiveBtnClasses;
+
+            if (roleTabBtn) {
+                if (!currentUser) {
+                    roleTabBtn.classList.add('hidden');
                 } else {
-                    navHomeBtn.className = inactiveBtnClasses;
+                    roleTabBtn.className = activeBtnClasses;
                 }
-            } else {
-                navHomeBtn.className = inactiveBtnClasses;
-                if (roleTabBtn) roleTabBtn.className = activeBtnClasses;
             }
+        }
+
+        // Rule 1: Student cannot click Home button while logged in
+        function handleBrandLogoClick() {
+            if (currentUser && currentUser.role === 'student') {
+                return; // Disabled for logged-in students
+            }
+            switchTab('publicHome');
+        }
+
+        function handleNavHomeClick() {
+            if (currentUser && currentUser.role === 'student') {
+                return; // Disabled for logged-in students
+            }
+            switchTab('publicHome');
         }
 
         function handleRoleTabClick() {
@@ -676,7 +704,6 @@
             if (!supabaseClient) return;
 
             try {
-                // Primary Query: เรียง id จากใหม่ไปเก่า
                 let { data, error } = await supabaseClient
                     .from('units')
                     .select(`
@@ -693,7 +720,6 @@
                     `)
                     .order('id', { ascending: false });
 
-                // Fallback Query 1: กรณีมีปัญหา Relation กับตารางข้อสอบ
                 if (error) {
                     console.warn("Retrying with primary tables query...", error);
                     const fallbackRes = await supabaseClient
@@ -716,7 +742,6 @@
                     }
                 }
 
-                // Fallback Query 2: ดึงแบบเบสิกที่สุด
                 if (error) {
                     console.warn("Retrying with simple units query...", error);
                     const simpleRes = await supabaseClient
@@ -753,7 +778,6 @@
 
                         const unitCodeVal = u.unit_code || `UNIT-${String(u.id).padStart(3, '0')}`;
                         
-                        // แปลง URL รูปภาพปก (กรณีเป็น Google Drive ให้เป็น Direct View URL)
                         let coverUrlVal = u.cover_url && u.cover_url.trim() ? u.cover_url : getUnitCoverImage(u.id, u.title);
                         if (coverUrlVal.includes('drive.google.com/file/d/')) {
                             const fileId = coverUrlVal.split('/d/')[1].split('/')[0];
@@ -802,7 +826,6 @@
 
             const selectedValue = select.value;
 
-            // Extract unique categories from actual units data
             const uniqueCategories = [];
             allUnits.forEach(unit => {
                 if (unit.category && !uniqueCategories.includes(unit.category)) {
@@ -845,13 +868,17 @@
         }
 
         function switchTab(tabName) {
+            const heroBannerSection = document.getElementById('heroBannerSection');
             const publicHomeView = document.getElementById('publicHomeView');
             const studentView = document.getElementById('studentView');
             const staffView = document.getElementById('staffView');
+            const unitDetailView = document.getElementById('unitDetailView');
 
             publicHomeView.classList.add('hidden');
             studentView.classList.add('hidden');
             staffView.classList.add('hidden');
+            unitDetailView.classList.add('hidden');
+            heroBannerSection.classList.remove('hidden');
 
             if (tabName === 'publicHome') {
                 publicHomeView.classList.remove('hidden');
@@ -859,6 +886,9 @@
                 studentView.classList.remove('hidden');
             } else if (tabName === 'staffView') {
                 staffView.classList.remove('hidden');
+            } else if (tabName === 'unitDetailView') {
+                heroBannerSection.classList.add('hidden');
+                unitDetailView.classList.remove('hidden');
             }
 
             updateNavButtonStyles(tabName);
@@ -964,7 +994,6 @@
                 });
             }
 
-            // Pagination Controls for Public View
             const paginationContainer = document.getElementById('publicPaginationButtons');
             if (paginationContainer) {
                 paginationContainer.innerHTML = '';
@@ -1021,7 +1050,7 @@
                     const videoCount = unit.videos ? unit.videos.length : (unit.youtube_url ? 1 : 0);
                     const card = document.createElement('div');
                     card.className = "bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-catalog border border-slate-200/80 transition duration-300 flex flex-col group cursor-pointer";
-                    card.onclick = () => openUnitViewerModal(unit);
+                    card.onclick = () => openUnitDetailView(unit);
 
                     card.innerHTML = `
                         <div class="relative h-44 overflow-hidden bg-slate-900">
@@ -1052,7 +1081,6 @@
                 });
             }
 
-            // Pagination Controls
             const paginationContainer = document.getElementById('paginationButtons');
             paginationContainer.innerHTML = '';
 
@@ -1138,7 +1166,7 @@
             if (!currentUser) {
                 openAuthGuardModal();
             } else {
-                openUnitViewerModal(unit);
+                openUnitDetailView(unit);
             }
         }
 
@@ -1262,21 +1290,22 @@
             }
         }
 
+        // Rule 1: Logout returns to public home and hides student button automatically
         async function handleLogout() {
             if (supabaseClient) {
                 await supabaseClient.auth.signOut();
             }
             currentUser = null;
-            updateUserInterface();
+            updateUserInterface(); // Automatically hides roleTabBtn & logoutBtn
             showToast("ออกจากระบบเรียบร้อยแล้ว", 'info');
             switchTab('publicHome');
         }
 
-        function openUnitViewerModal(unit) {
+        function openUnitDetailView(unit) {
             activeUnitForViewer = unit;
-            document.getElementById('modalUnitTitle').innerText = unit.title;
-            document.getElementById('modalUnitCategory').innerText = `${unit.unit_code} | ${unit.category}`;
-            document.getElementById('modalUnitDescription').innerText = unit.description || 'ไม่มีรายละเอียดเพิ่มเติม';
+            document.getElementById('detailUnitTitle').innerText = unit.title;
+            document.getElementById('detailUnitCategory').innerText = `${unit.unit_code} | ${unit.category}`;
+            document.getElementById('detailUnitDescription').innerText = unit.description || 'ไม่มีรายละเอียดเพิ่มเติม';
 
             let videoList = [];
             if (unit.videos && unit.videos.length > 0) {
@@ -1295,9 +1324,9 @@
                 videoList.forEach((vItem, index) => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
-                    btn.className = `px-3 py-1 rounded-lg text-xs font-semibold transition ${index === 0 ? 'bg-amber-600 text-white shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-300'}`;
-                    btn.innerText = vItem.title ? `ตอนที่ ${index + 1}: ${vItem.title}` : `ตอนที่ ${index + 1}`;
-                    btn.onclick = () => switchActiveVideo(vItem, btn);
+                    btn.className = `px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${index === 0 ? 'bg-amber-600 text-white shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-300'}`;
+                    btn.innerText = `ตอนที่ ${index + 1}`;
+                    btn.onclick = () => switchActiveVideo(vItem, index, btn);
                     playlistButtons.appendChild(btn);
                 });
             } else {
@@ -1305,8 +1334,7 @@
             }
 
             const firstVid = videoList.length > 0 ? videoList[0] : { url: '', title: '' };
-            activeVideoUrl = firstVid.url;
-            document.getElementById('youtubeIframe').src = getYoutubeEmbedUrl(activeVideoUrl);
+            switchActiveVideo(firstVid, 0, null);
 
             renderQuizQuestions('pretest', unit.pre_test || []);
             renderQuizQuestions('posttest', unit.post_test || []);
@@ -1315,24 +1343,35 @@
             document.getElementById('posttestScoreBadge').classList.add('hidden');
 
             switchViewerTab('video');
-            document.getElementById('unitViewerModal').classList.remove('hidden');
+            switchTab('unitDetailView');
         }
 
-        function switchActiveVideo(vItem, btnElement) {
+        function switchActiveVideo(vItem, index, btnElement) {
             const videoUrl = typeof vItem === 'string' ? vItem : vItem.url;
             activeVideoUrl = videoUrl;
             document.getElementById('youtubeIframe').src = getYoutubeEmbedUrl(videoUrl);
 
-            const buttons = document.querySelectorAll('#videoPlaylistButtons button');
-            buttons.forEach(b => {
-                b.className = "px-3 py-1 rounded-lg text-xs font-semibold transition bg-white text-slate-700 hover:bg-slate-200 border border-slate-300";
-            });
-            btnElement.className = "px-3 py-1 rounded-lg text-xs font-semibold transition bg-amber-600 text-white shadow-sm";
+            const epTitleText = (vItem && vItem.title) ? `ตอนที่ ${index + 1}: ${vItem.title}` : `ตอนที่ ${index + 1}`;
+            document.getElementById('detailActiveVideoTitle').innerHTML = `<i class="fa-solid fa-circle-play text-amber-600 text-sm"></i> <span>${epTitleText}</span>`;
+
+            if (btnElement) {
+                const buttons = document.querySelectorAll('#videoPlaylistButtons button');
+                buttons.forEach(b => {
+                    b.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-white text-slate-700 hover:bg-slate-200 border border-slate-300";
+                });
+                btnElement.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-amber-600 text-white shadow-sm";
+            }
         }
 
-        function closeUnitViewerModal() {
+        function closeUnitDetailView() {
             document.getElementById('youtubeIframe').src = '';
-            document.getElementById('unitViewerModal').classList.add('hidden');
+            if (currentUser && currentUser.role === 'staff') {
+                switchTab('staffView');
+            } else if (currentUser && currentUser.role === 'student') {
+                switchTab('studentView');
+            } else {
+                switchTab('publicHome');
+            }
         }
 
         function switchViewerTab(tab) {
@@ -1348,19 +1387,19 @@
             pTab.classList.add('hidden');
             oTab.classList.add('hidden');
 
-            btnV.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2";
-            btnP.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2";
-            btnO.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2";
+            btnV.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2 whitespace-nowrap";
+            btnP.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2 whitespace-nowrap";
+            btnO.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2 whitespace-nowrap";
 
             if (tab === 'video') {
                 vTab.classList.remove('hidden');
-                btnV.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center space-x-2";
+                btnV.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center space-x-2 whitespace-nowrap";
             } else if (tab === 'pretest') {
                 pTab.classList.remove('hidden');
-                btnP.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-blue-600 text-blue-700 flex items-center space-x-2";
+                btnP.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-blue-600 text-blue-700 flex items-center space-x-2 whitespace-nowrap";
             } else if (tab === 'posttest') {
                 oTab.classList.remove('hidden');
-                btnO.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2";
+                btnO.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 whitespace-nowrap";
             }
         }
 
@@ -1438,14 +1477,20 @@
         function getYoutubeEmbedUrl(url) {
             if (!url) return '';
             let videoId = '';
-            if (url.includes('youtu.be/')) {
-                videoId = url.split('youtu.be/')[1].split('?')[0];
-            } else if (url.includes('watch?v=')) {
-                videoId = url.split('watch?v=')[1].split('&')[0];
-            } else if (url.includes('embed/')) {
-                return url;
+            
+            try {
+                if (url.includes('youtu.be/')) {
+                    videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0];
+                } else if (url.includes('watch?v=')) {
+                    videoId = url.split('watch?v=')[1].split('&')[0].split('?')[0];
+                } else if (url.includes('embed/')) {
+                    videoId = url.split('embed/')[1].split('?')[0].split('&')[0];
+                }
+            } catch (err) {
+                console.warn("URL parse error:", err);
             }
-            return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+
+            return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0` : url;
         }
 
         function addYoutubeInputRow(urlVal = '', titleVal = '') {
@@ -1713,7 +1758,6 @@
 
                 const targetUnitId = (typeof unitId === 'string' && !isNaN(unitId)) ? parseInt(unitId) : unitId;
 
-                // Safely update unit_videos in Supabase
                 await supabaseClient.from('unit_videos').delete().eq('unit_id', targetUnitId);
                 const videoInserts = youtubeList.map((vItem, idx) => ({
                     unit_id: targetUnitId,
@@ -1724,7 +1768,6 @@
                 const { error: vidErr } = await supabaseClient.from('unit_videos').insert(videoInserts);
                 if (vidErr) console.warn("Video insert error:", vidErr);
 
-                // Save Pre-test & Post-test Questions
                 await supabaseClient.from('pre_test_questions').delete().eq('unit_id', targetUnitId);
                 if (pretestFormQuestions.length > 0) {
                     const preInsert = pretestFormQuestions.map(q => ({
