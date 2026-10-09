@@ -1,792 +1,1464 @@
 <!DOCTYPE html>
-<html lang="th" class="scroll-smooth dark">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R2R Digital Support - คลังเรียนรู้เพื่อพัฒนางานประจำสู่งานวิจัย</title>
+    <title>CatalogView Learning Hub - ระบบสืบค้นและเรียนรู้ออนไลน์</title>
     
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts: Prompt & Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- FontAwesome 6 Icons -->
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- PapaParse for parsing Google Sheets CSV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        cyber: {
-                            cyan: '#06b6d4',
-                            indigo: '#6366f1',
-                            blue: '#3b82f6',
-                            glow: '#22d3ee'
-                        },
-                        darkSlate: {
-                            950: '#0b0f19',
-                            900: '#111827',
-                            800: '#1f2937',
-                            700: '#374151'
-                        },
-                        line: {
-                            green: '#06C755',
-                            dark: '#05B34C'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Prompt', 'Inter', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'glow-cyan': '0 0 25px -5px rgba(6, 182, 212, 0.35)',
-                        'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.35)',
-                        'card-hover': '0 20px 30px -10px rgba(0, 0, 0, 0.7), 0 0 20px 0 rgba(6, 182, 212, 0.25)',
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        body {
-            font-family: 'Prompt', 'Inter', sans-serif;
-            background-color: #0b0f19;
-            color: #f3f4f6;
+        * {
+            font-family: 'Prompt', sans-serif;
+        }
+        
+        :root {
+            --primary-blue: #0f172a;
+            --dark-blue: #020617;
+            --accent-gold: #d97706;
+            --bg-light: #f8fafc;
         }
 
-        /* Custom Cyber Scrollbar */
+        .bg-catalog-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #020617 100%);
+        }
+
+        .shadow-catalog {
+            box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #0b0f19;
+            background: #f1f1f1;
         }
         ::-webkit-scrollbar-thumb {
-            background: #1f2937;
+            background: #a44a3f;
             border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #06b6d4;
-        }
-
-        /* Glassmorphism utility classes */
-        .glass-panel {
-            background: rgba(17, 24, 39, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .glass-card {
-            background: rgba(17, 24, 39, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .glass-card:hover {
-            background: rgba(31, 41, 55, 0.95);
-            border-color: rgba(6, 182, 212, 0.4);
-            transform: translateY(-4px);
-            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.7), 0 0 20px 0 rgba(6, 182, 212, 0.25);
-        }
-
-        .line-pulse {
-            box-shadow: 0 0 0 0 rgba(6, 199, 85, 0.6);
-            animation: pulse-line 2s infinite;
-        }
-
-        @keyframes pulse-line {
-            0% {
-                transform: scale(0.96);
-                box-shadow: 0 0 0 0 rgba(6, 199, 85, 0.6);
-            }
-            70% {
-                transform: scale(1);
-                box-shadow: 0 0 0 16px rgba(6, 199, 85, 0);
-            }
-            100% {
-                transform: scale(0.96);
-                box-shadow: 0 0 0 0 rgba(6, 199, 85, 0);
-            }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black bg-[#0b0f19] text-gray-100">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
 
-    <header class="sticky top-0 z-40 glass-panel border-b border-gray-800/80">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <!-- Brand Logo & Title -->
-                <div class="flex items-center gap-3.5">
-                    <div id="logoContainer" class="relative group cursor-pointer">
-                        <!-- Neon Glow Ring Effect -->
-                        <div class="absolute -inset-0.5 bg-gradient-to-r from-orange-500 via-cyan-500 to-blue-600 rounded-2xl blur opacity-70 group-hover:opacity-100 transition duration-300"></div>
-                        
-                        <!-- R² Vector Logo matching uploaded design -->
-                        <div class="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-cyan-400/80 shadow-lg shadow-cyan-500/40 group-hover:scale-105 transition-transform duration-300 flex items-center justify-center bg-[#002066]">
-                            <svg viewBox="0 0 500 500" class="w-full h-full p-0.5" xmlns="http://www.w3.org/2000/svg">
-                                <rect width="500" height="500" fill="#002066"/>
-                                <!-- Top Accent Line -->
-                                <rect x="96" y="70" width="20" height="75" fill="#FFFFFF"/>
-                                <!-- Orange 'R' Outer Shape -->
-                                <path d="M 124 70 L 290 70 C 390 70 405 130 405 230 C 405 325 365 385 295 385 L 377 432 L 265 432 L 198 360 L 198 285 L 290 285 C 328 285 330 145 230 145 L 124 145 Z" fill="#FF6A00"/>
-                                <!-- White 'r' Stem & Arch -->
-                                <path d="M 136 180 C 105 180 96 198 96 225 L 96 432 L 172 432 L 172 258 L 245 258 L 245 180 Z" fill="#FFFFFF"/>
-                                <!-- White Superscript '2' -->
-                                <path d="M 258 190 L 298 190 C 304 190 308 194 308 200 C 308 212 292 222 280 234 L 280 236 L 308 236 L 308 250 L 258 250 L 258 238 C 274 222 292 212 292 205 C 292 202 290 200 285 200 L 258 200 Z" fill="#FFFFFF"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2.5">
-                            <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">
-                                R2R <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-blue-400">Digital Support</span>
-                            </h1>
-                        </div>
-                        <p class="text-xs text-gray-400">คลังเรียนรู้เพื่อพัฒนางานประจำสู่งานวิจัย</p>
-                    </div>
+    <!-- TOP NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 bg-slate-900 text-white shadow-md border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo & Title -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('publicHome')">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-2xl shadow-inner">
+                    <i class="fa-solid fa-book-bookmark"></i>
                 </div>
-
-                <!-- Refresh Button with Icon and Text -->
-                <div class="flex items-center gap-3">
-                    <button id="refreshDataBtn" onclick="fetchLiveData()" class="px-3.5 py-2 text-gray-300 hover:text-white bg-gray-900/90 hover:bg-gray-800 border border-gray-800 rounded-xl transition-all duration-200 flex items-center gap-2 text-xs font-medium" title="อัปเดตข้อมูลจาก Google Sheet">
-                        <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-cyan-400"></i>
-                        <span>รีเฟรช</span>
-                    </button>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl font-bold tracking-wide text-amber-200">CatalogView</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 font-normal">Hub</span>
+                    </div>
+                    <p class="text-xs text-blue-200/80 tracking-wider">ระบบสืบค้นและเรียนรู้ออนไลน์</p>
                 </div>
             </div>
+
+            <!-- Right Nav Links (Guest vs Logged In) -->
+            <nav id="navMenu" class="flex items-center space-x-3 sm:space-x-4">
+                <button onclick="switchTab('publicHome')" class="px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-house"></i>
+                    <span class="hidden sm:inline">หน้าหลัก</span>
+                </button>
+                
+                <!-- Guest View Button -->
+                <button id="loginBtn" onclick="openLoginModal()" class="px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-md transition flex items-center space-x-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>เข้าสู่ระบบ</span>
+                </button>
+
+                <!-- User Profile Dropdown / Logged In State -->
+                <div id="userProfileArea" class="hidden flex items-center space-x-3">
+                    <div class="text-right hidden md:block">
+                        <p id="userDisplayName" class="text-sm font-semibold text-amber-200">ชื่อผู้ใช้งาน</p>
+                        <span id="userRoleBadge" class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">นักศึกษา</span>
+                    </div>
+                    <button id="staffAdminBtn" onclick="switchTab('staffView')" class="hidden px-3 py-2 rounded-lg text-xs sm:text-sm bg-rose-900/60 hover:bg-rose-800 text-rose-100 border border-rose-500/40 transition">
+                        <i class="fa-solid fa-sliders mr-1"></i> จัดการบทเรียน
+                    </button>
+                    <button onclick="handleLogout()" class="px-3 py-2 rounded-lg text-xs sm:text-sm bg-red-800/80 hover:bg-red-700 text-white transition flex items-center space-x-1" title="ออกจากระบบ">
+                        <i class="fa-solid fa-power-off"></i>
+                        <span class="hidden sm:inline">ออก</span>
+                    </button>
+                </div>
+            </nav>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
-        <div class="space-y-6">
-            <!-- Search & Filter Control Panel -->
-            <div class="glass-panel p-5 rounded-2xl shadow-xl">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                    <!-- 1. พิมพ์รายละเอียดเพื่อค้นหา -->
-                    <div class="space-y-1.5">
-                        <label for="searchInput" class="text-xs text-gray-400 font-medium flex items-center gap-1.5">
-                            <i class="fa-solid fa-magnifying-glass text-cyan-400"></i> พิมพ์รายละเอียดเพื่อค้นหา
-                        </label>
-                        <div class="relative w-full">
-                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <input type="text" id="searchInput" placeholder="พิมพ์ชื่อ, หมวดหมู่, หรือรหัส..." 
-                                class="w-full pl-11 pr-10 py-2.5 rounded-xl bg-gray-950/80 border border-gray-800 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all">
-                            <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white text-sm p-1">
-                                <i class="fa-solid fa-xmark"></i>
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow">
+        
+        <!-- HERO BANNER SECTION -->
+        <section class="bg-catalog-gradient text-white pt-8 pb-14 px-4 sm:px-6 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            <div class="max-w-7xl mx-auto text-center relative z-10">
+                <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 text-amber-300 text-xs sm:text-sm mb-4 border border-white/15">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>ศูนย์รวมคลังบทเรียนและตำราเรียนดิจิทัล</span>
+                </span>
+                <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
+                    สืบค้นและเรียนรู้บทเรียนออนไลน์
+                </h1>
+                <p class="text-blue-100/80 text-sm sm:text-base max-w-2xl mx-auto mb-6">
+                    รวบรวมสื่อการสอน วิดีโอคลิป และแบบทดสอบก่อน-หลังเรียน พร้อมประเมินผลได้ทันที
+                </p>
+
+                <!-- Search & Category Filters -->
+                <div class="max-w-2xl mx-auto bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-2xl flex flex-col sm:flex-row gap-2">
+                    <div class="relative flex-grow">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400"></i>
+                        <input type="text" id="searchInput" oninput="handleSearch()" placeholder="ค้นหาชื่อบทเรียน หรือคำอธิบาย..." class="w-full pl-10 pr-4 py-2.5 rounded-xl text-slate-800 placeholder-slate-400 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
+                    </div>
+                    <select id="filterCategory" onchange="handleSearch()" class="px-4 py-2.5 rounded-xl text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm font-medium">
+                        <option value="ALL">📚 ทุกหมวดหมู่</option>
+                        <option value="COMP">💻 วิทยาการคอมพิวเตอร์</option>
+                        <option value="ENG">⚙️ วิศวกรรมศาสตร์</option>
+                        <option value="GEN">📖 วิชาทั่วไป</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 1: PUBLIC HOME -->
+        <section id="publicHomeView" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20 pb-16">
+            <div class="bg-white rounded-2xl p-6 shadow-catalog border border-slate-100 mb-6 flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
+                        <i class="fa-solid fa-layer-group text-amber-600"></i>
+                        <span>ชั้นวางบทเรียนแนะนำ (9 เรื่องล่าสุด)</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">เข้าสู่ระบบเพื่อเข้าชมวิดีโอและทำแบบทดสอบประจำบทเรียน</p>
+                </div>
+                <div class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200">
+                    <i class="fa-solid fa-lock text-xs mr-1"></i> ต้องเข้าสู่ระบบเพื่อดูเนื้อหา
+                </div>
+            </div>
+
+            <!-- 9 Grid Cards -->
+            <div id="publicUnitsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- VIEW 2: STUDENT DASHBOARD -->
+        <section id="studentView" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20 pb-16">
+            <div class="bg-white rounded-2xl p-6 shadow-catalog border border-slate-100 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
+                        <i class="fa-solid fa-user-graduate text-emerald-600"></i>
+                        <span>คลังบทเรียนสำหรับนักศึกษา</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">เลือกบทเรียนที่ต้องการเพื่อรับชมวิดีโอและทำแบบทดสอบประเมินผล</p>
+                </div>
+                <div class="flex items-center space-x-2 text-sm text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
+                    <span>แสดงผล:</span>
+                    <span class="font-bold text-slate-800">9 เรื่อง / หน้า</span>
+                </div>
+            </div>
+
+            <!-- Grid Container -->
+            <div id="studentUnitsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+            <!-- PAGINATION CONTROLS -->
+            <div class="mt-10 flex flex-col sm:flex-row items-center justify-between bg-white px-6 py-4 rounded-xl shadow-sm border border-slate-200 gap-4">
+                <p id="pageInfoText" class="text-xs sm:text-sm text-slate-600">
+                    กำลังแสดง <span class="font-semibold text-slate-800" id="pageStart">1</span> - <span class="font-semibold text-slate-800" id="pageEnd">9</span> จากทั้งหมด <span class="font-semibold text-slate-800" id="totalUnitsCount">0</span> เรื่อง
+                </p>
+                <div id="paginationButtons" class="flex items-center space-x-1"></div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: STAFF MANAGEMENT PANEL -->
+        <section id="staffView" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20 pb-16">
+            <div class="bg-white rounded-2xl p-6 shadow-catalog border border-slate-100 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-700">Staff Portal</span>
+                        <h2 class="text-xl font-bold text-slate-800">ระบบจัดการบทเรียนและแบบทดสอบ</h2>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">เพิ่ม แก้ไข ลบ บทเรียน วิดีโอ YouTube และแบบทดสอบก่อน-หลังเรียน ใน Supabase</p>
+                </div>
+                <button onclick="openUnitFormModal()" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-sm shadow-md transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>+ เพิ่มบทเรียนใหม่</span>
+                </button>
+            </div>
+
+            <!-- Staff Units Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100/80 text-slate-700 text-xs uppercase tracking-wider border-b border-slate-200">
+                                <th class="py-3.5 px-4 font-semibold">ลำดับ</th>
+                                <th class="py-3.5 px-4 font-semibold">ชื่อบทเรียน / รายละเอียด</th>
+                                <th class="py-3.5 px-4 font-semibold">หมวดหมู่</th>
+                                <th class="py-3.5 px-4 font-semibold text-center">วิดีโอ</th>
+                                <th class="py-3.5 px-4 font-semibold text-center">ข้อสอบ Pre/Post</th>
+                                <th class="py-3.5 px-4 font-semibold text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs sm:text-sm">
+            <p class="font-medium text-slate-300">© 2026 CatalogView Learning Hub - ระบบสืบค้นและบทเรียนดิจิทัล</p>
+            <p class="text-slate-500 mt-1">เชื่อมต่อข้อมูล Supabase REST Engine (Live Database Connection Active)</p>
+        </div>
+    </footer>
+
+    <!-- MODAL 1: LOGIN & REGISTER POPUP -->
+    <div id="loginModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
+            <div class="bg-catalog-gradient p-6 text-white text-center relative">
+                <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-white/70 hover:text-white text-lg w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="w-12 h-12 bg-amber-500/20 rounded-full mx-auto flex items-center justify-center text-amber-300 text-2xl mb-2">
+                    <i class="fa-solid fa-user-lock"></i>
+                </div>
+                <h3 class="text-xl font-bold" id="authModalTitle">เข้าสู่ระบบ CatalogView</h3>
+                <p class="text-xs text-blue-100/80 mt-1">เลือกสิทธิ์การใช้งานและกรอกข้อมูลเพื่อเข้าสู่ระบบ</p>
+            </div>
+
+            <div class="p-6">
+                <div class="mb-5">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">เลือกสิทธิ์เข้าใช้งาน</label>
+                    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+                        <button type="button" id="roleStudentBtn" onclick="setAuthRole('student')" class="py-2 rounded-lg text-sm font-semibold transition bg-white text-amber-700 shadow-sm flex items-center justify-center space-x-1.5">
+                            <i class="fa-solid fa-user-graduate"></i>
+                            <span>นักศึกษา</span>
+                        </button>
+                        <button type="button" id="roleStaffBtn" onclick="setAuthRole('staff')" class="py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5">
+                            <i class="fa-solid fa-user-gear"></i>
+                            <span>เจ้าหน้าที่</span>
+                        </button>
+                    </div>
+                </div>
+
+                <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                    <div class="mb-4">
+                        <label class="block text-xs font-medium text-slate-700 mb-1">อีเมลผู้ใช้</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-envelope absolute left-3 top-3 text-slate-400 text-sm"></i>
+                            <input type="email" id="authEmail" required placeholder="user@example.com" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-medium text-slate-700">รหัสผ่าน</label>
+                            <button type="button" onclick="showForgotPasswordPrompt()" class="text-xs text-amber-600 hover:underline">ลืมรหัสผ่าน?</button>
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
+                            <input type="password" id="authPassword" required placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <button type="button" onclick="togglePasswordVisibility('authPassword', 'eyeIcon')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-1">
+                                <i id="eyeIcon" class="fa-solid fa-eye"></i>
                             </button>
                         </div>
                     </div>
 
-                    <!-- 2. หมวดหมู่ Dropdown -->
-                    <div class="space-y-1.5">
-                        <label for="categorySelect" class="text-xs text-gray-400 font-medium flex items-center gap-1.5">
-                            <i class="fa-solid fa-layer-group text-indigo-400"></i> หมวดหมู่
-                        </label>
-                        <select id="categorySelect" onchange="applyFilters()" class="w-full px-3.5 py-2.5 rounded-xl bg-gray-950/80 border border-gray-800 text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all cursor-pointer">
-                            <option value="ALL">หมวดหมู่ทั้งหมด</option>
-                        </select>
+                    <div id="displayNameContainer" class="mb-4 hidden">
+                        <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อ-นามสกุล</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-id-card absolute left-3 top-3 text-slate-400 text-sm"></i>
+                            <input type="text" id="authDisplayName" placeholder="สมชาย ใจดี" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
                     </div>
 
-                    <!-- 3. แท็กเนื้อหา Dropdown -->
-                    <div class="space-y-1.5">
-                        <label for="tagSelect" class="text-xs text-gray-400 font-medium flex items-center gap-1.5">
-                            <i class="fa-solid fa-tags text-cyan-400"></i> แท็กเนื้อหา
-                        </label>
-                        <select id="tagSelect" onchange="applyFilters()" class="w-full px-3.5 py-2.5 rounded-xl bg-gray-950/80 border border-gray-800 text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all cursor-pointer">
-                            <option value="ALL">แท็กเนื้อหาทั้งหมด</option>
-                        </select>
+                    <button type="submit" id="authSubmitBtn" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-sm shadow-md transition mb-3">
+                        เข้าสู่ระบบ
+                    </button>
+
+                    <div class="text-center text-xs text-slate-500">
+                        <span id="authToggleText">ยังไม่มีบัญชีสมาชิก?</span>
+                        <button type="button" onclick="toggleAuthMode()" id="authToggleBtn" class="text-amber-600 font-semibold hover:underline ml-1">สมัครสมาชิก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: GUEST ACCESS DENIED WARNING MODAL -->
+    <div id="authGuardModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center border border-slate-100">
+            <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">เข้าถึงเนื้อหาจำกัด</h3>
+            <p class="text-xs text-slate-600 mb-6">ท่านจำเป็นต้องเข้าสู่ระบบก่อนเพื่อเข้าชมวิดีโอเนื้อหาและทำแบบทดสอบประเมินผล</p>
+            <div class="flex space-x-2">
+                <button onclick="closeAuthGuardModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50">ยกเลิก</button>
+                <button onclick="closeAuthGuardModal(); openLoginModal();" class="w-1/2 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow-sm">เข้าสู่ระบบเลย</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: STUDENT UNIT VIEWER -->
+    <div id="unitViewerModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col my-auto border border-slate-100">
+            <div class="bg-slate-900 text-white p-4 px-6 flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center space-x-3">
+                    <span class="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs rounded font-medium" id="modalUnitCategory">COMP</span>
+                    <h3 class="text-base sm:text-lg font-bold text-amber-100 truncate max-w-md" id="modalUnitTitle">ชื่อบทเรียน</h3>
+                </div>
+                <button onclick="closeUnitViewerModal()" class="text-slate-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="flex-grow overflow-y-auto p-4 sm:p-6">
+                <div class="flex border-b border-slate-200 mb-6 space-x-2">
+                    <button onclick="switchViewerTab('video')" id="tabBtnVideo" class="py-2.5 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center space-x-2">
+                        <i class="fa-solid fa-video"></i>
+                        <span>วิดีโอบทเรียน</span>
+                    </button>
+                    <button onclick="switchViewerTab('pretest')" id="tabBtnPretest" class="py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2">
+                        <i class="fa-solid fa-clipboard-question"></i>
+                        <span>แบบทดสอบก่อนเรียน</span>
+                    </button>
+                    <button onclick="switchViewerTab('posttest')" id="tabBtnPosttest" class="py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2">
+                        <i class="fa-solid fa-square-check"></i>
+                        <span>แบบทดสอบหลังเรียน</span>
+                    </button>
+                </div>
+
+                <div id="viewerTabVideo" class="space-y-4">
+                    <div class="aspect-video w-full bg-slate-900 rounded-xl overflow-hidden shadow-inner border border-slate-800">
+                        <iframe id="youtubeIframe" class="w-full h-full" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-200/60">
+                        <h4 class="font-bold text-slate-800 text-sm mb-1">รายละเอียดบทเรียน</h4>
+                        <p id="modalUnitDescription" class="text-xs sm:text-sm text-slate-600 leading-relaxed"></p>
                     </div>
                 </div>
-            </div>
 
-            <div class="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm text-gray-400 px-1">
-                <div class="flex items-center gap-2">
-                    <span>พบวิดีโอ <span id="resultCount" class="font-bold text-cyan-400 text-base">0</span> รายการ</span>
+                <div id="viewerTabPretest" class="hidden space-y-6">
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-xs sm:text-sm text-blue-800 flex justify-between items-center">
+                        <div>
+                            <span class="font-bold">📝 แบบทดสอบก่อนเรียน (Pre-test)</span>
+                            <p class="text-xs text-blue-600 mt-0.5">ตอบคำถามเพื่อวัดความรู้พื้นฐานก่อนเข้าสู่เนื้อหา</p>
+                        </div>
+                        <div id="pretestScoreBadge" class="hidden px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold"></div>
+                    </div>
+                    <form id="pretestForm" class="space-y-6">
+                        <div id="pretestQuestionsContainer" class="space-y-6"></div>
+                        <button type="button" onclick="gradeQuiz('pretest')" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm shadow-md transition">
+                            ส่งแบบทดสอบก่อนเรียน
+                        </button>
+                    </form>
                 </div>
-                <button onclick="resetAllFilters()" class="text-cyan-400 hover:text-cyan-300 font-medium underline transition-colors flex items-center gap-1">
-                    <i class="fa-solid fa-rotate-left text-xs"></i> ล้างตัวกรองทั้งหมด
-                </button>
-            </div>
 
-            <!-- Video Cards Grid -->
-            <div id="videoGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Dynamic cards populated via JavaScript -->
-            </div>
-
-            <!-- Pagination Container -->
-            <div id="paginationContainer" class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 border-t border-gray-800/80">
-                <div id="paginationButtons" class="flex items-center gap-1.5 flex-wrap justify-center">
-                    <!-- Page buttons generated via JS -->
-                </div>
-            </div>
-
-            <!-- Empty State Display -->
-            <div id="emptyState" class="hidden glass-panel p-12 text-center rounded-2xl my-8 border border-gray-800">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-500 text-2xl">
-                    <i class="fa-solid fa-film text-cyan-400"></i>
-                </div>
-                <h3 class="text-lg font-bold text-white mb-1">ไม่พบวิดีโอที่ตรงกับการค้นหา</h3>
-                <p class="text-gray-400 text-xs sm:text-sm max-w-sm mx-auto mb-5">ลองเปลี่ยนคำค้นหาหรือเลือกหมวดหมู่อื่นๆ</p>
-                <button onclick="resetAllFilters()" class="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs rounded-xl shadow-lg shadow-cyan-600/30 transition-all">
-                    ดูวิดีโอทั้งหมด
-                </button>
-            </div>
-        </div>
-    </main>
-
-    <footer class="bg-gray-950/90 border-t border-gray-800/80 py-8 mt-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400 text-xs space-y-2">
-            <div class="text-gray-300 font-light pt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs sm:text-sm">
-                <span class="text-cyan-400 font-bold tracking-wide">R2R Digital Support:</span>
-                <span>พัฒนาโดย <span class="text-gray-200 font-medium">ชาคริต เทียนทอง</span></span>
-            </div>
-            <div class="text-gray-400 text-[11px]">
-                นักวิชาการโสตทัศนศึกษา ระดับ เชี่ยวชาญ
-            </div>
-
-            <div class="pt-3 text-gray-600 text-[11px]">
-                &copy; 2026 R2R Digital Support. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-    <!-- Video Modal -->
-    <div id="videoModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/85 backdrop-blur-md transition-opacity">
-        <div class="glass-panel w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] border border-gray-700">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-800 bg-gray-950/90">
-                <div class="pr-4 overflow-hidden">
-                    <span id="modalCategory" class="px-2.5 py-0.5 text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-md">
-                        หมวดหมู่
-                    </span>
-                    <h3 id="modalTitle" class="text-sm sm:text-base font-bold text-white truncate mt-1">
-                        ชื่อวิดีโอ
-                    </h3>
-                </div>
-                <button onclick="closeVideoModal()" class="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-gray-800 transition-colors flex-shrink-0">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <!-- Video Player Iframe Container (16:9 Aspect Ratio) -->
-            <div class="relative w-full pt-[56.25%] bg-black">
-                <iframe id="modalIframe" class="absolute inset-0 w-full h-full" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-            </div>
-
-            <!-- Modal Info Footer -->
-            <div class="p-4 sm:p-5 bg-gray-950/90 border-t border-gray-800 flex flex-wrap items-center justify-between gap-4 text-xs">
-                <div class="flex items-center gap-4 text-gray-300">
-                    <span class="flex items-center gap-1.5"><i class="fa-regular fa-clock text-gray-400"></i> <span id="modalDuration">-</span></span>
-                    <span class="flex items-center gap-1.5"><i class="fa-regular fa-calendar text-gray-400"></i> <span id="modalDate">-</span></span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <a id="modalYouTubeBtn" href="#" target="_blank" class="px-3.5 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded-xl transition-all flex items-center gap-1.5 font-medium">
-                        <i class="fa-brands fa-youtube"></i> ดูบน YouTube
-                    </a>
-                    <a id="modalPlaylistBtn" href="#" target="_blank" class="px-3.5 py-1.5 bg-gray-900 hover:bg-gray-800 text-gray-200 border border-gray-800 rounded-xl transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-list"></i> ดูทั้ง Playlist
-                    </a>
+                <div id="viewerTabPosttest" class="hidden space-y-6">
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-xs sm:text-sm text-emerald-800 flex justify-between items-center">
+                        <div>
+                            <span class="font-bold">🎯 แบบทดสอบหลังเรียน (Post-test)</span>
+                            <p class="text-xs text-emerald-600 mt-0.5">วัดระดับความเข้าใจหลังจากเรียนจบเรียบร้อยแล้ว</p>
+                        </div>
+                        <div id="posttestScoreBadge" class="hidden px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold"></div>
+                    </div>
+                    <form id="posttestForm" class="space-y-6">
+                        <div id="posttestQuestionsContainer" class="space-y-6"></div>
+                        <button type="button" onclick="gradeQuiz('posttest')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm shadow-md transition">
+                            ส่งแบบทดสอบหลังเรียน
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- LINE Support Floating Button -->
-    <div class="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
-        <button onclick="handleLineButtonClick()" class="group line-pulse relative bg-line-green hover:bg-line-dark text-white rounded-full w-14 h-14 shadow-2xl transition-all duration-300 flex items-center justify-center hover:scale-110 active:scale-95 border border-emerald-400/30" title="ปรึกษา LINE Support" aria-label="ปรึกษา LINE Support">
-            <i class="fa-brands fa-line text-3xl"></i>
-        </button>
-    </div>
-
-    <!-- LINE Modal -->
-    <div id="lineModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/85 backdrop-blur-md transition-opacity">
-        <div class="glass-panel w-full max-w-sm rounded-3xl overflow-hidden p-6 text-center relative border border-gray-800 shadow-2xl">
-            <button onclick="closeLineModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-xl hover:bg-gray-800 transition-colors">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-
-            <div class="w-16 h-16 rounded-2xl bg-line-green/10 text-line-green border border-line-green/30 flex items-center justify-center text-3xl mx-auto mb-3 shadow-lg shadow-emerald-500/10">
-                <i class="fa-brands fa-line"></i>
-            </div>
-            <h3 class="text-lg font-bold text-white mb-1">R2R Digital Support</h3>
-            <p class="text-gray-400 text-xs mb-4">สอบถามข้อมูลเพิ่มเติม หรือปรึกษางานวิจัย R2R</p>
-
-            <div class="bg-white p-4 rounded-2xl shadow-inner max-w-[200px] mx-auto mb-4 border border-gray-300">
-                <img id="qrCodeImage" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://line.me/R/ti/p/%40869teiib" alt="LINE QR Code" class="w-full h-auto rounded-lg">
-            </div>
-
-            <div class="bg-gray-950/80 border border-gray-800 rounded-xl p-2.5 flex items-center justify-between mb-4">
-                <div class="text-left pl-2">
-                    <div class="text-[10px] text-gray-500">LINE ID</div>
-                    <div class="text-sm font-bold text-cyan-400">@869teiib</div>
+    <!-- MODAL 4: STAFF ADD/EDIT UNIT MODAL -->
+    <div id="unitFormModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col my-auto border border-slate-100">
+            <div class="bg-catalog-gradient text-white p-4 px-6 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-pen-to-square text-amber-300"></i>
+                    <h3 class="text-lg font-bold" id="staffFormModalTitle">เพิ่มบทเรียนใหม่</h3>
                 </div>
-                <button onclick="copyLineId()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs rounded-lg transition-colors flex items-center gap-1">
-                    <i class="fa-regular fa-copy"></i>
-                    <span id="copyBtnText">คัดลอก</span>
+                <button onclick="closeUnitFormModal()" class="text-white/70 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <a href="https://line.me/R/ti/p/%40869teiib" target="_blank" class="w-full py-3 bg-line-green hover:bg-line-dark text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2">
-                <i class="fa-brands fa-line text-lg"></i> เปิดแอป LINE เพื่อเพิ่มเพื่อน
-            </a>
+            <div class="flex-grow overflow-y-auto p-4 sm:p-6">
+                <div class="grid grid-cols-3 gap-2 mb-6">
+                    <button type="button" onclick="switchStaffFormStep(1)" id="staffStepBtn1" class="py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center space-x-1.5">
+                        <span class="w-5 h-5 rounded-full bg-amber-600 text-white text-xs flex items-center justify-center">1</span>
+                        <span>ข้อมูลบทเรียน & วิดีโอ</span>
+                    </button>
+                    <button type="button" onclick="switchStaffFormStep(2)" id="staffStepBtn2" class="py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5">
+                        <span class="w-5 h-5 rounded-full bg-slate-400 text-white text-xs flex items-center justify-center">2</span>
+                        <span>ข้อสอบ Pre-test</span>
+                    </button>
+                    <button type="button" onclick="switchStaffFormStep(3)" id="staffStepBtn3" class="py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5">
+                        <span class="w-5 h-5 rounded-full bg-slate-400 text-white text-xs flex items-center justify-center">3</span>
+                        <span>ข้อสอบ Post-test</span>
+                    </button>
+                </div>
+
+                <form id="unitSaveForm" onsubmit="handleSaveUnit(event)">
+                    <input type="hidden" id="editingUnitId" value="">
+
+                    <div id="staffFormStep1" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อบทเรียน / หัวข้อ <span class="text-red-500">*</span></label>
+                                <input type="text" id="unitTitleInput" required placeholder="เช่น บทที่ 1: การเขียนโปรแกรมเบื้องต้น" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">หมวดหมู่วิชา</label>
+                                <select id="unitCategoryInput" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white">
+                                    <option value="COMP">💻 วิทยาการคอมพิวเตอร์</option>
+                                    <option value="ENG">⚙️ วิศวกรรมศาสตร์</option>
+                                    <option value="GEN">📖 วิชาทั่วไป</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">คำอธิบายสังเขป</label>
+                            <textarea id="unitDescriptionInput" rows="3" placeholder="อธิบายเนื้อหาโดยย่อของบทเรียนนี้..." class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">ลิงก์วิดีโอ YouTube <span class="text-red-500">*</span></label>
+                                <input type="url" id="unitYoutubeInput" required placeholder="https://www.youtube.com/watch?v=..." class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <span class="text-[11px] text-slate-400">รองรับ youtube.com/watch หรือ youtu.be</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">ลำดับแสดงผล (Order Index)</label>
+                                <input type="number" id="unitOrderInput" value="1" min="1" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="staffFormStep2" class="hidden space-y-4">
+                        <div class="flex justify-between items-center bg-blue-50 p-3 rounded-xl border border-blue-200">
+                            <div>
+                                <h4 class="text-xs font-bold text-blue-900">การจัดการแบบทดสอบก่อนเรียน (Pre-test)</h4>
+                                <p class="text-[11px] text-blue-700">บันทึกลงตาราง pre_test_questions ใน Supabase</p>
+                            </div>
+                            <button type="button" onclick="addQuestion('pretest')" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm">
+                                + เพิ่มข้อสอบ
+                            </button>
+                        </div>
+                        <div id="staffPretestContainer" class="space-y-4"></div>
+                    </div>
+
+                    <div id="staffFormStep3" class="hidden space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-emerald-50 p-3 rounded-xl border border-emerald-200 gap-2">
+                            <div>
+                                <h4 class="text-xs font-bold text-emerald-900">การจัดการแบบทดสอบหลังเรียน (Post-test)</h4>
+                                <p class="text-[11px] text-emerald-700">บันทึกลงตาราง post_test_questions ใน Supabase</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button type="button" onclick="copyPretestToPosttest()" class="px-3 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 text-xs font-semibold">
+                                    <i class="fa-solid fa-copy mr-1"></i> คัดลอกจาก Pre-test
+                                </button>
+                                <button type="button" onclick="addQuestion('posttest')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm">
+                                    + เพิ่มข้อสอบ
+                                </button>
+                            </div>
+                        </div>
+                        <div id="staffPosttestContainer" class="space-y-4"></div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-200 flex justify-between items-center">
+                        <button type="button" onclick="closeUnitFormModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-xs sm:text-sm font-medium hover:bg-slate-50">
+                            ยกเลิก
+                        </button>
+                        <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs sm:text-sm font-semibold shadow-md flex items-center space-x-1.5">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>บันทึกบทเรียนลง Supabase</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-24 right-6 z-50 hidden bg-gray-900 text-white border border-gray-700 text-xs px-4 py-3 rounded-xl shadow-2xl items-center gap-2 transition-all">
-        <i class="fa-solid fa-circle-check text-cyan-400"></i>
-        <span id="toastMsg">คัดลอก LINE ID เรียบร้อยแล้ว</span>
-    </div>
+    <!-- TOAST NOTIFICATION BOX -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
 
     <script>
-        // Google Sheet Configuration
-        const GOOGLE_SHEET_ID = "10M6I1peztnZ6lht3DrxuL3NnCyFDmNmEkIBW0n_Orog";
-        const CSV_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&id=${GOOGLE_SHEET_ID}&gid=0`;
+        // Supabase Client Initialization
+        const SUPABASE_URL = "https://soveyqvggppjklddrwja.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_OuBKjdxDFH7PiHpXMT2XkA_qh2pzRGq";
+        let supabaseClient = null;
 
-        const DEFAULT_CREATOR_NAME = "ชาคริต เทียนทอง นักวิชาการโสตทัศนศึกษา ระดับ เชี่ยวชาญ";
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } catch (e) {
+            console.error("Supabase Client Init Error:", e);
+        }
 
+        // Global State
+        let currentUser = null; // { id, email, role: 'student'|'staff', name }
+        let currentRoleSelection = 'student';
+        let isSignUpMode = false;
+
+        let allUnits = [];
+        let filteredUnits = [];
         let currentPage = 1;
-        let filteredVideos = [];
+        const ITEMS_PER_PAGE = 9;
 
-        // Dynamic items per page helper function according to device design requirement
-        function getItemsPerPage() {
-            const width = window.innerWidth;
-            if (width < 768) {
-                return 6;
-            } else if (width < 1024) {
-                return 8;
-            } else {
-                return 9;
+        let activeUnitForViewer = null;
+        let pretestFormQuestions = [];
+        let posttestFormQuestions = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initAuthCheck();
+            await fetchUnitsData();
+            switchTab('publicHome');
+        });
+
+        // Initialize Supabase Auth Check
+        async function initAuthCheck() {
+            if (!supabaseClient) return;
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    await loadUserProfile(session.user);
+                }
+            } catch (err) {
+                console.warn("Auth check error:", err);
             }
         }
 
-        // Fallback Dataset
-        const fallbackVideos = [
-            { id: "R2R-019", title: "EP5: ศึกชิงไหวชิงพริบ มนุษย์ปะทะสมองกล", category: "สื่อการสอน", tag: "Teachable Machine", youtubeUrl: "https://youtu.be/WoO5JHLE1U0", videoId: "WoO5JHLE1U0", playlistUrl: "https://www.youtube.com/playlist?list=PLIWoNaD8XELel1p0YTNJxpZTjPgYH3RYH", driveUrl: "https://drive.google.com/file/d/1_sPjkXjtllBEKeCH3oTGTZ1t56J_19N/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1_sPjkXjtllBEKeCH3oTGTZ1t56J_19N", duration: "04:03", date: "4 Feb 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-018", title: "EP4: เจาะกำแพงพรางตาที่ซ่อนเร้นของสมองกล", category: "สื่อการสอน", tag: "Teachable Machine", youtubeUrl: "https://youtu.be/JbcrnvpV0DQ", videoId: "JbcrnvpV0DQ", playlistUrl: "https://www.youtube.com/playlist?list=PLIWoNaD8XELel1p0YTNJxpZTjPgYH3RYH", driveUrl: "https://drive.google.com/file/d/1CXXPsHDuQ0QGwJp8aTWpzZ1Bdl6rnPcg/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1CXXPsHDuQ0QGwJp8aTWpzZ1Bdl6rnPcg", duration: "03:51", date: "4 Feb 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-017", title: "EP3: ศึกวิเคราะห์สัญญาณสัตว์ร้ายมหาประภัย", category: "สื่อการสอน", tag: "Teachable Machine", youtubeUrl: "https://youtu.be/bj5Ewv64zg4", videoId: "bj5Ewv64zg4", playlistUrl: "https://www.youtube.com/playlist?list=PLIWoNaD8XELel1p0YTNJxpZTjPgYH3RYH", driveUrl: "https://drive.google.com/file/d/1VmT-YJ0O_slR5gZUVh1n1KLMeY4sUApU/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1VmT-YJ0O_slR5gZUVh1n1KLMeY4sUApU", duration: "05:16", date: "4 Feb 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-016", title: "EP2: ปลูกถ่ายความทรงจำอัจฉริยะฉบับพี่ช้าง", category: "สื่อการสอน", tag: "Teachable Machine", youtubeUrl: "https://youtu.be/jEUVBavTnQM", videoId: "jEUVBavTnQM", playlistUrl: "https://www.youtube.com/playlist?list=PLIWoNaD8XELel1p0YTNJxpZTjPgYH3RYH", driveUrl: "https://drive.google.com/file/d/1nDHsTPRXY0v518q-oiey619g_Ifx5SCa/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1nDHsTPRXY0v518q-oiey619g_Ifx5SCa", duration: "02:40", date: "4 Feb 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-015", title: "EP1: ตอนกำเนิดสมองกล Teachable Machine", category: "สื่อการสอน", tag: "Teachable Machine", youtubeUrl: "https://youtu.be/sWGqmM-FmzIg", videoId: "sWGqmM-FmzIg", playlistUrl: "https://www.youtube.com/playlist?list=PLIWoNaD8XELel1p0YTNJxpZTjPgYH3RYH", driveUrl: "https://drive.google.com/file/d/1gziTTCf47lIXS8Iha3lx5nOpfeZIY5D5/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1gziTTCf47lIXS8Iha3lx5nOpfeZIY5D5", duration: "01:23", date: "4 Feb 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-014", title: "EP5: ถอดรหัสสื่อสารโลกด้วย AI Translate", category: "สื่อการสอน", tag: "Canva", youtubeUrl: "https://youtu.be/2tcFsXCIXYU", videoId: "2tcFsXCIXYU", playlistUrl: "https://www.youtube.com/playlist?list=PLIWoNaD8XElt1iVWnCNhhwZTf-srSnlf", driveUrl: "https://drive.google.com/file/d/1TyaehYxzfU-qqTflyFWWGKOd4CFyQYfO/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1TyaehYxzfU-qqTflyFWWGKOd4CFyQYfO", duration: "01:29", date: "4 Feb 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-013", title: "EP4: พลิกโฉมเทมเพลตด้วย Magic Design", category: "สื่อการสอน", tag: "Canva", youtubeUrl: "https://youtu.be/e_UPMbpsf9Q", videoId: "e_UPMbpsf9Q", playlistUrl: "https://www.youtube.com/playlist?list=PLIWoNaD8XElt1iVWnCNhhwZTf-srSnlf", driveUrl: "https://drive.google.com/file/d/1Y_IANVe9NqhXqrfUZVfGY2FTw6YTGq4A/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1Y_IANVe9NqhXqrfUZVfGY2FTw6YTGq4A", duration: "03:23", date: "4 Feb 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-012", title: "EP3: เสกจินตนาการผ่าน Text to Image", category: "สื่อการสอน", tag: "Canva", youtubeUrl: "https://youtu.be/O4XJhz6_t1s", videoId: "O4XJhz6_t1s", playlistUrl: "https://www.youtube.com/playlist?list=PLIWoNaD8XElt1iVWnCNhhwZTf-srSnlf", driveUrl: "https://drive.google.com/file/d/13u1mO7KTQXWe3oHJIDAKsjuaA9gue8U/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/13u1mO7KTQXWe3oHJIDAKsjuaA9gue8U", duration: "02:26", date: "4 Feb 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-011", title: "EP2: เนรมิตอักขระอัจฉริยะ Magic Write", category: "สื่อการสอน", tag: "Canva", youtubeUrl: "https://youtu.be/cwHQFRzQE1I", videoId: "cwHQFRzQE1I", playlistUrl: "https://www.youtube.com/playlist?list=PLIWoNaD8XElt1iVWnCNhhwZTf-srSnlf", driveUrl: "https://drive.google.com/file/d/1rguLFDwUf-eY8vjmj3QYvaRNkW-HadR_/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1rguLFDwUf-eY8vjmj3QYvaRNkW-HadR_", duration: "01:44", date: "4 Feb 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-010", title: "EP1: กำเนิดดีไซเนอร์สมองกล Canva AI", category: "สื่อการสอน", tag: "Canva", youtubeUrl: "https://youtu.be/NUaJZoy97Ws", videoId: "NUaJZoy97Ws", playlistUrl: "https://www.youtube.com/playlist?list=PLIWoNaD8XElt1iVWnCNhhwZTf-srSnlf", driveUrl: "https://drive.google.com/file/d/1Aok6HQDl_sDarXX2by5iCBpUxBzCDCIH/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1Aok6HQDl_sDarXX2by5iCBpUxBzCDCIH", duration: "01:29", date: "4 Feb 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-009", title: "EP9: นิยามศัพท์เฉพาะ...เคล็ดลับ 'ล็อก' ความเข้าใจ ให้งานจบสวย", category: "งานวิเคราะห์", tag: "Unit 1", youtubeUrl: "https://youtu.be/Blp3oX_2H0o", videoId: "Blp3oX_2H0o", playlistUrl: "https://youtube.com/playlist?list=PLalxO2lT3voc&si=n5gzKd9KztUda61E", driveUrl: "https://drive.google.com/file/d/1AA566-zXJ68NJT3PogiBB-4Dv68UVWx3/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1AA566-zXJ68NJT3PogiBB-4Dv68UVWx3", duration: "01:26", date: "8 Aug 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-008", title: "EP8: ขอบเขตชัดเจน... เซฟงาน เซฟใจ ไม่ให้หลงทาง", category: "งานวิเคราะห์", tag: "Unit 1", youtubeUrl: "https://youtu.be/TzUqzg1dRxk", videoId: "TzUqzg1dRxk", playlistUrl: "https://youtube.com/playlist?list=PLalxO2lT3voc&si=n5gzKd9KztUda61E", driveUrl: "https://drive.google.com/file/d/1_FzqtT12K5sPS-EaEaZHVO3jkDoOjvdBm/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1_FzqtT12K5sPS-EaEaZHVO3jkDoOjvdBm", duration: "01:26", date: "8 Aug 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-007", title: "EP7: การส่งต่อคุณค่าและการนำไปใช้จริง", category: "งานวิเคราะห์", tag: "Unit 1", youtubeUrl: "https://youtu.be/Ku5vRas3FCU", videoId: "Ku5vRas3FCU", playlistUrl: "https://youtube.com/playlist?list=PLalxO2lT3voc&si=n5gzKd9KztUda61E", driveUrl: "https://drive.google.com/file/d/1B1XezxmFR35Cw9MFH17-hLL-T557Fvg6/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1B1XezxmFR35Cw9MFH17-hLL-T557Fvg6", duration: "01:05", date: "8 Aug 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-006", title: "EP6: เส้นทางข้อมูล...จากแผนงานสู่ความสำเร็จ", category: "งานวิเคราะห์", tag: "Unit 1", youtubeUrl: "https://youtu.be/QJM08VrsJQA", videoId: "QJM08VrsJQA", playlistUrl: "https://youtube.com/playlist?list=PLalxO2lT3voc&si=n5gzKd9KztUda61E", driveUrl: "https://drive.google.com/file/d/1ix3-80OTbdMET3F2AvLaswmRIOJZuWOe/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1ix3-80OTbdMET3F2AvLaswmRIOJZuWOe", duration: "01:51", date: "8 Aug 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-005", title: "EP5: ประชากรที่ไม่ใช่คน...แต่มันคือข้อมูลการให้บริการ!", category: "งานวิเคราะห์", tag: "Unit 1", youtubeUrl: "https://youtu.be/txiPjKvqndQ", videoId: "txiPjKvqndQ", playlistUrl: "https://youtube.com/playlist?list=PLalxO2lT3voc&si=n5gzKd9KztUda61E", driveUrl: "https://drive.google.com/file/d/14WAkN9JOrzztQ1AspkgxWv3kjVG32nZl/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/14WAkN9JOrzztQ1AspkgxWv3kjVG32nZl", duration: "02:09", date: "8 Aug 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-004", title: "EP4: ปักหมุดเป้าหมาย...วิเคราะห์ให้ตรงจุด", category: "งานวิเคราะห์", tag: "Unit 1", youtubeUrl: "https://youtu.be/EUoLMURnVm4", videoId: "EUoLMURnVm4", playlistUrl: "https://youtube.com/playlist?list=PLalxO2lT3voc&si=n5gzKd9KztUda61E", driveUrl: "https://drive.google.com/file/d/1Q7zuToNnejcP5-ZlgpOvXLScPU6LR8/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1Q7zuToNnejcP5-ZlgpOvXLScPU6LR8", duration: "01:59", date: "8 Aug 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-003", title: "EP3: พลิกโลกรูทีน สู่คลังข้อมูลอัจฉริยะ", category: "งานวิเคราะห์", tag: "Unit 1", youtubeUrl: "https://youtu.be/tZY8-i1qCT8", videoId: "tZY8-i1qCT8", playlistUrl: "https://youtube.com/playlist?list=PLalxO2lT3voc&si=n5gzKd9KztUda61E", driveUrl: "https://drive.google.com/file/d/1SLPmy7JarvyNT1TqYFEam_HDqE7-Uyry/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1SLPmy7JarvyNT1TqYFEam_HDqE7-Uyry", duration: "01:11", date: "8 Aug 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-002", title: "EP2: พลิกโลกรูทีน สู่มิตินักวิเคราะห์มือโปร", category: "งานวิเคราะห์", tag: "Unit 1", youtubeUrl: "https://youtu.be/sVtKDcGnSQo", videoId: "sVtKDcGnSQo", playlistUrl: "https://youtube.com/playlist?list=PLalxO2lT3voc&si=n5gzKd9KztUda61E", driveUrl: "https://drive.google.com/file/d/1ewlTpOClFRqKFFA_igBFcOuAL6Jdu6Vb/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1ewlTpOClFRqKFFA_igBFcOuAL6Jdu6Vb", duration: "01:04", date: "8 Aug 2026", creator: DEFAULT_CREATOR_NAME },
-            { id: "R2R-001", title: "EP1: Road Map โครงสร้างงานวิเคราะห์", category: "งานวิเคราะห์", tag: "Unit 1", youtubeUrl: "https://youtu.be/CcCorFns9gY", videoId: "CcCorFns9gY", playlistUrl: "https://youtube.com/playlist?list=PLalxO2lT3voc&si=n5gzKd9KztUda61E", driveUrl: "https://drive.google.com/file/d/1rgxcaWwScPSOzqMvR-AtpMNRS14Kic5Q/view?usp=drive_link", imageUrl: "https://lh3.googleusercontent.com/d/1rgxcaWwScPSOzqMvR-AtpMNRS14Kic5Q", duration: "01:20", date: "8 Aug 2026", creator: DEFAULT_CREATOR_NAME }
-        ];
+        async function loadUserProfile(authUser) {
+            let role = 'student';
+            let name = authUser.user_metadata?.full_name || authUser.email.split('@')[0];
 
-        let allVideos = [...fallbackVideos];
+            if (supabaseClient) {
+                const { data, error } = await supabaseClient
+                    .from('elearning_users')
+                    .select('*')
+                    .eq('id', authUser.id)
+                    .maybeSingle();
 
-        const videoGrid = document.getElementById('videoGrid');
-        const emptyState = document.getElementById('emptyState');
-        const searchInput = document.getElementById('searchInput');
-        const clearSearchBtn = document.getElementById('clearSearchBtn');
-        const categorySelect = document.getElementById('categorySelect');
-        const tagSelect = document.getElementById('tagSelect');
-        const resultCount = document.getElementById('resultCount');
-        const paginationContainer = document.getElementById('paginationContainer');
-        const paginationButtons = document.getElementById('paginationButtons');
-
-        function fetchLiveData() {
-            const refreshIcon = document.getElementById('refreshIcon');
-            refreshIcon.classList.add('fa-spin');
-
-            Papa.parse(CSV_URL, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    refreshIcon.classList.remove('fa-spin');
-                    if (results.data && results.data.length > 0) {
-                        try {
-                            const parsed = results.data.map((row, index) => {
-                                let rawVideoId = row['Video_ID_URL'] || row['Video_ID'] || '';
-                                if (!rawVideoId && row['Video_YouTube_URL']) {
-                                    const match = row['Video_YouTube_URL'].match(/youtu\.be\/([^?]+)/);
-                                    if (match) rawVideoId = match[1];
-                                }
-                                if (!rawVideoId) rawVideoId = 'CcCorFns9gY';
-
-                                let rawImageUrl = row['Picture_ID_URL'] || row['Image_URL'] || row['Thumbnail_URL'] || '';
-                                if (!rawImageUrl && row['Drive_URL']) {
-                                    const driveMatch = row['Drive_URL'].match(/\/d\/([^\/]+)/);
-                                    if (driveMatch) {
-                                        rawImageUrl = `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
-                                    }
-                                }
-                                if (!rawImageUrl) {
-                                    rawImageUrl = `https://img.youtube.com/vi/${rawVideoId}/hqdefault.jpg`;
-                                }
-
-                                let rawCreator = row['Creator'] || '';
-                                if (!rawCreator || rawCreator.trim() === 'ชาคริต เทียนทอง') {
-                                    rawCreator = DEFAULT_CREATOR_NAME;
-                                }
-
-                                return {
-                                    id: row['ID'] || `R2R-${String(index+1).padStart(3, '0')}`,
-                                    title: row['Title'] || row['ชื่อวิดีโอ'] || 'วิดีโอไม่มีชื่อ',
-                                    category: row['Content_Type'] || row['Category'] || 'ทั่วไป',
-                                    tag: row['Tag'] || row['Tags'] || 'ทั่วไป',
-                                    youtubeUrl: row['Video_YouTube_URL'] || `https://youtu.be/${rawVideoId}`,
-                                    videoId: rawVideoId.trim(),
-                                    playlistUrl: row['Playlist_ID_URL'] || '#',
-                                    driveUrl: row['Drive_URL'] || '#',
-                                    imageUrl: rawImageUrl.trim(),
-                                    duration: row['Duration'] || '00:00',
-                                    date: row['Publish_Date'] || row['Date'] || '2026',
-                                    creator: rawCreator
-                                };
-                            });
-
-                            if (parsed.length > 0) {
-                                allVideos = parsed;
-                                showToast("อัปเดตข้อมูลเรียบร้อยแล้ว");
-                                initApp();
-                            }
-                        } catch (err) {
-                            console.warn("CSV format warning, using fallback data:", err);
-                        }
-                    }
-                },
-                error: function(err) {
-                    refreshIcon.classList.remove('fa-spin');
-                    initApp();
+                if (!error && data) {
+                    role = (data.role === 'admin' || data.is_admin) ? 'staff' : 'student';
+                    if (data.full_name) name = data.full_name;
                 }
-            });
+            }
+
+            currentUser = {
+                id: authUser.id,
+                email: authUser.email,
+                role: role,
+                name: name
+            };
+
+            updateUserInterface();
         }
 
-        function initApp() {
-            populateFilterDropdowns();
-            applyFilters();
-        }
+        function updateUserInterface() {
+            if (currentUser) {
+                document.getElementById('loginBtn').classList.add('hidden');
+                document.getElementById('userProfileArea').classList.remove('hidden');
+                document.getElementById('userDisplayName').innerText = currentUser.name;
 
-        function populateFilterDropdowns() {
-            const currentCat = categorySelect.value;
-            const currentTag = tagSelect.value;
+                const badge = document.getElementById('userRoleBadge');
+                const staffBtn = document.getElementById('staffAdminBtn');
 
-            // Categories
-            const categories = [...new Set(allVideos.map(v => v.category).filter(Boolean))];
-            categorySelect.innerHTML = '<option value="ALL">หมวดหมู่ทั้งหมด</option>' + 
-                categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
-
-            // Tags
-            const tags = [...new Set(allVideos.map(v => v.tag).filter(Boolean))];
-            tagSelect.innerHTML = '<option value="ALL">แท็กเนื้อหาทั้งหมด</option>' + 
-                tags.map(t => `<option value="${t}">${t}</option>`).join('');
-
-            if (categories.includes(currentCat)) categorySelect.value = currentCat;
-            if (tags.includes(currentTag)) tagSelect.value = currentTag;
-        }
-
-        function applyFilters() {
-            const selectedCategory = categorySelect.value;
-            const selectedTag = tagSelect.value;
-            const searchQuery = searchInput.value.toLowerCase().trim();
-
-            // Filter videos based on category, tag & search query
-            filteredVideos = allVideos.filter(video => {
-                const matchesCategory = selectedCategory === "ALL" || video.category === selectedCategory;
-                const matchesTag = selectedTag === "ALL" || video.tag === selectedTag;
-
-                const matchesSearch = !searchQuery || 
-                    video.title.toLowerCase().includes(searchQuery) || 
-                    video.category.toLowerCase().includes(searchQuery) || 
-                    video.tag.toLowerCase().includes(searchQuery) ||
-                    video.id.toLowerCase().includes(searchQuery) ||
-                    (video.date && video.date.toLowerCase().includes(searchQuery));
-
-                return matchesCategory && matchesTag && matchesSearch;
-            });
-
-            // Sorting logic
-            const isFilterSelected = selectedCategory !== "ALL" || selectedTag !== "ALL";
-
-            filteredVideos.sort((a, b) => {
-                const numA = parseInt((a.id || '').replace(/\D/g, ''), 10);
-                const numB = parseInt((b.id || '').replace(/\D/g, ''), 10);
-                
-                if (isFilterSelected) {
-                    if (!isNaN(numA) && !isNaN(numB) && numA !== numB) {
-                        return numA - numB;
-                    }
-                    return (a.id || '').localeCompare(b.id || '', undefined, { numeric: true, sensitivity: 'base' });
+                if (currentUser.role === 'staff') {
+                    badge.innerText = "เจ้าหน้าที่ / แอดมิน";
+                    badge.className = "text-xs px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-400/30";
+                    staffBtn.classList.remove('hidden');
                 } else {
-                    if (!isNaN(numA) && !isNaN(numB) && numA !== numB) {
-                        return numB - numA;
-                    }
-                    return (b.id || '').localeCompare(a.id || '', undefined, { numeric: true, sensitivity: 'base' });
+                    badge.innerText = "นักศึกษา";
+                    badge.className = "text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30";
+                    staffBtn.classList.add('hidden');
                 }
+            } else {
+                document.getElementById('loginBtn').classList.remove('hidden');
+                document.getElementById('userProfileArea').classList.add('hidden');
+                document.getElementById('staffAdminBtn').classList.add('hidden');
+            }
+        }
+
+        // Fetch Units and Related Data from Supabase
+        async function fetchUnitsData() {
+            if (!supabaseClient) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('units')
+                    .select(`
+                        id,
+                        title,
+                        description,
+                        order_index,
+                        created_at,
+                        unit_videos (id, title, video_url, order_index),
+                        pre_test_questions (id, question, options, correct_answer),
+                        post_test_questions (id, question, options, correct_answer)
+                    `)
+                    .order('order_index', { ascending: true })
+                    .order('id', { ascending: true });
+
+                if (!error && data) {
+                    allUnits = data.map(u => ({
+                        id: u.id,
+                        title: u.title,
+                        description: u.description || '',
+                        order_index: u.order_index || 1,
+                        created_at: u.created_at,
+                        youtube_url: u.unit_videos && u.unit_videos.length > 0 ? u.unit_videos[0].video_url : '',
+                        cover_url: getUnitCoverImage(u.id, u.title),
+                        category: detectCategory(u.title),
+                        pre_test: (u.pre_test_questions || []).map(q => ({
+                            id: q.id,
+                            q: q.question,
+                            choices: Array.isArray(q.options) ? q.options : JSON.parse(q.options || '[]'),
+                            answer: q.correct_answer
+                        })),
+                        post_test: (u.post_test_questions || []).map(q => ({
+                            id: q.id,
+                            q: q.question,
+                            choices: Array.isArray(q.options) ? q.options : JSON.parse(q.options || '[]'),
+                            answer: q.correct_answer
+                        }))
+                    }));
+                } else {
+                    console.warn("Supabase fetch failed or empty:", error);
+                }
+            } catch (err) {
+                console.error("Error fetching units:", err);
+            }
+
+            filteredUnits = [...allUnits];
+            renderCurrentView();
+        }
+
+        function detectCategory(title) {
+            if (!title) return 'COMP';
+            if (title.includes('วิศวกรรม') || title.includes('ไฟฟ้า') || title.includes('วงจร')) return 'ENG';
+            if (title.includes('ทักษะ') || title.includes('สื่อสาร') || title.includes('ทั่วไป')) return 'GEN';
+            return 'COMP';
+        }
+
+        function getUnitCoverImage(id, title) {
+            const covers = [
+                "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=600&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=600&auto=format&fit=crop&q=80"
+            ];
+            const idx = (typeof id === 'number' ? id : 1) % covers.length;
+            return covers[idx];
+        }
+
+        function switchTab(tabName) {
+            const publicHomeView = document.getElementById('publicHomeView');
+            const studentView = document.getElementById('studentView');
+            const staffView = document.getElementById('staffView');
+
+            publicHomeView.classList.add('hidden');
+            studentView.classList.add('hidden');
+            staffView.classList.add('hidden');
+
+            if (tabName === 'publicHome') {
+                publicHomeView.classList.remove('hidden');
+            } else if (tabName === 'studentView') {
+                studentView.classList.remove('hidden');
+            } else if (tabName === 'staffView') {
+                staffView.classList.remove('hidden');
+            }
+
+            renderCurrentView();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const category = document.getElementById('filterCategory').value;
+
+            filteredUnits = allUnits.filter(unit => {
+                const matchQuery = unit.title.toLowerCase().includes(query) || (unit.description && unit.description.toLowerCase().includes(query));
+                const matchCategory = (category === 'ALL') || (unit.category === category);
+                return matchQuery && matchCategory;
             });
 
             currentPage = 1;
-            renderPaginatedView();
+            renderCurrentView();
         }
 
-        function goToPage(page) {
-            const itemsPerPage = getItemsPerPage();
-            const totalPages = Math.ceil(filteredVideos.length / itemsPerPage) || 1;
-            if (page < 1 || page > totalPages) return;
-            
-            currentPage = page;
-            renderPaginatedView();
-            
-            document.getElementById('videoGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        function renderCurrentView() {
+            renderPublicUnits();
+            renderStudentUnits();
+            renderStaffTable();
         }
 
-        function renderPaginatedView() {
-            const itemsPerPage = getItemsPerPage();
-            const totalItems = filteredVideos.length;
-            resultCount.innerText = totalItems;
+        function renderPublicUnits() {
+            const container = document.getElementById('publicUnitsGrid');
+            container.innerHTML = '';
 
-            if (totalItems === 0) {
-                videoGrid.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                paginationContainer.classList.add('hidden');
+            const publicDisplayUnits = filteredUnits.slice(0, 9);
+
+            if (publicDisplayUnits.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                        <i class="fa-solid fa-folder-open text-4xl mb-2 text-slate-300"></i>
+                        <p class="text-sm">ยังไม่มีบทเรียนในระบบ หรือไม่พบข้อมูลตามคำค้นหา</p>
+                    </div>`;
                 return;
             }
 
-            emptyState.classList.add('hidden');
-            paginationContainer.classList.remove('hidden');
+            publicDisplayUnits.forEach((unit, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-catalog border border-slate-200/80 transition duration-300 flex flex-col group cursor-pointer relative";
+                card.onclick = () => handleUnitCardClick(unit);
 
-            const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+                card.innerHTML = `
+                    <div class="relative h-44 overflow-hidden bg-slate-900">
+                        <img src="${unit.cover_url}" alt="${unit.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
+                        <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-md border border-amber-500/30">
+                            ${unit.category}
+                        </span>
+                        <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                            <span class="px-3 py-1.5 rounded-full bg-amber-500 text-slate-950 font-bold text-xs shadow-lg flex items-center space-x-1">
+                                <i class="fa-solid ${currentUser ? 'fa-play' : 'fa-lock'}"></i>
+                                <span>${currentUser ? 'เข้าสู่บทเรียน' : 'ต้องเข้าสู่ระบบ'}</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex-grow flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 group-hover:text-amber-700 transition">
+                                ${unit.title}
+                            </h3>
+                            <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">
+                                ${unit.description || 'ไม่มีคำอธิบายเพิ่มเติม'}
+                            </p>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                            <span class="flex items-center space-x-1">
+                                <i class="fa-solid fa-circle-play text-amber-600"></i>
+                                <span>มีวิดีโอ & แบบทดสอบ</span>
+                            </span>
+                            <span class="font-semibold text-amber-700">Unit #${unit.id}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderStudentUnits() {
+            const container = document.getElementById('studentUnitsGrid');
+            container.innerHTML = '';
+
+            const total = filteredUnits.length;
+            const totalPages = Math.ceil(total / ITEMS_PER_PAGE) || 1;
+
             if (currentPage > totalPages) currentPage = totalPages;
 
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-            const currentSlice = filteredVideos.slice(startIndex, endIndex);
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, total);
+            const pageUnits = filteredUnits.slice(startIndex, endIndex);
 
-            renderVideoCards(currentSlice);
-            renderPaginationControls(totalPages);
-        }
+            document.getElementById('pageStart').innerText = total === 0 ? 0 : startIndex + 1;
+            document.getElementById('pageEnd').innerText = endIndex;
+            document.getElementById('totalUnitsCount').innerText = total;
 
-        function renderVideoCards(videos) {
-            videoGrid.innerHTML = videos.map(video => {
-                const fallbackThumb = `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
-                const displayCreator = video.creator || DEFAULT_CREATOR_NAME;
-                
-                return `
-                <div class="glass-card rounded-2xl overflow-hidden group flex flex-col justify-between">
-                    <div>
-                        <!-- Thumbnail Frame -->
-                        <div class="relative w-full pt-[56.25%] overflow-hidden bg-gray-950 cursor-pointer" onclick="openVideoModal('${video.videoId}', '${escapeHtml(video.title)}', '${escapeHtml(video.category)}', '${video.duration}', '${video.date}', '${escapeHtml(displayCreator)}', '${video.youtubeUrl}', '${video.playlistUrl}')">
-                            <img src="${video.imageUrl}" 
-                                 onerror="this.onerror=null; this.src='${fallbackThumb}';" 
-                                 alt="${escapeHtml(video.title)}" 
-                                 class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100">
-                            
-                            <!-- Vignette Overlay -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/30 to-transparent"></div>
-                            
-                            <!-- Glowing Play Icon -->
-                            <div class="absolute inset-0 flex items-center justify-center opacity-85 group-hover:opacity-100 transition-opacity">
-                                <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:scale-110 transition-transform pl-0.5">
-                                    <i class="fa-solid fa-play text-lg"></i>
-                                </div>
+            if (pageUnits.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                        <i class="fa-solid fa-book-open text-4xl mb-2 text-slate-300"></i>
+                        <p class="text-sm">ไม่พบบทเรียนที่คุณกำลังค้นหา</p>
+                    </div>`;
+            } else {
+                pageUnits.forEach((unit) => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-catalog border border-slate-200/80 transition duration-300 flex flex-col group cursor-pointer";
+                    card.onclick = () => openUnitViewerModal(unit);
+
+                    card.innerHTML = `
+                        <div class="relative h-44 overflow-hidden bg-slate-900">
+                            <img src="${unit.cover_url}" alt="${unit.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
+                            <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-emerald-300 text-[10px] font-bold px-2.5 py-1 rounded-md border border-emerald-500/30">
+                                ${unit.category}
+                            </span>
+                        </div>
+                        <div class="p-4 flex-grow flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 group-hover:text-emerald-700 transition">
+                                    ${unit.title}
+                                </h3>
+                                <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">
+                                    ${unit.description || 'ไม่มีคำอธิบายเพิ่มเติม'}
+                                </p>
                             </div>
-
-                            <!-- Duration Badge -->
-                            <div class="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-sm border border-gray-700/80 text-[11px] font-mono text-gray-200 flex items-center gap-1 z-10">
-                                <i class="fa-regular fa-clock text-cyan-400"></i> ${video.duration}
-                            </div>
-
-                            <!-- Category Badge -->
-                            <div class="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-md bg-gray-900/90 backdrop-blur-sm border border-gray-700 text-cyan-400 text-[10px] font-semibold z-10">
-                                ${escapeHtml(video.category)}
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-emerald-600">
+                                <span>เข้าเรียนบทเรียนนี้</span>
+                                <i class="fa-solid fa-circle-arrow-right text-base group-hover:translate-x-1 transition"></i>
                             </div>
                         </div>
-
-                        <!-- Content Body -->
-                        <div class="p-4 space-y-2.5">
-                            <!-- Tag Chip & Code -->
-                            <div class="flex items-center justify-between text-[11px]">
-                                <span class="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-medium">
-                                    🏷️ ${escapeHtml(video.tag)}
-                                </span>
-                                <span class="text-gray-400 font-mono text-[11px] font-bold bg-gray-900/80 px-2 py-0.5 rounded border border-gray-800">${video.id}</span>
-                            </div>
-
-                            <!-- Video Title -->
-                            <h3 onclick="openVideoModal('${video.videoId}', '${escapeHtml(video.title)}', '${escapeHtml(video.category)}', '${video.duration}', '${video.date}', '${escapeHtml(displayCreator)}', '${video.youtubeUrl}', '${video.playlistUrl}')" 
-                                class="text-sm font-semibold text-white group-hover:text-cyan-300 transition-colors line-clamp-2 cursor-pointer leading-snug">
-                                ${escapeHtml(video.title)}
-                            </h3>
-                        </div>
-                    </div>
-
-                    <!-- Footer Details & Action -->
-                    <div class="px-4 pb-4 pt-3 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
-                        <div class="flex items-center gap-1.5 text-[11px]">
-                            <i class="fa-solid fa-user-circle text-gray-500"></i>
-                            <span class="truncate max-w-[120px] text-gray-400 font-medium">ชาคริต เทียนทอง</span>
-                        </div>
-                        <button onclick="openVideoModal('${video.videoId}', '${escapeHtml(video.title)}', '${escapeHtml(video.category)}', '${video.duration}', '${video.date}', '${escapeHtml(displayCreator)}', '${video.youtubeUrl}', '${video.playlistUrl}')" 
-                            class="px-3.5 py-1.5 rounded-xl bg-gray-900 hover:bg-cyan-600/20 text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 transition-all text-xs font-semibold flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-play"></i> รับชม
-                        </button>
-                    </div>
-                </div>
-            `;
-            }).join('');
-        }
-
-        function renderPaginationControls(totalPages) {
-            let buttonsHtml = '';
-
-            // Previous Button
-            buttonsHtml += `
-                <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="opacity-40 cursor-not-allowed px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-gray-500 text-xs"' : 'class="px-3 py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-white text-xs transition-colors"'}>
-                    <i class="fa-solid fa-chevron-left"></i> ย้อนกลับ
-                </button>
-            `;
-
-            // Numeric Page Buttons
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === currentPage) {
-                    buttonsHtml += `
-                        <button class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white font-bold text-xs shadow-md shadow-cyan-500/20 border border-cyan-400/40">
-                            ${i}
-                        </button>
                     `;
+                    container.appendChild(card);
+                });
+            }
+
+            // Pagination Controls
+            const paginationContainer = document.getElementById('paginationButtons');
+            paginationContainer.innerHTML = '';
+
+            const prevBtn = document.createElement('button');
+            prevBtn.className = `w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold transition ${currentPage === 1 ? 'text-slate-300 cursor-not-allowed bg-slate-100' : 'text-slate-700 hover:bg-slate-200 bg-slate-100'}`;
+            prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderCurrentView(); } };
+            paginationContainer.appendChild(prevBtn);
+
+            for (let p = 1; p <= totalPages; p++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `w-9 h-9 rounded-lg text-xs font-bold transition ${p === currentPage ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-200 bg-slate-100'}`;
+                pageBtn.innerText = p;
+                pageBtn.onclick = () => { currentPage = p; renderCurrentView(); };
+                paginationContainer.appendChild(pageBtn);
+            }
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = `w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold transition ${currentPage === totalPages || totalPages === 0 ? 'text-slate-300 cursor-not-allowed bg-slate-100' : 'text-slate-700 hover:bg-slate-200 bg-slate-100'}`;
+            nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+            nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+            nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderCurrentView(); } };
+            paginationContainer.appendChild(nextBtn);
+        }
+
+        function renderStaffTable() {
+            const tbody = document.getElementById('staffTableBody');
+            tbody.innerHTML = '';
+
+            if (allUnits.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-400">
+                            ยังไม่มีบทเรียนในระบบ Supabase กดปุ่ม "+ เพิ่มบทเรียนใหม่" ด้านบนเพื่อเริ่มสร้าง
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            allUnits.forEach((unit, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition border-b border-slate-100";
+
+                const preCount = unit.pre_test ? unit.pre_test.length : 0;
+                const postCount = unit.post_test ? unit.post_test.length : 0;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4">
+                        <span class="text-xs font-bold text-slate-500">#${unit.id}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <p class="font-semibold text-slate-800 line-clamp-1">${unit.title}</p>
+                        <p class="text-xs text-slate-400 line-clamp-1">${unit.description || '-'}</p>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                            ${unit.category}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        ${unit.youtube_url ? `
+                            <a href="${unit.youtube_url}" target="_blank" class="inline-flex items-center space-x-1 text-xs text-red-600 hover:underline">
+                                <i class="fa-brands fa-youtube text-base"></i>
+                                <span>ดูคลิป</span>
+                            </a>
+                        ` : '<span class="text-xs text-slate-400">-</span>'}
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="text-xs font-semibold text-slate-600">Pre: ${preCount} ข้อ | Post: ${postCount} ข้อ</span>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="editUnit(${unit.id})" class="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 text-xs font-semibold transition" title="แก้ไข">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="deleteUnit(${unit.id})" class="px-2.5 py-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 text-xs font-semibold transition" title="ลบ">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function handleUnitCardClick(unit) {
+            if (!currentUser) {
+                openAuthGuardModal();
+            } else {
+                openUnitViewerModal(unit);
+            }
+        }
+
+        function togglePasswordVisibility(inputId, eyeIconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(eyeIconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function openLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
+        function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
+        function openAuthGuardModal() { document.getElementById('authGuardModal').classList.remove('hidden'); }
+        function closeAuthGuardModal() { document.getElementById('authGuardModal').classList.add('hidden'); }
+
+        function setAuthRole(role) {
+            currentRoleSelection = role;
+            const studentBtn = document.getElementById('roleStudentBtn');
+            const staffBtn = document.getElementById('roleStaffBtn');
+
+            if (role === 'student') {
+                studentBtn.className = "py-2 rounded-lg text-sm font-semibold transition bg-white text-amber-700 shadow-sm flex items-center justify-center space-x-1.5";
+                staffBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
+            } else {
+                staffBtn.className = "py-2 rounded-lg text-sm font-semibold transition bg-white text-rose-700 shadow-sm flex items-center justify-center space-x-1.5";
+                studentBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
+            }
+        }
+
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            const modalTitle = document.getElementById('authModalTitle');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const toggleText = document.getElementById('authToggleText');
+            const toggleBtn = document.getElementById('authToggleBtn');
+            const nameContainer = document.getElementById('displayNameContainer');
+
+            if (isSignUpMode) {
+                modalTitle.innerText = "สมัครสมาชิก CatalogView";
+                submitBtn.innerText = "ลงทะเบียนสมัครสมาชิก";
+                toggleText.innerText = "มีบัญชีผู้ใช้งานอยู่แล้ว?";
+                toggleBtn.innerText = "เข้าสู่ระบบ";
+                nameContainer.classList.remove('hidden');
+            } else {
+                modalTitle.innerText = "เข้าสู่ระบบ CatalogView";
+                submitBtn.innerText = "เข้าสู่ระบบ";
+                toggleText.innerText = "ยังไม่มีบัญชีสมาชิก?";
+                toggleBtn.innerText = "สมัครสมาชิก";
+                nameContainer.classList.add('hidden');
+            }
+        }
+
+        function showForgotPasswordPrompt() {
+            const email = document.getElementById('authEmail').value;
+            showToast(`ระบบได้ส่งคำขอรีเซ็ตรหัสผ่านไปยัง ${email || 'อีเมลของคุณ'} เรียบร้อยแล้ว`, 'info');
+        }
+
+        // Supabase Auth Submit Handling
+        async function handleAuthSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const displayName = document.getElementById('authDisplayName').value || email.split('@')[0];
+
+            if (!supabaseClient) return;
+
+            try {
+                if (isSignUpMode) {
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: { data: { full_name: displayName } }
+                    });
+
+                    if (error) throw error;
+
+                    if (data.user) {
+                        // Upsert into elearning_users table
+                        await supabaseClient.from('elearning_users').upsert({
+                            id: data.user.id,
+                            email: email,
+                            full_name: displayName,
+                            role: currentRoleSelection === 'staff' ? 'admin' : 'student',
+                            is_admin: currentRoleSelection === 'staff'
+                        });
+
+                        await loadUserProfile(data.user);
+                        showToast(`สมัครสมาชิกสำเร็จ! ยินดีต้อนรับคุณ ${displayName}`, 'success');
+                    }
                 } else {
-                    buttonsHtml += `
-                        <button onclick="goToPage(${i})" class="w-9 h-9 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-cyan-400 font-semibold text-xs transition-colors">
-                            ${i}
-                        </button>
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+
+                    if (error) throw error;
+
+                    if (data.user) {
+                        await loadUserProfile(data.user);
+                        showToast(`เข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ ${currentUser.name}`, 'success');
+                    }
+                }
+
+                closeLoginModal();
+
+                if (currentUser.role === 'staff') {
+                    switchTab('staffView');
+                } else {
+                    switchTab('studentView');
+                }
+            } catch (err) {
+                console.error("Auth Error:", err);
+                showToast("เกิดข้อผิดพลาด: " + (err.message || "ไม่สามารถทำรายการได้"), "error");
+            }
+        }
+
+        async function handleLogout() {
+            if (supabaseClient) {
+                await supabaseClient.auth.signOut();
+            }
+            currentUser = null;
+            updateUserInterface();
+            showToast("ออกจากระบบเรียบร้อยแล้ว", 'info');
+            switchTab('publicHome');
+        }
+
+        function openUnitViewerModal(unit) {
+            activeUnitForViewer = unit;
+            document.getElementById('modalUnitTitle').innerText = unit.title;
+            document.getElementById('modalUnitCategory').innerText = unit.category;
+            document.getElementById('modalUnitDescription').innerText = unit.description || 'ไม่มีรายละเอียดเพิ่มเติม';
+
+            const youtubeEmbedUrl = getYoutubeEmbedUrl(unit.youtube_url);
+            document.getElementById('youtubeIframe').src = youtubeEmbedUrl;
+
+            renderQuizQuestions('pretest', unit.pre_test || []);
+            renderQuizQuestions('posttest', unit.post_test || []);
+
+            document.getElementById('pretestScoreBadge').classList.add('hidden');
+            document.getElementById('posttestScoreBadge').classList.add('hidden');
+
+            switchViewerTab('video');
+            document.getElementById('unitViewerModal').classList.remove('hidden');
+        }
+
+        function closeUnitViewerModal() {
+            document.getElementById('youtubeIframe').src = '';
+            document.getElementById('unitViewerModal').classList.add('hidden');
+        }
+
+        function switchViewerTab(tab) {
+            const vTab = document.getElementById('viewerTabVideo');
+            const pTab = document.getElementById('viewerTabPretest');
+            const oTab = document.getElementById('viewerTabPosttest');
+
+            const btnV = document.getElementById('tabBtnVideo');
+            const btnP = document.getElementById('tabBtnPretest');
+            const btnO = document.getElementById('tabBtnPosttest');
+
+            vTab.classList.add('hidden');
+            pTab.classList.add('hidden');
+            oTab.classList.add('hidden');
+
+            btnV.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2";
+            btnP.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2";
+            btnO.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2";
+
+            if (tab === 'video') {
+                vTab.classList.remove('hidden');
+                btnV.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center space-x-2";
+            } else if (tab === 'pretest') {
+                pTab.classList.remove('hidden');
+                btnP.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-blue-600 text-blue-700 flex items-center space-x-2";
+            } else if (tab === 'posttest') {
+                oTab.classList.remove('hidden');
+                btnO.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2";
+            }
+        }
+
+        function renderQuizQuestions(type, questions) {
+            const container = document.getElementById(type === 'pretest' ? 'pretestQuestionsContainer' : 'posttestQuestionsContainer');
+            container.innerHTML = '';
+
+            if (questions.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-slate-200">
+                        ยังไม่มีแบบทดสอบสำหรับบทเรียนนี้
+                    </div>`;
+                return;
+            }
+
+            questions.forEach((q, qIndex) => {
+                const qBox = document.createElement('div');
+                qBox.className = "p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3";
+
+                let choicesHtml = '';
+                q.choices.forEach((cText, cIndex) => {
+                    choicesHtml += `
+                        <label class="flex items-center space-x-3 p-2.5 rounded-lg bg-white border border-slate-200 hover:border-amber-400 cursor-pointer text-xs sm:text-sm transition">
+                            <input type="radio" name="${type}_q${qIndex}" value="${cIndex}" class="text-amber-600 focus:ring-amber-500">
+                            <span class="text-slate-700">${cText}</span>
+                        </label>
                     `;
+                });
+
+                qBox.innerHTML = `
+                    <p class="font-bold text-slate-800 text-sm">ข้อที่ ${qIndex + 1}: ${q.q}</p>
+                    <div class="space-y-2">
+                        ${choicesHtml}
+                    </div>
+                `;
+                container.appendChild(qBox);
+            });
+        }
+
+        // Grade Quiz and Save Results to quiz_results table
+        async function gradeQuiz(type) {
+            if (!activeUnitForViewer) return;
+            const questions = type === 'pretest' ? (activeUnitForViewer.pre_test || []) : (activeUnitForViewer.post_test || []);
+            if (questions.length === 0) return;
+
+            let score = 0;
+            questions.forEach((q, qIndex) => {
+                const selected = document.querySelector(`input[name="${type}_q${qIndex}"]:checked`);
+                if (selected && parseInt(selected.value) === q.answer) {
+                    score++;
+                }
+            });
+
+            const badge = document.getElementById(type === 'pretest' ? 'pretestScoreBadge' : 'posttestScoreBadge');
+            badge.innerText = `คะแนนที่ได้: ${score} / ${questions.length}`;
+            badge.classList.remove('hidden');
+
+            // Save result to quiz_results in Supabase if logged in
+            if (currentUser && currentUser.id && supabaseClient) {
+                try {
+                    await supabaseClient.from('quiz_results').insert([{
+                        user_id: currentUser.id,
+                        unit_id: activeUnitForViewer.id,
+                        test_type: type === 'pretest' ? 'pre' : 'post',
+                        score: score,
+                        total_questions: questions.length
+                    }]);
+                } catch (e) {
+                    console.warn("Quiz result save error:", e);
                 }
             }
 
-            // Next Button
-            buttonsHtml += `
-                <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="opacity-40 cursor-not-allowed px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-gray-500 text-xs"' : 'class="px-3 py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-white text-xs transition-colors"'}>
-                    ถัดไป <i class="fa-solid fa-chevron-right"></i>
-                </button>
-            `;
-
-            paginationButtons.innerHTML = buttonsHtml;
+            showToast(`คุณทำแบบทดสอบ${type === 'pretest' ? 'ก่อนเรียน' : 'หลังเรียน'} ได้ ${score} จาก ${questions.length} คะแนน`, 'success');
         }
 
-        searchInput.addEventListener('input', (e) => {
-            clearSearchBtn.classList.toggle('hidden', !e.target.value);
-            applyFilters();
-        });
-
-        function clearSearch() {
-            searchInput.value = '';
-            clearSearchBtn.classList.add('hidden');
-            applyFilters();
+        function getYoutubeEmbedUrl(url) {
+            if (!url) return '';
+            let videoId = '';
+            if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split('?')[0];
+            } else if (url.includes('watch?v=')) {
+                videoId = url.split('watch?v=')[1].split('&')[0];
+            } else if (url.includes('embed/')) {
+                return url;
+            }
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
         }
 
-        function resetAllFilters() {
-            categorySelect.value = 'ALL';
-            tagSelect.value = 'ALL';
-            clearSearch();
+        function openUnitFormModal(unit = null) {
+            document.getElementById('editingUnitId').value = unit ? unit.id : '';
+            document.getElementById('staffFormModalTitle').innerText = unit ? `แก้ไขบทเรียน #${unit.id}` : 'เพิ่มบทเรียนใหม่';
+
+            document.getElementById('unitTitleInput').value = unit ? unit.title : '';
+            document.getElementById('unitCategoryInput').value = unit ? unit.category : 'COMP';
+            document.getElementById('unitDescriptionInput').value = unit ? unit.description : '';
+            document.getElementById('unitYoutubeInput').value = unit ? unit.youtube_url : '';
+            document.getElementById('unitOrderInput').value = unit ? (unit.order_index || 1) : (allUnits.length + 1);
+
+            pretestFormQuestions = unit && unit.pre_test ? JSON.parse(JSON.stringify(unit.pre_test)) : [];
+            posttestFormQuestions = unit && unit.post_test ? JSON.parse(JSON.stringify(unit.post_test)) : [];
+
+            renderStaffQuestionBuilder('pretest');
+            renderStaffQuestionBuilder('posttest');
+
+            switchStaffFormStep(1);
+            document.getElementById('unitFormModal').classList.remove('hidden');
         }
 
-        function openVideoModal(videoId, title, category, duration, date, creator, youtubeUrl, playlistUrl) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalCategory').innerText = category;
-            document.getElementById('modalDuration').innerText = duration;
-            document.getElementById('modalDate').innerText = date;
-            
-            document.getElementById('modalYouTubeBtn').href = youtubeUrl;
-            document.getElementById('modalPlaylistBtn').href = playlistUrl || '#';
-            
-            document.getElementById('modalIframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-
-            const modal = document.getElementById('videoModal');
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+        function closeUnitFormModal() {
+            document.getElementById('unitFormModal').classList.add('hidden');
         }
 
-        function closeVideoModal() {
-            const modal = document.getElementById('videoModal');
-            document.getElementById('modalIframe').src = '';
-            modal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
+        function switchStaffFormStep(step) {
+            const s1 = document.getElementById('staffFormStep1');
+            const s2 = document.getElementById('staffFormStep2');
+            const s3 = document.getElementById('staffFormStep3');
 
-        function handleLineButtonClick() {
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile) {
-                window.open('https://line.me/R/ti/p/%40869teiib', '_blank');
-            } else {
-                document.getElementById('lineModal').classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
+            const btn1 = document.getElementById('staffStepBtn1');
+            const btn2 = document.getElementById('staffStepBtn2');
+            const btn3 = document.getElementById('staffStepBtn3');
+
+            s1.classList.add('hidden');
+            s2.classList.add('hidden');
+            s3.classList.add('hidden');
+
+            btn1.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5";
+            btn2.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5";
+            btn3.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5";
+
+            if (step === 1) {
+                s1.classList.remove('hidden');
+                btn1.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center space-x-1.5";
+            } else if (step === 2) {
+                s2.classList.remove('hidden');
+                btn2.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-blue-100 text-blue-800 border border-blue-300 flex items-center justify-center space-x-1.5";
+            } else if (step === 3) {
+                s3.classList.remove('hidden');
+                btn3.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center space-x-1.5";
             }
         }
 
-        function closeLineModal() {
-            document.getElementById('lineModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
+        function addQuestion(type) {
+            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
+            list.push({
+                q: "พิมพ์คำถามใหม่...",
+                choices: ["ตัวเลือก ก", "ตัวเลือก ข", "ตัวเลือก ค", "ตัวเลือก ง"],
+                answer: 0
+            });
+            renderStaffQuestionBuilder(type);
         }
 
-        function copyLineId() {
-            const lineId = "@869teiib";
-            const tempInput = document.createElement("input");
-            tempInput.value = lineId;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
+        function removeQuestion(type, index) {
+            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
+            list.splice(index, 1);
+            renderStaffQuestionBuilder(type);
+        }
 
-            const copyBtnText = document.getElementById('copyBtnText');
-            copyBtnText.innerText = "คัดลอกแล้ว!";
-            showToast("คัดลอก LINE ID: @869teiib เรียบร้อยแล้ว");
-            
+        function copyPretestToPosttest() {
+            posttestFormQuestions = JSON.parse(JSON.stringify(pretestFormQuestions));
+            renderStaffQuestionBuilder('posttest');
+            showToast("คัดลอกข้อสอบจาก Pre-test มายัง Post-test เรียบร้อยแล้ว", 'info');
+        }
+
+        function renderStaffQuestionBuilder(type) {
+            const container = document.getElementById(type === 'pretest' ? 'staffPretestContainer' : 'staffPosttestContainer');
+            const questions = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
+            container.innerHTML = '';
+
+            if (questions.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        ยังไม่มีข้อสอบในส่วนนี้ กดปุ่ม "+ เพิ่มข้อสอบ" ด้านบน
+                    </div>`;
+                return;
+            }
+
+            questions.forEach((qItem, qIndex) => {
+                const card = document.createElement('div');
+                card.className = "p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 relative";
+
+                let choicesHtml = '';
+                qItem.choices.forEach((cText, cIndex) => {
+                    choicesHtml += `
+                        <div class="flex items-center space-x-2">
+                            <input type="radio" name="correct_${type}_${qIndex}" ${qItem.answer === cIndex ? 'checked' : ''} onchange="updateQuestionAnswer('${type}', ${qIndex}, ${cIndex})" class="text-amber-600 focus:ring-amber-500" title="เลือกเป็นข้อเฉลย">
+                            <input type="text" value="${cText}" onchange="updateQuestionChoice('${type}', ${qIndex}, ${cIndex}, this.value)" class="flex-grow px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-700">ข้อที่ ${qIndex + 1}</span>
+                        <button type="button" onclick="removeQuestion('${type}', ${qIndex})" class="text-xs text-red-500 hover:text-red-700 font-semibold">
+                            <i class="fa-solid fa-trash mr-1"></i> ลบข้อนี้
+                        </button>
+                    </div>
+                    <div>
+                        <input type="text" value="${qItem.q}" onchange="updateQuestionTitle('${type}', ${qIndex}, this.value)" placeholder="พิมพ์โจทย์คำถาม..." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                    <div class="space-y-1.5 pt-1">
+                        <span class="text-[11px] font-semibold text-slate-500">ตัวเลือกตอบ (ติ๊กปุ่มวงกลมหน้าข้อเพื่อเลือกเป็นเฉลยข้อที่ถูกต้อง):</span>
+                        ${choicesHtml}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateQuestionTitle(type, qIndex, val) {
+            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
+            list[qIndex].q = val;
+        }
+
+        function updateQuestionChoice(type, qIndex, cIndex, val) {
+            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
+            list[qIndex].choices[cIndex] = val;
+        }
+
+        function updateQuestionAnswer(type, qIndex, cIndex) {
+            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
+            list[qIndex].answer = cIndex;
+        }
+
+        // Save Unit directly to Supabase Tables (units, unit_videos, pre_test_questions, post_test_questions)
+        async function handleSaveUnit(e) {
+            e.preventDefault();
+            const id = document.getElementById('editingUnitId').value;
+            const title = document.getElementById('unitTitleInput').value;
+            const description = document.getElementById('unitDescriptionInput').value;
+            const youtube_url = document.getElementById('unitYoutubeInput').value;
+            const order_index = parseInt(document.getElementById('unitOrderInput').value) || 1;
+
+            if (!supabaseClient) {
+                showToast("ไม่สามารถเชื่อมต่อ Supabase ได้", "error");
+                return;
+            }
+
+            try {
+                let unitId = id;
+
+                if (id) {
+                    // Update existing unit
+                    const { error: unitErr } = await supabaseClient
+                        .from('units')
+                        .update({ title, description, order_index })
+                        .eq('id', id);
+
+                    if (unitErr) throw unitErr;
+                } else {
+                    // Insert new unit
+                    const { data: newUnit, error: unitErr } = await supabaseClient
+                        .from('units')
+                        .insert([{ title, description, order_index }])
+                        .select()
+                        .single();
+
+                    if (unitErr) throw unitErr;
+                    unitId = newUnit.id;
+                }
+
+                // Handle unit_videos table
+                await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
+                if (youtube_url) {
+                    await supabaseClient.from('unit_videos').insert([{
+                        unit_id: unitId,
+                        title: title + " - Video",
+                        video_url: youtube_url,
+                        order_index: 1
+                    }]);
+                }
+
+                // Handle pre_test_questions table
+                await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
+                if (pretestFormQuestions.length > 0) {
+                    const preInsert = pretestFormQuestions.map(q => ({
+                        unit_id: unitId,
+                        question: q.q,
+                        options: q.choices,
+                        correct_answer: q.answer
+                    }));
+                    await supabaseClient.from('pre_test_questions').insert(preInsert);
+                }
+
+                // Handle post_test_questions table
+                await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
+                if (posttestFormQuestions.length > 0) {
+                    const postInsert = posttestFormQuestions.map(q => ({
+                        unit_id: unitId,
+                        question: q.q,
+                        options: q.choices,
+                        correct_answer: q.answer
+                    }));
+                    await supabaseClient.from('post_test_questions').insert(postInsert);
+                }
+
+                showToast("บันทึกข้อมูลบทเรียนลง Supabase เรียบร้อยแล้ว", "success");
+                await fetchUnitsData();
+                closeUnitFormModal();
+            } catch (err) {
+                console.error("Save error:", err);
+                showToast("เกิดข้อผิดพลาดในการบันทึก: " + (err.message || "กรุณาลองใหม่อีกครั้ง"), "error");
+            }
+        }
+
+        function editUnit(unitId) {
+            const unit = allUnits.find(u => u.id == unitId);
+            if (unit) {
+                openUnitFormModal(unit);
+            }
+        }
+
+        async function deleteUnit(unitId) {
+            if (!confirm("คุณแน่ใจหรือไม่ที่จะลบบทเรียนนี้ออกจากระบบ?")) return;
+
+            if (supabaseClient) {
+                try {
+                    const { error } = await supabaseClient.from('units').delete().eq('id', unitId);
+                    if (error) throw error;
+                    showToast("ลบบทเรียนออกจากฐานข้อมูลเรียบร้อยแล้ว", 'info');
+                    await fetchUnitsData();
+                } catch (err) {
+                    console.error("Delete error:", err);
+                    showToast("ไม่สามารถลบได้: " + err.message, 'error');
+                }
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            let bg = 'bg-slate-800 text-white';
+            let icon = 'fa-info-circle';
+
+            if (type === 'success') {
+                bg = 'bg-emerald-700 text-white';
+                icon = 'fa-circle-check';
+            } else if (type === 'error') {
+                bg = 'bg-red-700 text-white';
+                icon = 'fa-triangle-exclamation';
+            }
+
+            toast.className = `p-3.5 px-5 rounded-xl shadow-xl border border-white/20 text-xs sm:text-sm flex items-center space-x-2 transform transition-all duration-300 pointer-events-auto ${bg}`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${message}</span>`;
+
+            container.appendChild(toast);
             setTimeout(() => {
-                copyBtnText.innerText = "คัดลอก";
-            }, 2000);
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
         }
-
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = message;
-            toast.classList.remove('hidden');
-            toast.classList.add('flex');
-            
-            setTimeout(() => {
-                toast.classList.add('hidden');
-                toast.classList.remove('flex');
-            }, 3000);
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        }
-
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                renderPaginatedView();
-            }, 150);
-        });
-
-        window.onload = function() {
-            initApp();
-            fetchLiveData();
-        };
     </script>
 </body>
 </html>
