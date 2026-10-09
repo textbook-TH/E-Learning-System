@@ -61,7 +61,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
 
-    <!-- TOP NAVIGATION BAR -->
+    <!-- TOP NAVIGATION BAR WITH CAPSULE TOGGLE -->
     <header class="sticky top-0 z-40 bg-slate-900 text-white shadow-md border-b border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <!-- Brand Logo & Title -->
@@ -78,34 +78,24 @@
                 </div>
             </div>
 
-            <!-- Right Nav Links (Guest vs Logged In) -->
-            <nav id="navMenu" class="flex items-center space-x-3 sm:space-x-4">
-                <button onclick="switchTab('publicHome')" class="px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition flex items-center space-x-2">
-                    <i class="fa-solid fa-house"></i>
-                    <span class="hidden sm:inline">หน้าหลัก</span>
-                </button>
-                
-                <!-- Guest View Button -->
-                <button id="loginBtn" onclick="openLoginModal()" class="px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-md transition flex items-center space-x-2">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                    <span>เข้าสู่ระบบ</span>
-                </button>
+            <!-- CAPSULE NAVIGATION CONTAINER -->
+            <div class="flex items-center space-x-3">
+                <nav id="navCapsule" class="bg-slate-800/90 p-1.5 rounded-full border border-slate-700 shadow-inner flex items-center space-x-1">
+                    <!-- Capsule Buttons Injected via JavaScript -->
+                </nav>
 
-                <!-- User Profile Dropdown / Logged In State -->
-                <div id="userProfileArea" class="hidden flex items-center space-x-3">
+                <!-- User Profile Display & Logout Button -->
+                <div id="userProfileArea" class="hidden flex items-center space-x-2 pl-2 border-l border-slate-800">
                     <div class="text-right hidden md:block">
-                        <p id="userDisplayName" class="text-sm font-semibold text-amber-200">ชื่อผู้ใช้งาน</p>
-                        <span id="userRoleBadge" class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">นักศึกษา</span>
+                        <p id="userDisplayName" class="text-xs sm:text-sm font-semibold text-amber-200">ชื่อผู้ใช้งาน</p>
+                        <span id="userRoleBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">นักศึกษา</span>
                     </div>
-                    <button id="staffAdminBtn" onclick="switchTab('staffView')" class="hidden px-3 py-2 rounded-lg text-xs sm:text-sm bg-rose-900/60 hover:bg-rose-800 text-rose-100 border border-rose-500/40 transition">
-                        <i class="fa-solid fa-sliders mr-1"></i> จัดการบทเรียน
-                    </button>
-                    <button onclick="handleLogout()" class="px-3 py-2 rounded-lg text-xs sm:text-sm bg-red-800/80 hover:bg-red-700 text-white transition flex items-center space-x-1" title="ออกจากระบบ">
+                    <button onclick="handleLogout()" class="px-3 py-1.5 rounded-full bg-red-900/60 hover:bg-red-800 text-red-200 border border-red-500/40 text-xs font-medium transition flex items-center space-x-1" title="ออกจากระบบ">
                         <i class="fa-solid fa-power-off"></i>
                         <span class="hidden sm:inline">ออก</span>
                     </button>
                 </div>
-            </nav>
+            </div>
         </div>
     </header>
 
@@ -525,6 +515,7 @@
 
         // Global State
         let currentUser = null; // { id, email, role: 'student'|'staff', name }
+        let currentTab = 'publicHome'; // 'publicHome' | 'studentView' | 'staffView'
         let currentRoleSelection = 'student';
         let isSignUpMode = false;
 
@@ -542,6 +533,88 @@
             await fetchUnitsData();
             switchTab('publicHome');
         });
+
+        // Renders Capsule Navigation based on Auth state and active tab
+        function renderNavCapsule() {
+            const capsule = document.getElementById('navCapsule');
+            if (!capsule) return;
+
+            // Orange style for active button, subtle dark style for inactive button
+            const activeStyle = "bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold shadow-md rounded-full px-4 py-1.5 text-xs sm:text-sm transition-all duration-200 flex items-center space-x-1.5 cursor-pointer";
+            const inactiveStyle = "text-slate-300 hover:text-white hover:bg-white/10 font-medium rounded-full px-4 py-1.5 text-xs sm:text-sm transition-all duration-200 flex items-center space-x-1.5 cursor-pointer";
+
+            let html = '';
+
+            if (!currentUser) {
+                // Before Login: [ หน้าหลัก ] [ เข้าสู่ระบบ ]
+                const isHomeActive = currentTab === 'publicHome';
+                html = `
+                    <button onclick="switchTab('publicHome')" class="${isHomeActive ? activeStyle : inactiveStyle}">
+                        <i class="fa-solid fa-house"></i>
+                        <span>หน้าหลัก</span>
+                    </button>
+                    <button onclick="openLoginModal()" class="${inactiveStyle}">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>เข้าสู่ระบบ</span>
+                    </button>
+                `;
+            } else if (currentUser.role === 'student') {
+                // Student Logged In: [ หน้าหลัก ] [ นักศึกษา ]
+                const isHomeActive = currentTab === 'publicHome';
+                const isStudentActive = currentTab === 'studentView';
+                html = `
+                    <button onclick="switchTab('publicHome')" class="${isHomeActive ? activeStyle : inactiveStyle}">
+                        <i class="fa-solid fa-house"></i>
+                        <span>หน้าหลัก</span>
+                    </button>
+                    <button onclick="switchTab('studentView')" class="${isStudentActive ? activeStyle : inactiveStyle}">
+                        <i class="fa-solid fa-user-graduate"></i>
+                        <span>นักศึกษา</span>
+                    </button>
+                `;
+            } else if (currentUser.role === 'staff') {
+                // Staff Logged In: [ หน้าหลัก ] [ เจ้าหน้าที่ ]
+                const isHomeActive = currentTab === 'publicHome';
+                const isStaffActive = currentTab === 'staffView';
+                html = `
+                    <button onclick="switchTab('publicHome')" class="${isHomeActive ? activeStyle : inactiveStyle}">
+                        <i class="fa-solid fa-house"></i>
+                        <span>หน้าหลัก</span>
+                    </button>
+                    <button onclick="switchTab('staffView')" class="${isStaffActive ? activeStyle : inactiveStyle}">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>เจ้าหน้าที่</span>
+                    </button>
+                `;
+            }
+
+            capsule.innerHTML = html;
+        }
+
+        // Switch View Tab Function
+        function switchTab(tabName) {
+            currentTab = tabName;
+
+            const publicHomeView = document.getElementById('publicHomeView');
+            const studentView = document.getElementById('studentView');
+            const staffView = document.getElementById('staffView');
+
+            publicHomeView.classList.add('hidden');
+            studentView.classList.add('hidden');
+            staffView.classList.add('hidden');
+
+            if (tabName === 'publicHome') {
+                publicHomeView.classList.remove('hidden');
+            } else if (tabName === 'studentView') {
+                studentView.classList.remove('hidden');
+            } else if (tabName === 'staffView') {
+                staffView.classList.remove('hidden');
+            }
+
+            renderNavCapsule();
+            renderCurrentView();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         // Initialize Supabase Auth Check
         async function initAuthCheck() {
@@ -585,27 +658,21 @@
 
         function updateUserInterface() {
             if (currentUser) {
-                document.getElementById('loginBtn').classList.add('hidden');
                 document.getElementById('userProfileArea').classList.remove('hidden');
                 document.getElementById('userDisplayName').innerText = currentUser.name;
 
                 const badge = document.getElementById('userRoleBadge');
-                const staffBtn = document.getElementById('staffAdminBtn');
-
                 if (currentUser.role === 'staff') {
                     badge.innerText = "เจ้าหน้าที่ / แอดมิน";
-                    badge.className = "text-xs px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-400/30";
-                    staffBtn.classList.remove('hidden');
+                    badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30";
                 } else {
                     badge.innerText = "นักศึกษา";
-                    badge.className = "text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30";
-                    staffBtn.classList.add('hidden');
+                    badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30";
                 }
             } else {
-                document.getElementById('loginBtn').classList.remove('hidden');
                 document.getElementById('userProfileArea').classList.add('hidden');
-                document.getElementById('staffAdminBtn').classList.add('hidden');
             }
+            renderNavCapsule();
         }
 
         // Fetch Units and Related Data from Supabase
@@ -681,27 +748,6 @@
             return covers[idx];
         }
 
-        function switchTab(tabName) {
-            const publicHomeView = document.getElementById('publicHomeView');
-            const studentView = document.getElementById('studentView');
-            const staffView = document.getElementById('staffView');
-
-            publicHomeView.classList.add('hidden');
-            studentView.classList.add('hidden');
-            staffView.classList.add('hidden');
-
-            if (tabName === 'publicHome') {
-                publicHomeView.classList.remove('hidden');
-            } else if (tabName === 'studentView') {
-                studentView.classList.remove('hidden');
-            } else if (tabName === 'staffView') {
-                staffView.classList.remove('hidden');
-            }
-
-            renderCurrentView();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
         function handleSearch() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             const category = document.getElementById('filterCategory').value;
@@ -737,7 +783,7 @@
                 return;
             }
 
-            publicDisplayUnits.forEach((unit, index) => {
+            publicDisplayUnits.forEach((unit) => {
                 const card = document.createElement('div');
                 card.className = "bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-catalog border border-slate-200/80 transition duration-300 flex flex-col group cursor-pointer relative";
                 card.onclick = () => handleUnitCardClick(unit);
@@ -873,7 +919,7 @@
                 return;
             }
 
-            allUnits.forEach((unit, index) => {
+            allUnits.forEach((unit) => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/80 transition border-b border-slate-100";
 
@@ -1008,7 +1054,6 @@
                     if (error) throw error;
 
                     if (data.user) {
-                        // Upsert into elearning_users table
                         await supabaseClient.from('elearning_users').upsert({
                             id: data.user.id,
                             email: email,
@@ -1052,9 +1097,9 @@
                 await supabaseClient.auth.signOut();
             }
             currentUser = null;
+            switchTab('publicHome');
             updateUserInterface();
             showToast("ออกจากระบบเรียบร้อยแล้ว", 'info');
-            switchTab('publicHome');
         }
 
         function openUnitViewerModal(unit) {
@@ -1146,7 +1191,6 @@
             });
         }
 
-        // Grade Quiz and Save Results to quiz_results table
         async function gradeQuiz(type) {
             if (!activeUnitForViewer) return;
             const questions = type === 'pretest' ? (activeUnitForViewer.pre_test || []) : (activeUnitForViewer.post_test || []);
@@ -1164,7 +1208,6 @@
             badge.innerText = `คะแนนที่ได้: ${score} / ${questions.length}`;
             badge.classList.remove('hidden');
 
-            // Save result to quiz_results in Supabase if logged in
             if (currentUser && currentUser.id && supabaseClient) {
                 try {
                     await supabaseClient.from('quiz_results').insert([{
@@ -1331,7 +1374,6 @@
             list[qIndex].answer = cIndex;
         }
 
-        // Save Unit directly to Supabase Tables (units, unit_videos, pre_test_questions, post_test_questions)
         async function handleSaveUnit(e) {
             e.preventDefault();
             const id = document.getElementById('editingUnitId').value;
@@ -1349,7 +1391,6 @@
                 let unitId = id;
 
                 if (id) {
-                    // Update existing unit
                     const { error: unitErr } = await supabaseClient
                         .from('units')
                         .update({ title, description, order_index })
@@ -1357,7 +1398,6 @@
 
                     if (unitErr) throw unitErr;
                 } else {
-                    // Insert new unit
                     const { data: newUnit, error: unitErr } = await supabaseClient
                         .from('units')
                         .insert([{ title, description, order_index }])
@@ -1368,7 +1408,6 @@
                     unitId = newUnit.id;
                 }
 
-                // Handle unit_videos table
                 await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
                 if (youtube_url) {
                     await supabaseClient.from('unit_videos').insert([{
@@ -1379,7 +1418,6 @@
                     }]);
                 }
 
-                // Handle pre_test_questions table
                 await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
                 if (pretestFormQuestions.length > 0) {
                     const preInsert = pretestFormQuestions.map(q => ({
@@ -1391,7 +1429,6 @@
                     await supabaseClient.from('pre_test_questions').insert(preInsert);
                 }
 
-                // Handle post_test_questions table
                 await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
                 if (posttestFormQuestions.length > 0) {
                     const postInsert = posttestFormQuestions.map(q => ({
