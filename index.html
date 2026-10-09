@@ -672,7 +672,7 @@
             if (!supabaseClient) return;
 
             try {
-                // Primary query with unit_code and cover_url (Order by created_at DESC / id DESC for newest first)
+                // Primary Query: เรียง id จากใหม่ไปเก่า
                 let { data, error } = await supabaseClient
                     .from('units')
                     .select(`
@@ -682,32 +682,28 @@
                         description,
                         category,
                         cover_url,
-                        order_index,
                         created_at,
                         unit_videos (id, title, video_url, order_index),
                         pre_test_questions (id, question, options, correct_answer),
                         post_test_questions (id, question, options, correct_answer)
                     `)
-                    .order('created_at', { ascending: false })
                     .order('id', { ascending: false });
 
-                // Fail-safe fallback if custom columns are not yet in Supabase schema
+                // Fallback Query 1: กรณีมีปัญหา Relation กับตารางข้อสอบ
                 if (error) {
-                    console.warn("Retrying query with fallback columns...", error);
+                    console.warn("Retrying with primary tables query...", error);
                     const fallbackRes = await supabaseClient
                         .from('units')
                         .select(`
                             id,
+                            unit_code,
                             title,
                             description,
                             category,
-                            order_index,
+                            cover_url,
                             created_at,
-                            unit_videos (id, title, video_url, order_index),
-                            pre_test_questions (id, question, options, correct_answer),
-                            post_test_questions (id, question, options, correct_answer)
+                            unit_videos (id, title, video_url, order_index)
                         `)
-                        .order('created_at', { ascending: false })
                         .order('id', { ascending: false });
 
                     if (!fallbackRes.error) {
@@ -716,11 +712,24 @@
                     }
                 }
 
+                // Fallback Query 2: ดึงแบบเบสิกที่สุด
+                if (error) {
+                    console.warn("Retrying with simple units query...", error);
+                    const simpleRes = await supabaseClient
+                        .from('units')
+                        .select('*')
+                        .order('id', { ascending: false });
+
+                    if (!simpleRes.error) {
+                        data = simpleRes.data;
+                        error = null;
+                    }
+                }
+
                 if (!error && data) {
                     allUnits = data.map(u => {
                         const rawVideos = (u.unit_videos || []).sort((a,b) => (a.order_index || 0) - (b.order_index || 0));
                         
-                        // Parse video items as object list with URL and Title
                         const videoList = rawVideos.map(v => ({
                             id: v.id,
                             url: v.video_url || '',
@@ -729,7 +738,6 @@
 
                         const primaryVideoUrl = videoList.length > 0 ? videoList[0].url : '';
 
-                        // Helper for safely parsing JSON choices
                         const parseChoices = (options) => {
                             if (!options) return [];
                             if (Array.isArray(options)) return options;
@@ -740,14 +748,19 @@
                         };
 
                         const unitCodeVal = u.unit_code || `UNIT-${String(u.id).padStart(3, '0')}`;
-                        const coverUrlVal = (u.cover_url && u.cover_url.trim()) ? u.cover_url : getUnitCoverImage(u.id, u.title);
+                        
+                        // แปลง URL รูปภาพปก (กรณีเป็น Google Drive ให้เป็น Direct View URL)
+                        let coverUrlVal = u.cover_url && u.cover_url.trim() ? u.cover_url : getUnitCoverImage(u.id, u.title);
+                        if (coverUrlVal.includes('drive.google.com/file/d/')) {
+                            const fileId = coverUrlVal.split('/d/')[1].split('/')[0];
+                            coverUrlVal = `https://lh3.googleusercontent.com/d/${fileId}`;
+                        }
 
                         return {
                             id: u.id,
                             unit_code: unitCodeVal,
                             title: u.title,
                             description: u.description || '',
-                            order_index: u.order_index || 1,
                             created_at: u.created_at,
                             youtube_url: primaryVideoUrl,
                             videos: videoList,
@@ -768,7 +781,7 @@
                         };
                     });
                 } else if (error) {
-                    console.warn("Supabase fetch failed:", error);
+                    console.error("Supabase fetch failed:", error);
                 }
             } catch (err) {
                 console.error("Error fetching units:", err);
@@ -1631,7 +1644,6 @@
                         .eq('id', id);
 
                     if (unitErr) {
-                        // Fallback update without new schema columns if not present
                         const { error: fallbackErr } = await supabaseClient
                             .from('units')
                             .update({ title, description, category })
@@ -1648,7 +1660,6 @@
                         .single();
 
                     if (res1.error) {
-                        // Fallback insert if unit_code / cover_url missing in schema
                         const res2 = await supabaseClient
                             .from('units')
                             .insert([{ title, description, category }])
