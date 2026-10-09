@@ -83,18 +83,6 @@
                 <nav id="navCapsule" class="bg-slate-800/90 p-1.5 rounded-full border border-slate-700 shadow-inner flex items-center space-x-1">
                     <!-- Capsule Buttons Injected via JavaScript -->
                 </nav>
-
-                <!-- User Profile Display & Logout Button -->
-                <div id="userProfileArea" class="hidden flex items-center space-x-2 pl-2 border-l border-slate-800">
-                    <div class="text-right hidden md:block">
-                        <p id="userDisplayName" class="text-xs sm:text-sm font-semibold text-amber-200">ชื่อผู้ใช้งาน</p>
-                        <span id="userRoleBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">นักศึกษา</span>
-                    </div>
-                    <button onclick="handleLogout()" class="px-3 py-1.5 rounded-full bg-red-900/60 hover:bg-red-800 text-red-200 border border-red-500/40 text-xs font-medium transition flex items-center space-x-1" title="ออกจากระบบ">
-                        <i class="fa-solid fa-power-off"></i>
-                        <span class="hidden sm:inline">ออก</span>
-                    </button>
-                </div>
             </div>
         </div>
     </header>
@@ -513,27 +501,6 @@
             console.error("Supabase Client Init Error:", e);
         }
 
-        // Global State
-        let currentUser = null; // { id, email, role: 'student'|'staff', name }
-        let currentTab = 'publicHome'; // 'publicHome' | 'studentView' | 'staffView'
-        let currentRoleSelection = 'student';
-        let isSignUpMode = false;
-
-        let allUnits = [];
-        let filteredUnits = [];
-        let currentPage = 1;
-        const ITEMS_PER_PAGE = 9;
-
-        let activeUnitForViewer = null;
-        let pretestFormQuestions = [];
-        let posttestFormQuestions = [];
-
-        window.addEventListener('DOMContentLoaded', async () => {
-            await initAuthCheck();
-            await fetchUnitsData();
-            switchTab('publicHome');
-        });
-
         // Renders Capsule Navigation based on Auth state and active tab
         function renderNavCapsule() {
             const capsule = document.getElementById('navCapsule');
@@ -542,6 +509,7 @@
             // Orange style for active button, subtle dark style for inactive button
             const activeStyle = "bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold shadow-md rounded-full px-4 py-1.5 text-xs sm:text-sm transition-all duration-200 flex items-center space-x-1.5 cursor-pointer";
             const inactiveStyle = "text-slate-300 hover:text-white hover:bg-white/10 font-medium rounded-full px-4 py-1.5 text-xs sm:text-sm transition-all duration-200 flex items-center space-x-1.5 cursor-pointer";
+            const logoutStyle = "text-red-300 hover:text-red-100 hover:bg-red-500/20 font-medium rounded-full px-3.5 py-1.5 text-xs sm:text-sm transition-all duration-200 flex items-center space-x-1.5 cursor-pointer ml-1 border border-red-500/20";
 
             let html = '';
 
@@ -559,7 +527,7 @@
                     </button>
                 `;
             } else if (currentUser.role === 'student') {
-                // Student Logged In: [ หน้าหลัก ] [ นักศึกษา ]
+                // Student Logged In: [ หน้าหลัก ] [ นักศึกษา ] [ ออกจากระบบ ]
                 const isHomeActive = currentTab === 'publicHome';
                 const isStudentActive = currentTab === 'studentView';
                 html = `
@@ -571,9 +539,13 @@
                         <i class="fa-solid fa-user-graduate"></i>
                         <span>นักศึกษา</span>
                     </button>
+                    <button onclick="handleLogout()" class="${logoutStyle}" title="ออกจากระบบ">
+                        <i class="fa-solid fa-power-off"></i>
+                        <span>ออกจากระบบ</span>
+                    </button>
                 `;
             } else if (currentUser.role === 'staff') {
-                // Staff Logged In: [ หน้าหลัก ] [ เจ้าหน้าที่ ]
+                // Staff Logged In: [ หน้าหลัก ] [ เจ้าหน้าที่ ] [ ออกจากระบบ ]
                 const isHomeActive = currentTab === 'publicHome';
                 const isStaffActive = currentTab === 'staffView';
                 html = `
@@ -585,10 +557,18 @@
                         <i class="fa-solid fa-sliders"></i>
                         <span>เจ้าหน้าที่</span>
                     </button>
+                    <button onclick="handleLogout()" class="${logoutStyle}" title="ออกจากระบบ">
+                        <i class="fa-solid fa-power-off"></i>
+                        <span>ออกจากระบบ</span>
+                    </button>
                 `;
             }
 
             capsule.innerHTML = html;
+        }
+
+        function updateUserInterface() {
+            renderNavCapsule();
         }
 
         // Switch View Tab Function
