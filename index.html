@@ -144,9 +144,9 @@
                 <div>
                     <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
                         <i class="fa-solid fa-layer-group text-amber-600"></i>
-                        <span>คลังบทเรียนออนไลน์สำหรับนักศึกษา</span>
+                        <span>คลังบทเรียนออนไลน์สำหรับบุคลากรและนักเรียน สจล.</span>
                     </h2>
-                    <p class="text-xs text-slate-500 mt-0.5">กรุณา Login เพื่อเลือกบทเรียนที่ต้องการรับชม</p>
+                    <p class="text-xs text-slate-500 mt-0.5">กรุณา Login ด้วยอีเมล์สถาบันเท่านั้น</p>
                 </div>
             </div>
 
@@ -167,8 +167,8 @@
             <div class="bg-white rounded-2xl p-6 shadow-catalog border border-slate-100 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
-                        <i class="fa-solid fa-user-graduate text-emerald-600"></i>
-                        <span>คลังบทเรียนสำหรับนักศึกษา</span>
+                        <i class="fa-solid fa-users text-emerald-600"></i>
+                        <span>คลังบทเรียนสำหรับสมาชิก</span>
                     </h2>
                     <p class="text-xs text-slate-500 mt-0.5">เลือกบทเรียนที่ต้องการเพื่อรับชมวิดีโอและทำแบบทดสอบประเมินผล</p>
                 </div>
@@ -348,8 +348,8 @@
                     <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">เลือกสิทธิ์เข้าใช้งาน</label>
                     <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
                         <button type="button" id="roleStudentBtn" onclick="setAuthRole('student')" class="py-2 rounded-lg text-sm font-semibold transition bg-white text-amber-700 shadow-sm flex items-center justify-center space-x-1.5">
-                            <i class="fa-solid fa-user-graduate"></i>
-                            <span>นักศึกษา</span>
+                            <i class="fa-solid fa-users"></i>
+                            <span>สมาชิก</span>
                         </button>
                         <button type="button" id="roleStaffBtn" onclick="setAuthRole('staff')" class="py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5">
                             <i class="fa-solid fa-user-gear"></i>
@@ -643,8 +643,8 @@
                     if (roleTabText) roleTabText.innerText = 'เจ้าหน้าที่';
                     if (roleTabIcon) roleTabIcon.className = 'fa-solid fa-user-gear';
                 } else {
-                    if (roleTabText) roleTabText.innerText = 'นักศึกษา';
-                    if (roleTabIcon) roleTabIcon.className = 'fa-solid fa-user-graduate';
+                    if (roleTabText) roleTabText.innerText = 'สมาชิก';
+                    if (roleTabIcon) roleTabIcon.className = 'fa-solid fa-users';
                 }
             } else {
                 if (loginBtn) loginBtn.classList.remove('hidden');
@@ -676,17 +676,16 @@
             }
         }
 
-        // Rule 1: Student cannot click Home button while logged in
         function handleBrandLogoClick() {
             if (currentUser && currentUser.role === 'student') {
-                return; // Disabled for logged-in students
+                return;
             }
             switchTab('publicHome');
         }
 
         function handleNavHomeClick() {
             if (currentUser && currentUser.role === 'student') {
-                return; // Disabled for logged-in students
+                return;
             }
             switchTab('publicHome');
         }
@@ -1290,13 +1289,12 @@
             }
         }
 
-        // Rule 1: Logout returns to public home and hides student button automatically
         async function handleLogout() {
             if (supabaseClient) {
                 await supabaseClient.auth.signOut();
             }
             currentUser = null;
-            updateUserInterface(); // Automatically hides roleTabBtn & logoutBtn
+            updateUserInterface();
             showToast("ออกจากระบบเรียบร้อยแล้ว", 'info');
             switchTab('publicHome');
         }
