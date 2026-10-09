@@ -144,17 +144,22 @@
                 <div>
                     <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
                         <i class="fa-solid fa-layer-group text-amber-600"></i>
-                        <span>ชั้นวางบทเรียนแนะนำ (9 เรื่องล่าสุด)</span>
+                        <span>บทเรียนใหม่ พร้อมให้คุณเรียนรู้</span>
                     </h2>
-                    <p class="text-xs text-slate-500 mt-0.5">เข้าสู่ระบบเพื่อเข้าชมวิดีโอและทำแบบทดสอบประจำบทเรียน</p>
-                </div>
-                <div class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200">
-                    <i class="fa-solid fa-lock text-xs mr-1"></i> ต้องเข้าสู่ระบบเพื่อดูเนื้อหา
+                    <p class="text-xs text-slate-500 mt-0.5">บทเรียนออนไลน์ อัปสกิลได้ทุกที่ผ่านการเข้าชมคลิปวิดีโอ</p>
                 </div>
             </div>
 
-            <!-- 9 Grid Cards -->
+            <!-- 3 x 3 Grid Cards Container (9 per page) -->
             <div id="publicUnitsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+            <!-- PUBLIC HOME PAGINATION CONTROLS -->
+            <div class="mt-10 flex flex-col sm:flex-row items-center justify-between bg-white px-6 py-4 rounded-xl shadow-sm border border-slate-200 gap-4">
+                <p id="publicPageInfoText" class="text-xs sm:text-sm text-slate-600">
+                    กำลังแสดง <span class="font-semibold text-slate-800" id="publicPageStart">1</span> - <span class="font-semibold text-slate-800" id="publicPageEnd">9</span> จากทั้งหมด <span class="font-semibold text-slate-800" id="publicTotalUnitsCount">0</span> เรื่อง
+                </p>
+                <div id="publicPaginationButtons" class="flex items-center space-x-1"></div>
+            </div>
         </section>
 
         <!-- VIEW 2: STUDENT DASHBOARD -->
@@ -308,7 +313,7 @@
                 <i class="fa-solid fa-lock"></i>
             </div>
             <h3 class="text-lg font-bold text-slate-800 mb-2">เข้าถึงเนื้อหาจำกัด</h3>
-            <p class="text-xs text-slate-600 mb-6">ท่านจำเป็นต้องเข้าสู่ระบบก่อนเพื่อเข้าชมวิดีโอเนื้อหาและทำแบบทดสอบประเมินผล</p>
+            <p class="text-xs text-slate-600 mb-6">ท่านจำเป็นต้องเข้าสู่ระบบก่อนเนื้อหาในคลิปวิดีโอ</p>
             <div class="flex space-x-2">
                 <button onclick="closeAuthGuardModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50">ยกเลิก</button>
                 <button onclick="closeAuthGuardModal(); openLoginModal();" class="w-1/2 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow-sm">เข้าสู่ระบบเลย</button>
@@ -540,6 +545,7 @@
         let allUnits = [];
         let filteredUnits = [];
         let currentPage = 1;
+        let publicCurrentPage = 1;
         const ITEMS_PER_PAGE = 9;
 
         let activeUnitForViewer = null;
@@ -879,6 +885,7 @@
             });
 
             currentPage = 1;
+            publicCurrentPage = 1;
             renderCurrentView();
         }
 
@@ -892,7 +899,22 @@
             const container = document.getElementById('publicUnitsGrid');
             container.innerHTML = '';
 
-            const publicDisplayUnits = filteredUnits.slice(0, 9);
+            const total = filteredUnits.length;
+            const totalPages = Math.ceil(total / ITEMS_PER_PAGE) || 1;
+
+            if (publicCurrentPage > totalPages) publicCurrentPage = totalPages;
+
+            const startIndex = (publicCurrentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, total);
+            const publicDisplayUnits = filteredUnits.slice(startIndex, endIndex);
+
+            const pageStartEl = document.getElementById('publicPageStart');
+            const pageEndEl = document.getElementById('publicPageEnd');
+            const totalCountEl = document.getElementById('publicTotalUnitsCount');
+
+            if (pageStartEl) pageStartEl.innerText = total === 0 ? 0 : startIndex + 1;
+            if (pageEndEl) pageEndEl.innerText = endIndex;
+            if (totalCountEl) totalCountEl.innerText = total;
 
             if (publicDisplayUnits.length === 0) {
                 container.innerHTML = `
@@ -900,48 +922,75 @@
                         <i class="fa-solid fa-folder-open text-4xl mb-2 text-slate-300"></i>
                         <p class="text-sm">ยังไม่มีบทเรียนในระบบ หรือไม่พบข้อมูลตามคำค้นหา</p>
                     </div>`;
-                return;
+            } else {
+                publicDisplayUnits.forEach((unit) => {
+                    const videoCount = unit.videos ? unit.videos.length : (unit.youtube_url ? 1 : 0);
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-catalog border border-slate-200/80 transition duration-300 flex flex-col group cursor-pointer relative";
+                    card.onclick = () => handleUnitCardClick(unit);
+
+                    card.innerHTML = `
+                        <div class="relative h-44 overflow-hidden bg-slate-900">
+                            <img src="${unit.cover_url}" alt="${unit.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
+                            <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-md border border-amber-500/30">
+                                ${unit.category}
+                            </span>
+                            <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <span class="px-3 py-1.5 rounded-full bg-amber-500 text-slate-950 font-bold text-xs shadow-lg flex items-center space-x-1">
+                                    <i class="fa-solid ${currentUser ? 'fa-play' : 'fa-lock'}"></i>
+                                    <span>${currentUser ? 'เข้าสู่บทเรียน' : 'ต้องเข้าสู่ระบบ'}</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-4 flex-grow flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 group-hover:text-amber-700 transition">
+                                    ${unit.title}
+                                </h3>
+                                <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">
+                                    ${unit.description || 'ไม่มีคำอธิบายเพิ่มเติม'}
+                                </p>
+                            </div>
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                                <span class="flex items-center space-x-1">
+                                    <i class="fa-solid fa-circle-play text-amber-600"></i>
+                                    <span>วิดีโอ (${videoCount} คลิป)</span>
+                                </span>
+                                <span class="font-semibold text-amber-700">${unit.unit_code}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
             }
 
-            publicDisplayUnits.forEach((unit) => {
-                const videoCount = unit.videos ? unit.videos.length : (unit.youtube_url ? 1 : 0);
-                const card = document.createElement('div');
-                card.className = "bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-catalog border border-slate-200/80 transition duration-300 flex flex-col group cursor-pointer relative";
-                card.onclick = () => handleUnitCardClick(unit);
+            // Pagination Controls for Public View
+            const paginationContainer = document.getElementById('publicPaginationButtons');
+            if (paginationContainer) {
+                paginationContainer.innerHTML = '';
 
-                card.innerHTML = `
-                    <div class="relative h-44 overflow-hidden bg-slate-900">
-                        <img src="${unit.cover_url}" alt="${unit.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
-                        <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-md border border-amber-500/30">
-                            ${unit.category}
-                        </span>
-                        <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                            <span class="px-3 py-1.5 rounded-full bg-amber-500 text-slate-950 font-bold text-xs shadow-lg flex items-center space-x-1">
-                                <i class="fa-solid ${currentUser ? 'fa-play' : 'fa-lock'}"></i>
-                                <span>${currentUser ? 'เข้าสู่บทเรียน' : 'ต้องเข้าสู่ระบบ'}</span>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="p-4 flex-grow flex flex-col justify-between">
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 group-hover:text-amber-700 transition">
-                                ${unit.title}
-                            </h3>
-                            <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">
-                                ${unit.description || 'ไม่มีคำอธิบายเพิ่มเติม'}
-                            </p>
-                        </div>
-                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                            <span class="flex items-center space-x-1">
-                                <i class="fa-solid fa-circle-play text-amber-600"></i>
-                                <span>วิดีโอ (${videoCount} คลิป)</span>
-                            </span>
-                            <span class="font-semibold text-amber-700">${unit.unit_code}</span>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+                const prevBtn = document.createElement('button');
+                prevBtn.className = `w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold transition ${publicCurrentPage === 1 ? 'text-slate-300 cursor-not-allowed bg-slate-100' : 'text-slate-700 hover:bg-slate-200 bg-slate-100'}`;
+                prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+                prevBtn.disabled = publicCurrentPage === 1;
+                prevBtn.onclick = () => { if (publicCurrentPage > 1) { publicCurrentPage--; renderPublicUnits(); window.scrollTo({ top: 300, behavior: 'smooth' }); } };
+                paginationContainer.appendChild(prevBtn);
+
+                for (let p = 1; p <= totalPages; p++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.className = `w-9 h-9 rounded-lg text-xs font-bold transition ${p === publicCurrentPage ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-200 bg-slate-100'}`;
+                    pageBtn.innerText = p;
+                    pageBtn.onclick = () => { publicCurrentPage = p; renderPublicUnits(); window.scrollTo({ top: 300, behavior: 'smooth' }); };
+                    paginationContainer.appendChild(pageBtn);
+                }
+
+                const nextBtn = document.createElement('button');
+                nextBtn.className = `w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold transition ${publicCurrentPage === totalPages || totalPages === 0 ? 'text-slate-300 cursor-not-allowed bg-slate-100' : 'text-slate-700 hover:bg-slate-200 bg-slate-100'}`;
+                nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+                nextBtn.disabled = publicCurrentPage === totalPages || totalPages === 0;
+                nextBtn.onclick = () => { if (publicCurrentPage < totalPages) { publicCurrentPage++; renderPublicUnits(); window.scrollTo({ top: 300, behavior: 'smooth' }); } };
+                paginationContainer.appendChild(nextBtn);
+            }
         }
 
         function renderStudentUnits() {
@@ -1011,14 +1060,14 @@
             prevBtn.className = `w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold transition ${currentPage === 1 ? 'text-slate-300 cursor-not-allowed bg-slate-100' : 'text-slate-700 hover:bg-slate-200 bg-slate-100'}`;
             prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
             prevBtn.disabled = currentPage === 1;
-            prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderCurrentView(); } };
+            prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderCurrentView(); window.scrollTo({ top: 300, behavior: 'smooth' }); } };
             paginationContainer.appendChild(prevBtn);
 
             for (let p = 1; p <= totalPages; p++) {
                 const pageBtn = document.createElement('button');
                 pageBtn.className = `w-9 h-9 rounded-lg text-xs font-bold transition ${p === currentPage ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-200 bg-slate-100'}`;
                 pageBtn.innerText = p;
-                pageBtn.onclick = () => { currentPage = p; renderCurrentView(); };
+                pageBtn.onclick = () => { currentPage = p; renderCurrentView(); window.scrollTo({ top: 300, behavior: 'smooth' }); };
                 paginationContainer.appendChild(pageBtn);
             }
 
@@ -1026,7 +1075,7 @@
             nextBtn.className = `w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold transition ${currentPage === totalPages || totalPages === 0 ? 'text-slate-300 cursor-not-allowed bg-slate-100' : 'text-slate-700 hover:bg-slate-200 bg-slate-100'}`;
             nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
             nextBtn.disabled = currentPage === totalPages || totalPages === 0;
-            nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderCurrentView(); } };
+            nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderCurrentView(); window.scrollTo({ top: 300, behavior: 'smooth' }); } };
             paginationContainer.appendChild(nextBtn);
         }
 
