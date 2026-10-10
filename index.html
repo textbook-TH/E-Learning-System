@@ -653,13 +653,37 @@
                         userRecordFound = true;
                         role = (data.role === 'admin' || data.is_admin) ? 'staff' : 'student';
                         if (data.full_name) name = data.full_name;
+                    } else if (!data) {
+                        // Fallback: If user exists in auth.users but not in elearning_users, create record automatically
+                        const { data: insertedData, error: insertErr } = await supabaseClient
+                            .from('elearning_users')
+                            .upsert({
+                                id: authUser.id,
+                                email: authUser.email,
+                                full_name: name,
+                                role: 'student',
+                                is_admin: false
+                            })
+                            .select()
+                            .maybeSingle();
+
+                        if (!insertErr) {
+                            userRecordFound = true;
+                            if (insertedData) {
+                                role = (insertedData.role === 'admin' || insertedData.is_admin) ? 'staff' : 'student';
+                                if (insertedData.full_name) name = insertedData.full_name;
+                            }
+                        } else {
+                            // If user is authenticated in Auth, allow session to proceed as student
+                            userRecordFound = true;
+                        }
                     }
                 } catch (e) {
                     console.warn("Error loading user profile:", e);
+                    userRecordFound = true;
                 }
             }
 
-            // CRITICAL CHECK: If user record does not exist in elearning_users, deny access & sign out
             if (!userRecordFound) {
                 if (supabaseClient) {
                     await supabaseClient.auth.signOut();
@@ -1427,20 +1451,7 @@
             }
 
             if (authMode === 'forgot') {
-                // Step 1: Check if email exists in elearning_users table
                 try {
-                    const { data, error } = await supabaseClient
-                        .from('elearning_users')
-                        .select('email')
-                        .eq('email', email)
-                        .maybeSingle();
-
-                    if (error || !data) {
-                        showToast("กรุณาลงทะเบียนสมัครสมาชิก", "error");
-                        return;
-                    }
-
-                    // Step 2: Email exists, send password reset link
                     const redirectUrl = window.location.origin + window.location.pathname;
                     const { error: resetErr } = await supabaseClient.auth.resetPasswordForEmail(email, {
                         redirectTo: redirectUrl
@@ -1516,13 +1527,24 @@
             const { email, password, displayName } = pendingRegistrationData;
 
             try {
+                const redirectUrl = window.location.origin + window.location.pathname;
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
-                    options: { data: { full_name: displayName } }
+                    options: { 
+                        emailRedirectTo: redirectUrl,
+                        data: { full_name: displayName } 
+                    }
                 });
 
                 if (error) throw error;
+
+                // Check if user already exists (identities empty in Supabase JS v2)
+                if (data.user && data.user.identities && data.user.identities.length === 0) {
+                    showToast("เกิดข้อผิดพลาด: อีเมลนี้ได้รับการลงทะเบียนในระบบเรียบร้อยแล้ว", "error");
+                    pendingRegistrationData = null;
+                    return;
+                }
 
                 if (data.user) {
                     try {
@@ -1535,7 +1557,12 @@
                         });
                     } catch(e) { console.warn("User table record warning:", e); }
 
-                    showToast(`สมัครสมาชิกเรียบร้อยแล้ว! กรุณาตรวจสอบอีเมลเพื่อทำการยืนยันการใช้งาน`, 'success');
+                    if (data.session) {
+                        await loadUserProfile(data.user);
+                        showToast(`สมัครสมาชิกและเข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ ${displayName}`, 'success');
+                    } else {
+                        showToast(`สมัครสมาชิกเรียบร้อยแล้ว! กรุณาตรวจสอบอีเมลเพื่อทำการยืนยันการใช้งาน`, 'success');
+                    }
                 }
 
                 closeLoginModal();
@@ -2020,88 +2047,110 @@
                     video_url: vItem.url,
                     order_index: idx + 1
                 }));
-                const { error: vidErr } = await supabaseClient.from('unit_videos').insert(videoInserts);
-                if (vidErr) console.warn("Video insert error:", vidErr);
 
+                if (videoInserts.length > 0) {
+                    await supabaseClient.from('unit_videos').insert(videoInserts);
+                }
+
+                // Save Pre-test Questions
                 await supabaseClient.from('pre_test_questions').delete().eq('unit_id', targetUnitId);
                 if (pretestFormQuestions.length > 0) {
-                    const preInsert = pretestFormQuestions.map(q => ({
+                    const preInserts = pretestFormQuestions.map(q => ({
                         unit_id: targetUnitId,
                         question: q.q,
-                        options: q.choices,
+                        options: JSON.stringify(q.choices),
                         correct_answer: q.answer
                     }));
-                    const { error: preErr } = await supabaseClient.from('pre_test_questions').insert(preInsert);
-                    if (preErr) console.warn("Pretest insert error:", preErr);
+                    await supabaseClient.from('pre_test_questions').insert(preInserts);
                 }
 
+                // Save Post-test Questions
                 await supabaseClient.from('post_test_questions').delete().eq('unit_id', targetUnitId);
                 if (posttestFormQuestions.length > 0) {
-                    const postInsert = posttestFormQuestions.map(q => ({
+                    const postInserts = posttestFormQuestions.map(q => ({
                         unit_id: targetUnitId,
                         question: q.q,
-                        options: q.choices,
+                        options: JSON.stringify(q.choices),
                         correct_answer: q.answer
                     }));
-                    const { error: postErr } = await supabaseClient.from('post_test_questions').insert(postInsert);
-                    if (postErr) console.warn("Posttest insert error:", postErr);
+                    await supabaseClient.from('post_test_questions').insert(postInserts);
                 }
 
-                showToast("บันทึกข้อมูลบทเรียนลง Supabase เรียบร้อยแล้ว", "success");
-                await fetchUnitsData();
+                showToast(id ? "แก้ไขบทเรียนเรียบร้อยแล้ว" : "เพิ่มบทเรียนใหม่เรียบร้อยแล้ว", "success");
                 closeUnitFormModal();
+                await fetchUnitsData();
             } catch (err) {
-                console.error("Save error:", err);
-                showToast("เกิดข้อผิดพลาดในการบันทึก: " + (err.message || "กรุณาลองใหม่อีกครั้ง"), "error");
+                console.error("Save unit error:", err);
+                showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
             }
         }
 
         function editUnit(unitId) {
-            const unit = allUnits.find(u => u.id == unitId);
+            const unit = allUnits.find(u => String(u.id) === String(unitId));
             if (unit) {
                 openUnitFormModal(unit);
             }
         }
 
         async function deleteUnit(unitId) {
-            if (supabaseClient) {
-                try {
-                    const { error } = await supabaseClient.from('units').delete().eq('id', unitId);
-                    if (error) throw error;
-                    showToast("ลบบทเรียนออกจากฐานข้อมูลเรียบร้อยแล้ว", 'info');
-                    await fetchUnitsData();
-                } catch (err) {
-                    console.error("Delete error:", err);
-                    showToast("ไม่สามารถลบได้: " + err.message, 'error');
-                }
+            if (!confirm("คุณต้องการลบบทเรียนนี้ใช่หรือไม่?")) return;
+            if (!supabaseClient) return;
+
+            try {
+                const targetId = (typeof unitId === 'string' && !isNaN(unitId)) ? parseInt(unitId) : unitId;
+                await supabaseClient.from('unit_videos').delete().eq('unit_id', targetId);
+                await supabaseClient.from('pre_test_questions').delete().eq('unit_id', targetId);
+                await supabaseClient.from('post_test_questions').delete().eq('unit_id', targetId);
+                const { error } = await supabaseClient.from('units').delete().eq('id', targetId);
+
+                if (error) throw error;
+
+                showToast("ลบบทเรียนเรียบร้อยแล้ว", "success");
+                await fetchUnitsData();
+            } catch (err) {
+                console.error("Delete unit error:", err);
+                showToast("เกิดข้อผิดพลาดในการลบบทเรียน", "error");
             }
         }
 
-        // Center Screen Notification Modal Function
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
-            container.innerHTML = ''; // Clear previous notifications
+            if (!container) return;
 
             const toast = document.createElement('div');
-            let bg = 'bg-slate-900 border-slate-700 text-white';
-            let icon = 'fa-circle-info text-amber-400';
+            let bgColor = "bg-slate-800 text-white";
+            let icon = "fa-circle-info text-blue-400";
 
             if (type === 'success') {
-                bg = 'bg-slate-900 border-emerald-500/50 text-white';
-                icon = 'fa-circle-check text-emerald-400';
+                bgColor = "bg-emerald-900/90 text-emerald-100 border border-emerald-700";
+                icon = "fa-circle-check text-emerald-400";
             } else if (type === 'error') {
-                bg = 'bg-slate-900 border-rose-500/50 text-white';
-                icon = 'fa-triangle-exclamation text-rose-400';
+                bgColor = "bg-rose-900/90 text-rose-100 border border-rose-700";
+                icon = "fa-triangle-exclamation text-rose-400";
+            } else if (type === 'info') {
+                bgColor = "bg-slate-900/90 text-slate-100 border border-slate-700";
+                icon = "fa-circle-info text-amber-400";
             }
 
-            toast.className = `p-5 px-6 rounded-2xl shadow-2xl border backdrop-blur-md text-sm sm:text-base flex items-center space-x-3 pointer-events-auto transform transition-all duration-300 max-w-md w-full justify-center text-center ${bg}`;
-            toast.innerHTML = `<i class="fa-solid ${icon} text-xl"></i><span class="font-medium">${message}</span>`;
+            toast.className = `${bgColor} px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0 max-w-md text-xs sm:text-sm font-medium border backdrop-blur-md`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} text-lg flex-shrink-0"></i>
+                <span class="flex-grow">${message}</span>
+                <button onclick="this.parentElement.remove()" class="text-white/60 hover:text-white ml-2 text-base">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
 
             container.appendChild(toast);
+
             setTimeout(() => {
-                toast.classList.add('opacity-0', 'scale-95');
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => toast.remove(), 300);
-            }, 3200);
+            }, 4000);
         }
     </script>
 </body>
