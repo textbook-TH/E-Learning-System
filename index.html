@@ -140,7 +140,7 @@
                 <div class="max-w-2xl mx-auto bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-2xl flex flex-col sm:flex-row gap-2">
                     <div class="relative flex-grow">
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
-                        <input type="text" id="searchInput" oninput="handleSearch()" oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="ค้นหาชื่อบทเรียน หรือคำอธิบาย..." class="w-full pl-10 pr-4 py-2.5 rounded-xl text-slate-800 placeholder-slate-400 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
+                        <input type="text" id="searchInput" oninput="handleSearch()" oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" placeholder="ค้นหาชื่อบทเรียน หรือคำอธิบาย..." class="w-full pl-10 pr-4 py-2.5 rounded-xl text-slate-800 placeholder-slate-400 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
                     </div>
                     <div class="relative">
                         <select id="filterCategory" onchange="handleSearch()" class="custom-select-dropdown w-full sm:w-auto pl-4 pr-12 py-2.5 rounded-xl text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm font-medium cursor-pointer">
@@ -641,8 +641,6 @@
 
         let activeUnitForViewer = null;
         let activeVideoUrl = '';
-        let pretestFormQuestions = [];
-        let posttestFormQuestions = [];
 
         let notificationOnCloseCallback = null;
         let confirmCallback = null;
@@ -1044,7 +1042,7 @@
             let htmlOptions = '<option value="ALL">📚 ทุกหมวดหมู่</option>';
 
             uniqueCategories.forEach(cat => {
-                htmlOptions += `<option value="${cat}">${cat}</option>`;
+                htmlOptions += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
             });
 
             select.innerHTML = htmlOptions;
@@ -1169,9 +1167,9 @@
 
                     card.innerHTML = `
                         <div class="relative h-44 overflow-hidden bg-slate-900">
-                            <img src="${unit.cover_url}" alt="${unit.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
+                            <img src="${escapeHtml(unit.cover_url)}" alt="${escapeHtml(unit.title)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
                             <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-md border border-amber-500/30">
-                                ${unit.category}
+                                ${escapeHtml(unit.category)}
                             </span>
                             <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                                 <span class="px-3 py-1.5 rounded-full bg-amber-500 text-slate-950 font-bold text-xs shadow-lg flex items-center space-x-1">
@@ -1183,10 +1181,10 @@
                         <div class="p-4 flex-grow flex flex-col justify-between">
                             <div>
                                 <h3 class="font-bold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 group-hover:text-amber-700 transition">
-                                    ${unit.title}
+                                    ${escapeHtml(unit.title)}
                                 </h3>
                                 <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">
-                                    ${unit.description || 'ไม่มีคำอธิบายเพิ่มเติม'}
+                                    ${escapeHtml(unit.description || 'ไม่มีคำอธิบายเพิ่มเติม')}
                                 </p>
                             </div>
                             <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
@@ -1194,7 +1192,7 @@
                                     <i class="fa-solid fa-circle-play text-amber-600"></i>
                                     <span>วิดีโอ (${videoCount} คลิป)</span>
                                 </span>
-                                <span class="font-semibold text-amber-700">${unit.unit_code}</span>
+                                <span class="font-semibold text-amber-700">${escapeHtml(unit.unit_code)}</span>
                             </div>
                         </div>
                     `;
@@ -1262,21 +1260,21 @@
 
                     card.innerHTML = `
                         <div class="relative h-44 overflow-hidden bg-slate-900">
-                            <img src="${unit.cover_url}" alt="${unit.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
+                            <img src="${escapeHtml(unit.cover_url)}" alt="${escapeHtml(unit.title)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
                             <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-emerald-300 text-[10px] font-bold px-2.5 py-1 rounded-md border border-emerald-500/30">
-                                ${unit.category}
+                                ${escapeHtml(unit.category)}
                             </span>
                             <span class="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-md text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-400/30">
-                                ${unit.unit_code}
+                                ${escapeHtml(unit.unit_code)}
                             </span>
                         </div>
                         <div class="p-4 flex-grow flex flex-col justify-between">
                             <div>
                                 <h3 class="font-bold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 group-hover:text-emerald-700 transition">
-                                    ${unit.title}
+                                    ${escapeHtml(unit.title)}
                                 </h3>
                                 <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3">
-                                    ${unit.description || 'ไม่มีคำอธิบายเพิ่มเติม'}
+                                    ${escapeHtml(unit.description || 'ไม่มีคำอธิบายเพิ่มเติม')}
                                 </p>
                             </div>
                             <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-medium text-emerald-600">
@@ -1337,14 +1335,14 @@
 
                 tr.innerHTML = `
                     <td class="py-3 px-4 whitespace-nowrap">
-                        <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 inline-block whitespace-nowrap">${unit.unit_code}</span>
+                        <span class="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 inline-block whitespace-nowrap">${escapeHtml(unit.unit_code)}</span>
                     </td>
                     <td class="py-3 px-4 whitespace-nowrap">
-                        <p class="font-semibold text-slate-800 line-clamp-1 whitespace-nowrap">${unit.title}</p>
+                        <p class="font-semibold text-slate-800 line-clamp-1 whitespace-nowrap">${escapeHtml(unit.title)}</p>
                     </td>
                     <td class="py-3 px-4 whitespace-nowrap">
                         <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 inline-block whitespace-nowrap">
-                            ${unit.category}
+                            ${escapeHtml(unit.category)}
                         </span>
                     </td>
                     <td class="py-3 px-4 text-center whitespace-nowrap">
@@ -1753,228 +1751,218 @@
                 playlistContainer.classList.add('hidden');
             }
 
-            const firstVid = videoList.length > 0 ? videoList[0] : { url: '', title: '' };
-            switchActiveVideo(firstVid, 0, null);
+            if (videoList.length > 0) {
+                const firstBtn = playlistButtons.querySelector('button');
+                switchActiveVideo(videoList[0], 0, firstBtn);
+            } else {
+                document.getElementById('youtubeIframe').src = '';
+                document.getElementById('detailActiveVideoTitle').innerText = 'ไม่มีวิดีโอในบทเรียนนี้';
+            }
 
-            renderQuizQuestions('pretest', unit.pre_test || []);
-            renderQuizQuestions('posttest', unit.post_test || []);
+            renderQuizForm('pretest', unit.pre_test || []);
+            renderQuizForm('posttest', unit.post_test || []);
 
-            document.getElementById('pretestScoreBadge').classList.add('hidden');
-            document.getElementById('posttestScoreBadge').classList.add('hidden');
+            // Reset quiz score badges
+            const preBadge = document.getElementById('pretestScoreBadge');
+            const postBadge = document.getElementById('posttestScoreBadge');
+            if (preBadge) preBadge.classList.add('hidden');
+            if (postBadge) postBadge.classList.add('hidden');
 
             switchViewerTab('video');
             switchTab('unitDetailView');
         }
 
-        function switchActiveVideo(vItem, index, btnElement) {
-            const videoUrl = typeof vItem === 'string' ? vItem : vItem.url;
-            activeVideoUrl = videoUrl;
-            document.getElementById('youtubeIframe').src = getYoutubeEmbedUrl(videoUrl);
+        function switchActiveVideo(vItem, index, activeBtn) {
+            const iframe = document.getElementById('youtubeIframe');
+            const titleEl = document.getElementById('detailActiveVideoTitle');
 
-            const epTitleText = (vItem && vItem.title) ? `ตอนที่ ${index + 1}: ${vItem.title}` : `ตอนที่ ${index + 1}`;
-            document.getElementById('detailActiveVideoTitle').innerHTML = `<i class="fa-solid fa-circle-play text-amber-600 text-sm"></i> <span>${epTitleText}</span>`;
+            if (vItem && vItem.url) {
+                iframe.src = getYouTubeEmbedUrl(vItem.url);
+            } else {
+                iframe.src = '';
+            }
 
-            if (btnElement) {
-                const buttons = document.querySelectorAll('#videoPlaylistButtons button');
+            if (titleEl) {
+                const displayTitle = vItem.title ? `ตอนที่ ${index + 1}: ${vItem.title}` : `ตอนที่ ${index + 1}`;
+                titleEl.innerHTML = `<i class="fa-solid fa-circle-play text-amber-600 text-sm"></i> <span>${escapeHtml(displayTitle)}</span>`;
+            }
+
+            const playlistButtons = document.getElementById('videoPlaylistButtons');
+            if (playlistButtons) {
+                const buttons = playlistButtons.querySelectorAll('button');
                 buttons.forEach(b => {
-                    b.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-white text-slate-700 hover:bg-slate-200 border border-slate-300";
+                    b.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-white text-slate-700 hover:bg-slate-200 border border-slate-300';
                 });
-                btnElement.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-amber-600 text-white shadow-sm";
+            }
+
+            if (activeBtn) {
+                activeBtn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-amber-600 text-white shadow-sm';
             }
         }
 
         function closeUnitDetailView() {
-            document.getElementById('youtubeIframe').src = '';
-            if (currentUser && currentUser.role === 'staff') {
-                switchTab('staffView');
-            } else if (currentUser && currentUser.role === 'student') {
+            const iframe = document.getElementById('youtubeIframe');
+            if (iframe) iframe.src = '';
+            
+            if (currentUser && currentUser.role === 'student') {
                 switchTab('studentView');
+            } else if (currentUser && currentUser.role === 'staff') {
+                switchTab('staffView');
             } else {
                 switchTab('publicHome');
             }
         }
 
-        function switchViewerTab(tab) {
-            const vTab = document.getElementById('viewerTabVideo');
-            const pTab = document.getElementById('viewerTabPretest');
-            const oTab = document.getElementById('viewerTabPosttest');
+        function switchViewerTab(tabName) {
+            const tabVideo = document.getElementById('viewerTabVideo');
+            const tabPretest = document.getElementById('viewerTabPretest');
+            const tabPosttest = document.getElementById('viewerTabPosttest');
 
-            const btnV = document.getElementById('tabBtnVideo');
-            const btnP = document.getElementById('tabBtnPretest');
-            const btnO = document.getElementById('tabBtnPosttest');
+            const btnVideo = document.getElementById('tabBtnVideo');
+            const btnPretest = document.getElementById('tabBtnPretest');
+            const btnPosttest = document.getElementById('tabBtnPosttest');
 
-            vTab.classList.add('hidden');
-            pTab.classList.add('hidden');
-            oTab.classList.add('hidden');
+            const activeClass = "py-2.5 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center space-x-2 whitespace-nowrap";
+            const inactiveClass = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2 whitespace-nowrap";
 
-            btnV.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2 whitespace-nowrap";
-            btnP.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2 whitespace-nowrap";
-            btnO.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2 whitespace-nowrap";
+            tabVideo.classList.add('hidden');
+            tabPretest.classList.add('hidden');
+            tabPosttest.classList.add('hidden');
 
-            if (tab === 'video') {
-                vTab.classList.remove('hidden');
-                btnV.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center space-x-2 whitespace-nowrap";
-            } else if (tab === 'pretest') {
-                pTab.classList.remove('hidden');
-                btnP.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-blue-600 text-blue-700 flex items-center space-x-2 whitespace-nowrap";
-            } else if (tab === 'posttest') {
-                oTab.classList.remove('hidden');
-                btnO.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 whitespace-nowrap";
+            btnVideo.className = inactiveClass;
+            btnPretest.className = inactiveClass;
+            btnPosttest.className = inactiveClass;
+
+            if (tabName === 'video') {
+                tabVideo.classList.remove('hidden');
+                btnVideo.className = activeClass;
+            } else if (tabName === 'pretest') {
+                tabPretest.classList.remove('hidden');
+                btnPretest.className = activeClass;
+            } else if (tabName === 'posttest') {
+                tabPosttest.classList.remove('hidden');
+                btnPosttest.className = activeClass;
             }
         }
 
-        function renderQuizQuestions(type, questions) {
-            const container = document.getElementById(type === 'pretest' ? 'pretestQuestionsContainer' : 'posttestQuestionsContainer');
+        function renderQuizForm(type, questions) {
+            const container = document.getElementById(`${type}QuestionsContainer`);
+            if (!container) return;
             container.innerHTML = '';
 
-            if (questions.length === 0) {
-                container.innerHTML = `
-                    <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-slate-200">
-                        ยังไม่มีแบบทดสอบสำหรับบทเรียนนี้
-                    </div>`;
+            if (!questions || questions.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6 bg-slate-50 rounded-xl border border-slate-200">ไม่มีข้อสอบสำหรับบทเรียนนี้</p>`;
                 return;
             }
 
             questions.forEach((q, qIndex) => {
-                const qBox = document.createElement('div');
-                qBox.className = "p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3";
+                const qCard = document.createElement('div');
+                qCard.className = "p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3";
 
                 let choicesHtml = '';
-                const choices = Array.isArray(q.choices) ? q.choices : [];
-                choices.forEach((cText, cIndex) => {
+                const choices = q.choices || [];
+
+                choices.forEach((choice, cIndex) => {
+                    const inputId = `${type}_q${qIndex}_choice${cIndex}`;
                     choicesHtml += `
-                        <label class="flex items-center space-x-3 p-2.5 rounded-lg bg-white border border-slate-200 hover:border-amber-400 cursor-pointer text-xs sm:text-sm transition">
-                            <input type="radio" name="${type}_q${qIndex}" value="${cIndex}" class="text-amber-600 focus:ring-amber-500">
-                            <span class="text-slate-700">${cText}</span>
+                        <label for="${inputId}" class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:bg-amber-50/50 hover:border-amber-300 transition text-xs sm:text-sm text-slate-700">
+                            <input type="radio" id="${inputId}" name="${type}_q_${qIndex}" value="${cIndex}" class="w-4 h-4 text-amber-600 focus:ring-amber-500 border-slate-300">
+                            <span>${escapeHtml(choice)}</span>
                         </label>
                     `;
                 });
 
-                qBox.innerHTML = `
-                    <p class="font-bold text-slate-800 text-sm">ข้อที่ ${qIndex + 1}: ${q.q}</p>
-                    <div class="space-y-2">
+                qCard.innerHTML = `
+                    <p class="font-semibold text-slate-800 text-xs sm:text-sm">
+                        ข้อที่ ${qIndex + 1}. ${escapeHtml(q.q || '')}
+                    </p>
+                    <div class="space-y-2 pl-1 sm:pl-2">
                         ${choicesHtml}
                     </div>
                 `;
-                container.appendChild(qBox);
+                container.appendChild(qCard);
             });
         }
 
-        async function gradeQuiz(type) {
+        function gradeQuiz(type) {
             if (!activeUnitForViewer) return;
             const questions = type === 'pretest' ? (activeUnitForViewer.pre_test || []) : (activeUnitForViewer.post_test || []);
-            if (questions.length === 0) return;
+            
+            if (questions.length === 0) {
+                showNotificationModal("แจ้งเตือน", "ไม่มีข้อสอบให้ทำ", "warning");
+                return;
+            }
 
             let score = 0;
+            let answeredCount = 0;
+
             questions.forEach((q, qIndex) => {
-                const selected = document.querySelector(`input[name="${type}_q${qIndex}"]:checked`);
-                if (selected && parseInt(selected.value) === q.answer) {
-                    score++;
+                const selected = document.querySelector(`input[name="${type}_q_${qIndex}"]:checked`);
+                if (selected) {
+                    answeredCount++;
+                    if (parseInt(selected.value) === parseInt(q.answer)) {
+                        score++;
+                    }
                 }
             });
 
-            const badge = document.getElementById(type === 'pretest' ? 'pretestScoreBadge' : 'posttestScoreBadge');
-            badge.innerText = `คะแนนที่ได้: ${score} / ${questions.length}`;
-            badge.classList.remove('hidden');
-
-            if (currentUser && currentUser.id && supabaseClient) {
-                try {
-                    await supabaseClient.from('quiz_results').insert([{
-                        user_id: currentUser.id,
-                        unit_id: activeUnitForViewer.id,
-                        test_type: type === 'pretest' ? 'pre' : 'post',
-                        score: score,
-                        total_questions: questions.length
-                    }]);
-                } catch (e) {
-                    console.warn("Quiz result save error:", e);
-                }
-            }
-        }
-
-        function getYoutubeEmbedUrl(url) {
-            if (!url) return '';
-            let videoId = '';
-            
-            try {
-                if (url.includes('youtu.be/')) {
-                    videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0];
-                } else if (url.includes('watch?v=')) {
-                    videoId = url.split('watch?v=')[1].split('&')[0].split('?')[0];
-                } else if (url.includes('embed/')) {
-                    videoId = url.split('embed/')[1].split('?')[0].split('&')[0];
-                }
-            } catch (err) {
-                console.warn("URL parse error:", err);
+            if (answeredCount < questions.length) {
+                showNotificationModal("ทำข้อสอบไม่ครบ", `กรุณาตอบคำถามให้ครบทุกข้อ (${answeredCount}/${questions.length})`, "warning");
+                return;
             }
 
-            return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0` : url;
+            const badge = document.getElementById(`${type}ScoreBadge`);
+            if (badge) {
+                badge.innerText = `คะแนนของคุณ: ${score} / ${questions.length}`;
+                badge.classList.remove('hidden');
+            }
+
+            const title = type === 'pretest' ? 'ผลการทดสอบก่อนเรียน' : 'ผลการทดสอบหลังเรียน';
+            showNotificationModal(title, `คุณทำได้ ${score} จากทั้งหมด ${questions.length} คะแนน`, "success");
         }
 
-        function addYoutubeInputRow(urlVal = '', titleVal = '') {
-            const list = document.getElementById('youtubeInputsList');
-            const rowCount = list.children.length;
-
-            const div = document.createElement('div');
-            div.className = "p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 youtube-input-row relative";
-            div.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold text-slate-600">คลิปวิดีโอที่ ${rowCount + 1}</span>
-                    ${rowCount > 0 ? `
-                        <button type="button" onclick="this.closest('.youtube-input-row').remove()" class="text-xs text-red-500 hover:text-red-700 font-semibold" title="ลบวิดีโอนี้">
-                            <i class="fa-solid fa-trash mr-1"></i> ลบตอน
-                        </button>
-                    ` : ''}
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <div class="sm:col-span-1">
-                        <input type="text" placeholder="ชื่อตอน (เช่น ตอนที่ 1)" value="${titleVal}" class="youtube-title-val w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                    </div>
-                    <div class="sm:col-span-2 relative">
-                        <i class="fa-brands fa-youtube absolute left-3 top-2.5 text-red-500 text-sm"></i>
-                        <input type="url" required oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="https://www.youtube.com/watch?v=..." value="${urlVal}" class="youtube-url-val w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                    </div>
-                </div>
-            `;
-            list.appendChild(div);
-        }
-
+        // STAFF FORM FUNCTIONS
         function openUnitFormModal(unit = null) {
-            document.getElementById('editingUnitId').value = unit ? unit.id : '';
-            document.getElementById('staffFormModalTitle').innerText = unit ? `แก้ไขบทเรียน ${unit.unit_code || ''}` : 'เพิ่มบทเรียนใหม่';
+            const modal = document.getElementById('unitFormModal');
+            const titleEl = document.getElementById('staffFormModalTitle');
+            const editingId = document.getElementById('editingUnitId');
 
-            document.getElementById('unitCodeInput').value = unit ? (unit.unit_code || '') : '';
-            document.getElementById('unitTitleInput').value = unit ? unit.title : '';
-            document.getElementById('unitCategoryInput').value = unit ? (unit.category || '') : '';
-            document.getElementById('unitCoverInput').value = unit ? (unit.cover_url || '') : '';
-            document.getElementById('unitDescriptionInput').value = unit ? unit.description : '';
+            document.getElementById('unitSaveForm').reset();
+            document.getElementById('youtubeInputsList').innerHTML = '';
+            document.getElementById('staffPretestContainer').innerHTML = '';
+            document.getElementById('staffPosttestContainer').innerHTML = '';
 
-            const youtubeListContainer = document.getElementById('youtubeInputsList');
-            youtubeListContainer.innerHTML = '';
+            if (unit) {
+                titleEl.innerText = "แก้ไขบทเรียน";
+                editingId.value = unit.id;
+                document.getElementById('unitCodeInput').value = unit.unit_code || '';
+                document.getElementById('unitTitleInput').value = unit.title || '';
+                document.getElementById('unitCategoryInput').value = unit.category || '';
+                document.getElementById('unitCoverInput').value = unit.cover_url || '';
+                document.getElementById('unitDescriptionInput').value = unit.description || '';
 
-            let videoItems = [];
-            if (unit && unit.videos && unit.videos.length > 0) {
-                videoItems = unit.videos;
-            } else if (unit && unit.youtube_url) {
-                videoItems = [{ url: unit.youtube_url, title: 'ตอนที่ 1' }];
+                if (unit.videos && unit.videos.length > 0) {
+                    unit.videos.forEach(v => addYoutubeInputRow(v.url, v.title));
+                } else if (unit.youtube_url) {
+                    addYoutubeInputRow(unit.youtube_url, 'คลิปหลัก');
+                } else {
+                    addYoutubeInputRow('', '');
+                }
+
+                if (unit.pre_test && unit.pre_test.length > 0) {
+                    unit.pre_test.forEach(q => addQuestion('pretest', q));
+                }
+                if (unit.post_test && unit.post_test.length > 0) {
+                    unit.post_test.forEach(q => addQuestion('posttest', q));
+                }
             } else {
-                videoItems = [{ url: '', title: '' }];
+                titleEl.innerText = "เพิ่มบทเรียนใหม่";
+                editingId.value = "";
+                addYoutubeInputRow('', '');
             }
-
-            videoItems.forEach(v => {
-                const url = typeof v === 'string' ? v : v.url;
-                const title = typeof v === 'string' ? '' : v.title;
-                addYoutubeInputRow(url, title);
-            });
-
-            pretestFormQuestions = unit && unit.pre_test ? JSON.parse(JSON.stringify(unit.pre_test)) : [];
-            posttestFormQuestions = unit && unit.post_test ? JSON.parse(JSON.stringify(unit.post_test)) : [];
-
-            renderStaffQuestionBuilder('pretest');
-            renderStaffQuestionBuilder('posttest');
 
             switchStaffFormStep(1);
-            document.getElementById('unitFormModal').classList.remove('hidden');
+            modal.classList.remove('hidden');
         }
 
         function closeUnitFormModal() {
@@ -1982,114 +1970,115 @@
         }
 
         function switchStaffFormStep(step) {
-            const s1 = document.getElementById('staffFormStep1');
-            const s2 = document.getElementById('staffFormStep2');
-            const s3 = document.getElementById('staffFormStep3');
+            const step1 = document.getElementById('staffFormStep1');
+            const step2 = document.getElementById('staffFormStep2');
+            const step3 = document.getElementById('staffFormStep3');
 
             const btn1 = document.getElementById('staffStepBtn1');
             const btn2 = document.getElementById('staffStepBtn2');
             const btn3 = document.getElementById('staffStepBtn3');
 
-            s1.classList.add('hidden');
-            s2.classList.add('hidden');
-            s3.classList.add('hidden');
+            const activeClass = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center space-x-1.5";
+            const inactiveClass = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5";
 
-            btn1.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5";
-            btn2.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5";
-            btn3.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5";
+            step1.classList.add('hidden');
+            step2.classList.add('hidden');
+            step3.classList.add('hidden');
+
+            btn1.className = inactiveClass;
+            btn2.className = inactiveClass;
+            btn3.className = inactiveClass;
 
             if (step === 1) {
-                s1.classList.remove('hidden');
-                btn1.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center space-x-1.5";
+                step1.classList.remove('hidden');
+                btn1.className = activeClass;
             } else if (step === 2) {
-                s2.classList.remove('hidden');
-                btn2.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-blue-100 text-blue-800 border border-blue-300 flex items-center justify-center space-x-1.5";
+                step2.classList.remove('hidden');
+                btn2.className = activeClass;
             } else if (step === 3) {
-                s3.classList.remove('hidden');
-                btn3.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center space-x-1.5";
+                step3.classList.remove('hidden');
+                btn3.className = activeClass;
             }
         }
 
-        function addQuestion(type) {
-            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
-            list.push({
-                q: "พิมพ์คำถามใหม่...",
-                choices: ["ตัวเลือก ก", "ตัวเลือก ข", "ตัวเลือก ค", "ตัวเลือก ง"],
-                answer: 0
-            });
-            renderStaffQuestionBuilder(type);
+        function addYoutubeInputRow(url = '', title = '') {
+            const container = document.getElementById('youtubeInputsList');
+            const index = container.children.length;
+
+            const row = document.createElement('div');
+            row.className = "flex items-center space-x-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 youtube-row";
+
+            row.innerHTML = `
+                <input type="text" placeholder="ชื่อคลิป (เช่น ตอนที่ ${index + 1})" value="${escapeHtml(title)}" class="yt-title-input w-1/3 px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                <input type="url" placeholder="URL ของ YouTube (เช่น https://www.youtube.com/watch?v=...)" value="${escapeHtml(url)}" class="yt-url-input flex-grow px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none" required>
+                <button type="button" onclick="this.parentElement.remove()" class="p-2 text-slate-400 hover:text-red-500 transition">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            `;
+            container.appendChild(row);
         }
 
-        function removeQuestion(type, index) {
-            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
-            list.splice(index, 1);
-            renderStaffQuestionBuilder(type);
+        function addQuestion(type, qData = null) {
+            const container = document.getElementById(`staff${type === 'pretest' ? 'Pretest' : 'Posttest'}Container`);
+            const qIndex = container.children.length;
+
+            const card = document.createElement('div');
+            card.className = `p-4 rounded-2xl border space-y-3 question-card ${type === 'pretest' ? 'bg-blue-50/40 border-blue-200' : 'bg-emerald-50/40 border-emerald-200'}`;
+
+            const qText = qData ? qData.q : '';
+            const choices = qData ? (qData.choices || ['', '', '', '']) : ['', '', '', ''];
+            const correctAns = qData ? (qData.answer || 0) : 0;
+
+            let choicesInputsHtml = '';
+            for (let i = 0; i < 4; i++) {
+                const choiceVal = choices[i] || '';
+                choicesInputsHtml += `
+                    <div class="flex items-center space-x-2">
+                        <input type="radio" name="${type}_correct_${qIndex}" value="${i}" ${parseInt(correctAns) === i ? 'checked' : ''} class="w-4 h-4 text-amber-600 focus:ring-amber-500">
+                        <input type="text" value="${escapeHtml(choiceVal)}" placeholder="ตัวเลือกที่ ${i + 1}" class="q-choice-input flex-grow px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white" required>
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold ${type === 'pretest' ? 'text-blue-800' : 'text-emerald-800'}">คำถามข้อที่ ${qIndex + 1}</span>
+                    <button type="button" onclick="this.closest('.question-card').remove()" class="text-xs text-red-500 hover:underline flex items-center space-x-1">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span>ลบข้อนี้</span>
+                    </button>
+                </div>
+                <input type="text" value="${escapeHtml(qText)}" placeholder="พิมพ์คำถาม..." class="q-text-input w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white" required>
+                <div class="space-y-2 pt-1">
+                    <span class="text-[11px] font-semibold text-slate-500">ตัวเลือกตอบ (คลิกปุ่มวิทยุด้านหน้าคำตอบที่ถูกต้อง):</span>
+                    ${choicesInputsHtml}
+                </div>
+            `;
+            container.appendChild(card);
         }
 
         function copyPretestToPosttest() {
-            posttestFormQuestions = JSON.parse(JSON.stringify(pretestFormQuestions));
-            renderStaffQuestionBuilder('posttest');
-        }
-
-        function renderStaffQuestionBuilder(type) {
-            const container = document.getElementById(type === 'pretest' ? 'staffPretestContainer' : 'staffPosttestContainer');
-            const questions = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
-            container.innerHTML = '';
-
-            if (questions.length === 0) {
-                container.innerHTML = `
-                    <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                        ยังไม่มีข้อสอบในส่วนนี้ กดปุ่ม "+ เพิ่มข้อสอบ" ด้านบน
-                    </div>`;
+            const preContainer = document.getElementById('staffPretestContainer');
+            const postContainer = document.getElementById('staffPosttestContainer');
+            
+            const preCards = preContainer.querySelectorAll('.question-card');
+            if (preCards.length === 0) {
+                showNotificationModal("แจ้งเตือน", "ไม่มีข้อสอบใน Pre-test ให้คัดลอก", "warning");
                 return;
             }
 
-            questions.forEach((qItem, qIndex) => {
-                const card = document.createElement('div');
-                card.className = "p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 relative";
+            postContainer.innerHTML = '';
+            preCards.forEach((pCard) => {
+                const qText = pCard.querySelector('.q-text-input').value;
+                const choiceInputs = pCard.querySelectorAll('.q-choice-input');
+                const choices = Array.from(choiceInputs).map(c => c.value);
+                const checkedRadio = pCard.querySelector('input[type="radio"]:checked');
+                const answer = checkedRadio ? parseInt(checkedRadio.value) : 0;
 
-                let choicesInputs = '';
-                (qItem.choices || []).forEach((choice, cIndex) => {
-                    choicesInputs += `
-                        <div class="flex items-center space-x-2">
-                            <input type="radio" name="${type}_correct_${qIndex}" value="${cIndex}" ${qItem.answer === cIndex ? 'checked' : ''} onchange="updateQuestionAnswer('${type}', ${qIndex}, ${cIndex})" class="text-amber-600 focus:ring-amber-500">
-                            <input type="text" value="${choice}" onchange="updateQuestionChoice('${type}', ${qIndex}, ${cIndex}, this.value)" placeholder="ตัวเลือกที่ ${cIndex + 1}" class="flex-grow px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                        </div>
-                    `;
-                });
-
-                card.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-700">ข้อที่ ${qIndex + 1}</span>
-                        <button type="button" onclick="removeQuestion('${type}', ${qIndex})" class="text-xs text-red-500 hover:text-red-700 font-semibold" title="ลบข้อสอบ">
-                            <i class="fa-solid fa-trash mr-1"></i> ลบข้อนี้
-                        </button>
-                    </div>
-                    <div>
-                        <input type="text" value="${qItem.q}" onchange="updateQuestionTitle('${type}', ${qIndex}, this.value)" placeholder="โจทย์คำถาม" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                    </div>
-                    <div class="space-y-1.5">
-                        <span class="text-[11px] text-slate-500 font-medium">ตัวเลือกตอบ (เลือกวงกลมด้านหน้าเพื่อกำหนดข้อที่ถูกต้อง):</span>
-                        ${choicesInputs}
-                    </div>
-                `;
-                container.appendChild(card);
+                addQuestion('posttest', { q: qText, choices: choices, answer: answer });
             });
-        }
 
-        function updateQuestionTitle(type, qIndex, val) {
-            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
-            if (list[qIndex]) list[qIndex].q = val;
-        }
-
-        function updateQuestionChoice(type, qIndex, cIndex, val) {
-            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
-            if (list[qIndex] && list[qIndex].choices) list[qIndex].choices[cIndex] = val;
-        }
-
-        function updateQuestionAnswer(type, qIndex, cIndex) {
-            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
-            if (list[qIndex]) list[qIndex].answer = parseInt(cIndex);
+            showNotificationModal("สำเร็จ", "คัดลอกข้อสอบจาก Pre-test มายัง Post-test เรียบร้อยแล้ว", "success");
         }
 
         async function handleSaveUnit(event) {
@@ -2103,22 +2092,56 @@
             const coverUrl = document.getElementById('unitCoverInput').value.trim();
             const description = document.getElementById('unitDescriptionInput').value.trim();
 
-            const videoRows = document.querySelectorAll('#youtubeInputsList .youtube-input-row');
-            const videoData = [];
+            // Collect Videos
+            const videoRows = document.querySelectorAll('#youtubeInputsList .youtube-row');
+            const videosData = [];
             videoRows.forEach((row, idx) => {
-                const url = row.querySelector('.youtube-url-val').value.trim();
-                const vTitle = row.querySelector('.youtube-title-val').value.trim() || `ตอนที่ ${idx + 1}`;
-                if (url) {
-                    videoData.push({ url, title: vTitle, order: idx + 1 });
+                const vTitle = row.querySelector('.yt-title-input').value.trim() || `ตอนที่ ${idx + 1}`;
+                const vUrl = row.querySelector('.yt-url-input').value.trim();
+                if (vUrl) {
+                    videosData.push({ title: vTitle, video_url: vUrl, order_index: idx + 1 });
                 }
             });
 
-            if (videoData.length === 0) return;
+            if (videosData.length === 0) {
+                showNotificationModal("ข้อมูลไม่ครบถ้วน", "กรุณาใส่ URL วิดีโออย่างน้อย 1 คลิป", "warning");
+                return;
+            }
+
+            // Collect Pre-test
+            const preCards = document.querySelectorAll('#staffPretestContainer .question-card');
+            const preQuestions = [];
+            preCards.forEach((card) => {
+                const qText = card.querySelector('.q-text-input').value.trim();
+                const choiceInputs = card.querySelectorAll('.q-choice-input');
+                const choices = Array.from(choiceInputs).map(c => c.value.trim());
+                const checkedRadio = card.querySelector('input[type="radio"]:checked');
+                const answer = checkedRadio ? parseInt(checkedRadio.value) : 0;
+
+                if (qText) {
+                    preQuestions.push({ question: qText, options: choices, correct_answer: answer });
+                }
+            });
+
+            // Collect Post-test
+            const postCards = document.querySelectorAll('#staffPosttestContainer .question-card');
+            const postQuestions = [];
+            postCards.forEach((card) => {
+                const qText = card.querySelector('.q-text-input').value.trim();
+                const choiceInputs = card.querySelectorAll('.q-choice-input');
+                const choices = Array.from(choiceInputs).map(c => c.value.trim());
+                const checkedRadio = card.querySelector('input[type="radio"]:checked');
+                const answer = checkedRadio ? parseInt(checkedRadio.value) : 0;
+
+                if (qText) {
+                    postQuestions.push({ question: qText, options: choices, correct_answer: answer });
+                }
+            });
 
             try {
                 let savedUnitId = unitId;
 
-                const unitPayload = {
+                const payload = {
                     unit_code: unitCode,
                     title: title,
                     category: category,
@@ -2127,68 +2150,114 @@
                 };
 
                 if (unitId) {
-                    await supabaseClient.from('units').update(unitPayload).eq('id', unitId);
+                    const { error } = await supabaseClient
+                        .from('units')
+                        .update(payload)
+                        .eq('id', unitId);
+
+                    if (error) throw error;
                 } else {
-                    const { data: newUnit, error: createErr } = await supabaseClient.from('units').insert([unitPayload]).select().single();
-                    if (createErr) throw createErr;
-                    savedUnitId = newUnit.id;
+                    const { data, error } = await supabaseClient
+                        .from('units')
+                        .insert([payload])
+                        .select('id')
+                        .single();
+
+                    if (error) throw error;
+                    savedUnitId = data.id;
                 }
 
-                if (savedUnitId) {
-                    await supabaseClient.from('unit_videos').delete().eq('unit_id', savedUnitId);
-                    const videoInserts = videoData.map(v => ({
-                        unit_id: savedUnitId,
-                        video_url: v.url,
-                        title: v.title,
-                        order_index: v.order
-                    }));
-                    await supabaseClient.from('unit_videos').insert(videoInserts);
+                // Delete old sub-records & insert new
+                await supabaseClient.from('unit_videos').delete().eq('unit_id', savedUnitId);
+                await supabaseClient.from('pre_test_questions').delete().eq('unit_id', savedUnitId);
+                await supabaseClient.from('post_test_questions').delete().eq('unit_id', savedUnitId);
 
-                    await supabaseClient.from('pre_test_questions').delete().eq('unit_id', savedUnitId);
-                    if (pretestFormQuestions.length > 0) {
-                        const preInserts = pretestFormQuestions.map(q => ({
-                            unit_id: savedUnitId,
-                            question: q.q,
-                            options: q.choices,
-                            correct_answer: q.answer
-                        }));
-                        await supabaseClient.from('pre_test_questions').insert(preInserts);
-                    }
+                if (videosData.length > 0) {
+                    const vRecords = videosData.map(v => ({ ...v, unit_id: savedUnitId }));
+                    await supabaseClient.from('unit_videos').insert(vRecords);
+                }
 
-                    await supabaseClient.from('post_test_questions').delete().eq('unit_id', savedUnitId);
-                    if (posttestFormQuestions.length > 0) {
-                        const postInserts = posttestFormQuestions.map(q => ({
-                            unit_id: savedUnitId,
-                            question: q.q,
-                            options: q.choices,
-                            correct_answer: q.answer
-                        }));
-                        await supabaseClient.from('post_test_questions').insert(postInserts);
-                    }
+                if (preQuestions.length > 0) {
+                    const preRecords = preQuestions.map(q => ({ ...q, unit_id: savedUnitId }));
+                    await supabaseClient.from('pre_test_questions').insert(preRecords);
+                }
+
+                if (postQuestions.length > 0) {
+                    const postRecords = postQuestions.map(q => ({ ...q, unit_id: savedUnitId }));
+                    await supabaseClient.from('post_test_questions').insert(postRecords);
                 }
 
                 closeUnitFormModal();
                 await fetchUnitsData();
+                showNotificationModal("บันทึกสำเร็จ", "บันทึกข้อมูลบทเรียนลงระบบ Supabase เรียบร้อยแล้ว", "success");
+
             } catch (err) {
-                console.error("Save unit error:", err);
+                console.error("Save Unit Error:", err);
+                showNotificationModal("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้: " + (err.message || err), "error");
             }
         }
 
         function editUnit(id) {
-            const unit = allUnits.find(u => String(u.id) === String(id));
-            if (unit) {
-                openUnitFormModal(unit);
+            const targetUnit = allUnits.find(u => String(u.id) === String(id));
+            if (targetUnit) {
+                openUnitFormModal(targetUnit);
             }
         }
 
-        async function deleteUnit(id) {
-            if (!supabaseClient) return;
-            try {
-                await supabaseClient.from('units').delete().eq('id', id);
-                await fetchUnitsData();
-            } catch (err) {
-                console.error("Delete unit error:", err);
+        function deleteUnit(id) {
+            showConfirmModal(
+                "ลบบทเรียน",
+                "คุณต้องการลบบทเรียนนี้ออกจากระบบใช่หรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้",
+                "fa-solid fa-trash-can text-2xl",
+                "bg-rose-100 text-rose-600 border border-rose-200",
+                "bg-rose-600 hover:bg-rose-500",
+                "ยืนยันการลบ",
+                async () => {
+                    if (!supabaseClient) return;
+                    try {
+                        await supabaseClient.from('unit_videos').delete().eq('unit_id', id);
+                        await supabaseClient.from('pre_test_questions').delete().eq('unit_id', id);
+                        await supabaseClient.from('post_test_questions').delete().eq('unit_id', id);
+                        const { error } = await supabaseClient.from('units').delete().eq('id', id);
+
+                        if (error) throw error;
+
+                        await fetchUnitsData();
+                        showNotificationModal("ลบสำเร็จ", "ลบบทเรียนออกจากระบบเรียบร้อยแล้ว", "success");
+                    } catch (err) {
+                        console.error("Delete error:", err);
+                        showNotificationModal("เกิดข้อผิดพลาด", "ไม่สามารถลบบทเรียนได้: " + (err.message || err), "error");
+                    }
+                }
+            );
+        }
+
+        function getYouTubeEmbedUrl(url) {
+            if (!url) return '';
+            let videoId = '';
+            
+            if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0];
+            } else if (url.includes('watch?v=')) {
+                videoId = url.split('watch?v=')[1].split('&')[0];
+            } else if (url.includes('embed/')) {
+                videoId = url.split('embed/')[1].split('?')[0];
             }
+
+            if (videoId) {
+                return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+            }
+            return url;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>
