@@ -425,10 +425,10 @@
 
                     <!-- Full Name Field (Sign Up Mode) -->
                     <div id="displayNameContainer" class="mb-4 hidden">
-                        <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อ-นามสกุล</label>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <i class="fa-solid fa-id-card absolute left-3 top-3 text-slate-400 text-sm"></i>
-                            <input type="text" id="authDisplayName" oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="สมชาย ใจดี" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <input type="text" id="authDisplayName" oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.value = this.value.replace(/[0-9]/g, ''); this.setCustomValidity('');" placeholder="กรุณากรอกชื่อ-นามสกุล" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                         </div>
                     </div>
 
@@ -1471,9 +1471,11 @@
 
             const passInput = document.getElementById('authPassword');
             const emailInput = document.getElementById('authEmail');
+            const nameInput = document.getElementById('authDisplayName');
 
             passInput.required = false;
             emailInput.required = true;
+            if (nameInput) nameInput.required = (authMode === 'signup');
 
             roleContainer.classList.remove('hidden');
             emailContainer.classList.remove('hidden');
@@ -1529,7 +1531,7 @@
             const password = document.getElementById('authPassword').value;
             const newPassword = document.getElementById('authNewPassword').value;
             const confirmPassword = document.getElementById('authConfirmPassword').value;
-            const displayName = document.getElementById('authDisplayName').value.trim() || email.split('@')[0];
+            const displayName = document.getElementById('authDisplayName').value.trim();
 
             if (!supabaseClient) return false;
 
@@ -1546,6 +1548,16 @@
 
             // FLOW 1: SIGN UP
             if (authMode === 'signup') {
+                if (!displayName || displayName.trim() === '') {
+                    showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "กรุณากรอกชื่อ-นามสกุล", "error");
+                    return false;
+                }
+
+                if (/\d/.test(displayName)) {
+                    showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "ชื่อ-นามสกุลห้ามมีตัวเลข", "error");
+                    return false;
+                }
+
                 if (!password || password.length < 6) {
                     showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร", "error");
                     return false;
@@ -2005,88 +2017,63 @@
             const container = document.getElementById('youtubeInputsList');
             if (!container) return;
 
-            const index = container.children.length;
-            const div = document.createElement('div');
-            div.className = "flex items-center space-x-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 youtube-row";
-
-            div.innerHTML = `
-                <div class="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <input type="text" value="${escapeHtml(title)}" placeholder="ชื่อตอน (เช่น ตอนที่ ${index + 1})" class="yt-title-input px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
-                    <input type="url" value="${escapeHtml(url)}" placeholder="URL วิดีโอ YouTube" class="yt-url-input px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
+            const rowIndex = container.children.length;
+            const row = document.createElement('div');
+            row.className = "flex flex-col sm:flex-row gap-2 items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200";
+            row.innerHTML = `
+                <div class="w-full sm:w-1/3">
+                    <input type="text" name="yt_title[]" value="${escapeHtml(title)}" placeholder="ชื่อตอน (เช่น ตอนที่ ${rowIndex + 1})" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
                 </div>
-                <button type="button" onclick="removeYoutubeInputRow(this)" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition" title="ลบรายการ">
-                    <i class="fa-solid fa-trash-can text-sm"></i>
-                </button>
+                <div class="w-full sm:w-2/3 flex items-center space-x-2">
+                    <input type="url" name="yt_url[]" value="${escapeHtml(url)}" placeholder="https://www.youtube.com/watch?v=..." class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <button type="button" onclick="this.closest('.flex').remove()" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition" title="ลบ">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
+                    </button>
+                </div>
             `;
-            container.appendChild(div);
+            container.appendChild(row);
         }
 
-        function removeYoutubeInputRow(btn) {
-            const container = document.getElementById('youtubeInputsList');
-            if (container && container.children.length > 1) {
-                btn.closest('.youtube-row').remove();
-            } else {
-                showNotificationModal("แจ้งเตือน", "จำเป็นต้องมีวิดีโออย่างน้อย 1 รายการ", "warning");
-            }
-        }
-
-        function addQuestion(type, questionData = null) {
-            const container = document.getElementById(type === 'pretest' ? 'staffPretestContainer' : 'staffPosttestContainer');
+        function addQuestion(type, questionObj = null) {
+            const container = document.getElementById(`staff${type === 'pretest' ? 'Pretest' : 'Posttest'}Container`);
             if (!container) return;
 
             const qIndex = container.children.length;
             const qCard = document.createElement('div');
-            qCard.className = "question-card p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 relative";
+            qCard.className = "p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 relative";
 
-            const qText = questionData ? questionData.q : '';
-            const choices = questionData ? questionData.choices : ['', '', '', ''];
-            const correctAns = questionData !== null && questionData.answer !== undefined ? parseInt(questionData.answer) : 0;
+            const qText = questionObj ? questionObj.q || '' : '';
+            const choices = questionObj && questionObj.choices ? questionObj.choices : ['', '', '', ''];
+            const correctAns = questionObj ? questionObj.answer : 0;
 
-            let choicesInputsHtml = '';
+            let choicesHtml = '';
             for (let i = 0; i < 4; i++) {
                 const choiceVal = choices[i] || '';
-                const isChecked = correctAns === i ? 'checked' : '';
-                choicesInputsHtml += `
+                const isChecked = parseInt(correctAns) === i ? 'checked' : '';
+                choicesHtml += `
                     <div class="flex items-center space-x-2">
-                        <input type="radio" name="${type}_correct_${qIndex}" value="${i}" ${isChecked} class="correct-radio w-4 h-4 text-amber-600 focus:ring-amber-500 border-slate-300">
-                        <input type="text" value="${escapeHtml(choiceVal)}" placeholder="ตัวเลือกที่ ${i + 1}" class="choice-input flex-grow px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none bg-white">
+                        <input type="radio" name="${type}_q_${qIndex}_ans" value="${i}" ${isChecked} class="w-4 h-4 text-amber-600 focus:ring-amber-500">
+                        <input type="text" class="${type}_q_choice_${i} w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="ตัวเลือกที่ ${i + 1}" value="${escapeHtml(choiceVal)}">
                     </div>
                 `;
             }
 
             qCard.innerHTML = `
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-xs font-bold text-slate-700">ข้อที่ <span class="q-number">${qIndex + 1}</span></span>
-                    <button type="button" onclick="removeQuestion(this, '${type}')" class="text-rose-500 hover:text-rose-700 text-xs flex items-center space-x-1">
-                        <i class="fa-solid fa-trash-can"></i>
-                        <span>ลบข้อสอบ</span>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold text-slate-700">ข้อที่ ${qIndex + 1}</span>
+                    <button type="button" onclick="this.closest('.p-4').remove()" class="text-rose-500 hover:text-rose-700 text-xs font-semibold">
+                        <i class="fa-solid fa-trash mr-1"></i> ลบข้อนี้
                     </button>
                 </div>
                 <div>
-                    <input type="text" value="${escapeHtml(qText)}" placeholder="คำถาม..." class="q-text-input w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm font-medium focus:ring-1 focus:ring-amber-500 focus:outline-none bg-white mb-2">
+                    <input type="text" class="${type}_q_title w-full px-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none font-medium" placeholder="โจทย์คำถาม..." value="${escapeHtml(qText)}">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-[11px] font-semibold text-slate-500">ตัวเลือก (เลือกปุ่มวิทยุหน้าข้อที่ถูกต้อง)</label>
-                    ${choicesInputsHtml}
+                <div class="space-y-2 pt-1">
+                    <label class="block text-[11px] font-semibold text-slate-500">ตัวเลือก (เลือกปุ่มวิทยุด้านหน้าสำหรับคำตอบที่ถูกต้อง):</label>
+                    ${choicesHtml}
                 </div>
             `;
-
             container.appendChild(qCard);
-        }
-
-        function removeQuestion(btn, type) {
-            const card = btn.closest('.question-card');
-            const container = card.parentElement;
-            card.remove();
-            
-            // Re-index question numbers and input names
-            const cards = container.querySelectorAll('.question-card');
-            cards.forEach((c, idx) => {
-                const numEl = c.querySelector('.q-number');
-                if (numEl) numEl.innerText = idx + 1;
-                const radios = c.querySelectorAll('.correct-radio');
-                radios.forEach(r => r.name = `${type}_correct_${idx}`);
-            });
         }
 
         function copyPretestToPosttest() {
@@ -2094,91 +2081,97 @@
             const postContainer = document.getElementById('staffPosttestContainer');
             if (!preContainer || !postContainer) return;
 
-            const preCards = preContainer.querySelectorAll('.question-card');
+            const preCards = preContainer.children;
             if (preCards.length === 0) {
                 showNotificationModal("แจ้งเตือน", "ยังไม่มีข้อสอบ Pre-test ให้คัดลอก", "warning");
                 return;
             }
 
             postContainer.innerHTML = '';
-            preCards.forEach((card) => {
-                const qText = card.querySelector('.q-text-input').value;
-                const choiceInputs = card.querySelectorAll('.choice-input');
-                const choices = Array.from(choiceInputs).map(i => i.value);
-                const checkedRadio = card.querySelector('.correct-radio:checked');
-                const answer = checkedRadio ? parseInt(checkedRadio.value) : 0;
+            Array.from(preCards).forEach((card, idx) => {
+                const qTitle = card.querySelector('.pretest_q_title')?.value || '';
+                const choices = [];
+                for (let c = 0; c < 4; c++) {
+                    choices.push(card.querySelector(`.pretest_q_choice_${c}`)?.value || '');
+                }
+                const selectedRadio = card.querySelector(`input[name="pretest_q_${idx}_ans"]:checked`);
+                const answer = selectedRadio ? parseInt(selectedRadio.value) : 0;
 
-                addQuestion('posttest', { q: qText, choices: choices, answer: answer });
+                addQuestion('posttest', {
+                    q: qTitle,
+                    choices: choices,
+                    answer: answer
+                });
             });
 
-            showNotificationModal("สำเร็จ", "คัดลอกข้อสอบจาก Pre-test ไปยัง Post-test เรียบร้อยแล้ว", "success");
+            showNotificationModal("สำเร็จ", "คัดลอกข้อสอบจาก Pre-test มายัง Post-test เรียบร้อยแล้ว", "success");
         }
 
         async function handleSaveUnit(event) {
             event.preventDefault();
+            if (!supabaseClient) return;
 
-            const editingId = document.getElementById('editingUnitId').value;
+            const unitId = document.getElementById('editingUnitId').value;
             const unitCode = document.getElementById('unitCodeInput').value.trim().toUpperCase();
             const title = document.getElementById('unitTitleInput').value.trim();
-            const category = document.getElementById('unitCategoryInput').value.trim();
+            const category = document.getElementById('unitCategoryInput').value.trim() || 'วิทยาการคอมพิวเตอร์';
             const coverUrl = document.getElementById('unitCoverInput').value.trim();
             const description = document.getElementById('unitDescriptionInput').value.trim();
 
-            if (!unitCode || !title || !category) {
-                showNotificationModal("ข้อมูลไม่ครบถ้วน", "กรุณากรอกข้อมูลรหัสบทเรียน ชื่อบทเรียน และหมวดหมู่ให้ครบถ้วน", "warning");
+            if (!unitCode || !title) {
+                showNotificationModal("ข้อมูลไม่ครบถ้วน", "กรุณากรอกรหัสบทเรียนและชื่อบทเรียน", "warning");
                 return;
             }
 
-            // Extract videos
-            const ytRows = document.querySelectorAll('#youtubeInputsList .youtube-row');
-            const videosData = [];
-            ytRows.forEach((row, idx) => {
-                const vTitle = row.querySelector('.yt-title-input').value.trim();
-                const vUrl = row.querySelector('.yt-url-input').value.trim();
-                if (vUrl) {
-                    videosData.push({
-                        title: vTitle || `ตอนที่ ${idx + 1}`,
-                        video_url: vUrl,
-                        order_index: idx + 1
-                    });
+            // Collect video URLs
+            const titleInputs = document.querySelectorAll('input[name="yt_title[]"]');
+            const urlInputs = document.querySelectorAll('input[name="yt_url[]"]');
+            const videos = [];
+
+            urlInputs.forEach((input, index) => {
+                const u = input.value.trim();
+                const t = titleInputs[index] ? titleInputs[index].value.trim() : '';
+                if (u) {
+                    videos.push({ title: t, url: u, order: index });
                 }
             });
 
-            // Extract Pre-test & Post-test
-            const extractQuiz = (containerId) => {
-                const container = document.getElementById(containerId);
-                const cards = container.querySelectorAll('.question-card');
-                const result = [];
-                cards.forEach((c) => {
-                    const qText = c.querySelector('.q-text-input').value.trim();
-                    const choiceInputs = c.querySelectorAll('.choice-input');
-                    const choices = Array.from(choiceInputs).map(i => i.value.trim());
-                    const checkedRadio = c.querySelector('.correct-radio:checked');
-                    const answer = checkedRadio ? parseInt(checkedRadio.value) : 0;
-
-                    if (qText) {
-                        result.push({
-                            question: qText,
-                            options: JSON.stringify(choices),
-                            correct_answer: answer
-                        });
+            // Collect Pre-test questions
+            const preContainer = document.getElementById('staffPretestContainer');
+            const preQuestions = [];
+            Array.from(preContainer.children).forEach((card, idx) => {
+                const qText = card.querySelector('.pretest_q_title')?.value.trim();
+                if (qText) {
+                    const choices = [];
+                    for (let c = 0; c < 4; c++) {
+                        choices.push(card.querySelector(`.pretest_q_choice_${c}`)?.value.trim() || '');
                     }
-                });
-                return result;
-            };
+                    const selectedRadio = card.querySelector(`input[name="pretest_q_${idx}_ans"]:checked`);
+                    const answer = selectedRadio ? parseInt(selectedRadio.value) : 0;
+                    preQuestions.push({ question: qText, options: choices, correct_answer: answer });
+                }
+            });
 
-            const preTestQuestions = extractQuiz('staffPretestContainer');
-            const postTestQuestions = extractQuiz('staffPosttestContainer');
-
-            if (!supabaseClient) {
-                showNotificationModal("เกิดข้อผิดพลาด", "ไม่สามารถเชื่อมต่อกับฐานข้อมูล Supabase ได้", "error");
-                return;
-            }
+            // Collect Post-test questions
+            const postContainer = document.getElementById('staffPosttestContainer');
+            const postQuestions = [];
+            Array.from(postContainer.children).forEach((card, idx) => {
+                const qText = card.querySelector('.posttest_q_title')?.value.trim();
+                if (qText) {
+                    const choices = [];
+                    for (let c = 0; c < 4; c++) {
+                        choices.push(card.querySelector(`.posttest_q_choice_${c}`)?.value.trim() || '');
+                    }
+                    const selectedRadio = card.querySelector(`input[name="posttest_q_${idx}_ans"]:checked`);
+                    const answer = selectedRadio ? parseInt(selectedRadio.value) : 0;
+                    postQuestions.push({ question: qText, options: choices, correct_answer: answer });
+                }
+            });
 
             try {
-                let unitId = editingId;
+                let savedUnitId = unitId;
 
-                const unitPayload = {
+                const unitData = {
                     unit_code: unitCode,
                     title: title,
                     category: category,
@@ -2189,54 +2182,62 @@
                 if (unitId) {
                     const { error } = await supabaseClient
                         .from('units')
-                        .update(unitPayload)
+                        .update(unitData)
                         .eq('id', unitId);
-
                     if (error) throw error;
                 } else {
                     const { data, error } = await supabaseClient
                         .from('units')
-                        .insert([unitPayload])
-                        .select();
-
+                        .insert([unitData])
+                        .select('id')
+                        .single();
                     if (error) throw error;
-                    if (data && data.length > 0) {
-                        unitId = data[0].id;
-                    }
+                    savedUnitId = data.id;
                 }
 
-                if (unitId) {
-                    // Delete old sub-records if editing
-                    await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
-                    await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
-                    await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
-
-                    // Insert Videos
-                    if (videosData.length > 0) {
-                        const videoRows = videosData.map(v => ({ ...v, unit_id: unitId }));
+                // Update videos
+                if (savedUnitId) {
+                    await supabaseClient.from('unit_videos').delete().eq('unit_id', savedUnitId);
+                    if (videos.length > 0) {
+                        const videoRows = videos.map(v => ({
+                            unit_id: savedUnitId,
+                            title: v.title,
+                            video_url: v.url,
+                            order_index: v.order
+                        }));
                         await supabaseClient.from('unit_videos').insert(videoRows);
                     }
 
-                    // Insert Pre-test
-                    if (preTestQuestions.length > 0) {
-                        const preRows = preTestQuestions.map(q => ({ ...q, unit_id: unitId }));
+                    // Update pre-test
+                    await supabaseClient.from('pre_test_questions').delete().eq('unit_id', savedUnitId);
+                    if (preQuestions.length > 0) {
+                        const preRows = preQuestions.map(q => ({
+                            unit_id: savedUnitId,
+                            question: q.question,
+                            options: q.options,
+                            correct_answer: q.correct_answer
+                        }));
                         await supabaseClient.from('pre_test_questions').insert(preRows);
                     }
 
-                    // Insert Post-test
-                    if (postTestQuestions.length > 0) {
-                        const postRows = postTestQuestions.map(q => ({ ...q, unit_id: unitId }));
+                    // Update post-test
+                    await supabaseClient.from('post_test_questions').delete().eq('unit_id', savedUnitId);
+                    if (postQuestions.length > 0) {
+                        const postRows = postQuestions.map(q => ({
+                            unit_id: savedUnitId,
+                            question: q.question,
+                            options: q.options,
+                            correct_answer: q.correct_answer
+                        }));
                         await supabaseClient.from('post_test_questions').insert(postRows);
                     }
                 }
 
                 closeUnitFormModal();
-                showNotificationModal("บันทึกสำเร็จ", "บันทึกข้อมูลบทเรียนลงระบบเรียบร้อยแล้ว", "success", async () => {
-                    await fetchUnitsData();
-                });
-
+                await fetchUnitsData();
+                showNotificationModal("บันทึกสำเร็จ", "บันทึกข้อมูลบทเรียนลงใน Supabase เรียบร้อยแล้ว", "success");
             } catch (err) {
-                console.error("Save Unit Error:", err);
+                console.error("Save unit error:", err);
                 showNotificationModal("เกิดข้อผิดพลาด", err.message || "ไม่สามารถบันทึกข้อมูลได้", "error");
             }
         }
@@ -2249,73 +2250,60 @@
         }
 
         function deleteUnit(unitId) {
-            const unit = allUnits.find(u => String(u.id) === String(unitId));
-            const title = unit ? unit.title : 'บทเรียนนี้';
-
             showConfirmModal(
-                "ยืนยันการลบ",
-                `คุณต้องการลบ "${title}" ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้`,
+                "ยืนยันการลบบทเรียน",
+                "คุณต้องการลบบทเรียนนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้",
                 "fa-solid fa-trash-can text-2xl",
                 "bg-rose-100 text-rose-600 border border-rose-200",
                 "bg-rose-600 hover:bg-rose-500",
-                "ยืนยันการลบ",
+                "ลบบทเรียน",
                 async () => {
                     if (!supabaseClient) return;
                     try {
                         await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
                         await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
                         await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
-                        
                         const { error } = await supabaseClient.from('units').delete().eq('id', unitId);
                         if (error) throw error;
 
-                        showNotificationModal("ลบสำเร็จ", "ลบบทเรียนออกจากระบบเรียบร้อยแล้ว", "success", async () => {
-                            await fetchUnitsData();
-                        });
+                        await fetchUnitsData();
+                        showNotificationModal("ลบสำเร็จ", "ลบบทเรียนเรียบร้อยแล้ว", "success");
                     } catch (err) {
-                        console.error("Delete Unit Error:", err);
+                        console.error("Delete unit error:", err);
                         showNotificationModal("เกิดข้อผิดพลาด", err.message || "ไม่สามารถลบบทเรียนได้", "error");
                     }
                 }
             );
         }
 
-        function getYouTubeEmbedUrl(url) {
-            if (!url) return '';
-            let videoId = '';
-            
-            if (url.includes('youtu.be/')) {
-                videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0];
-            } else if (url.includes('youtube.com/watch')) {
-                const urlParams = new URLSearchParams(url.split('?')[1]);
-                videoId = urlParams.get('v') || '';
-            } else if (url.includes('youtube.com/embed/')) {
-                videoId = url.split('youtube.com/embed/')[1].split('?')[0].split('&')[0];
-            }
-
-            if (videoId) {
-                return `https://www.youtube.com/embed/${videoId}?rel=0`;
-            }
-            return url;
-        }
-
-        function escapeHtml(str) {
-            if (str === null || str === undefined) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+        // Helper Utilities
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
         function safeUrl(url) {
             if (!url) return 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80';
-            const cleanUrl = String(url).trim();
-            if (cleanUrl.startsWith('javascript:') || cleanUrl.startsWith('data:text/html')) {
-                return '#';
+            return escapeHtml(url);
+        }
+
+        function getYouTubeEmbedUrl(url) {
+            if (!url) return '';
+            let videoId = '';
+            if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0];
+            } else if (url.includes('youtube.com/watch')) {
+                const urlParams = new URLSearchParams(url.split('?')[1]);
+                videoId = urlParams.get('v');
+            } else if (url.includes('youtube.com/embed/')) {
+                videoId = url.split('youtube.com/embed/')[1].split('?')[0];
             }
-            return cleanUrl;
+            return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0` : url;
         }
     </script>
 </body>
