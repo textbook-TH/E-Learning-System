@@ -339,8 +339,8 @@
                 <div class="w-12 h-12 bg-amber-500/20 rounded-full mx-auto flex items-center justify-center text-amber-300 text-2xl mb-2">
                     <i class="fa-solid fa-user-lock"></i>
                 </div>
-                <h3 class="text-xl font-bold" id="authModalTitle">เข้าสู่ระบบ CatalogView</h3>
-                <p class="text-xs text-blue-100/80 mt-1">เลือกสิทธิ์การใช้งานและกรอกข้อมูลเพื่อเข้าสู่ระบบ</p>
+                <h3 class="text-xl font-bold" id="authModalTitle">เข้าสู่ระบบ</h3>
+                <p class="text-xs text-blue-100/80 mt-1">เลือกสิทธิ์การใช้งานผ่านอีเมล์สถาบัน</p>
             </div>
 
             <div class="p-6">
@@ -408,8 +408,8 @@
             <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 shadow-inner">
                 <i class="fa-solid fa-envelope-circle-check"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-2">ยืนยันการลงทะเบียน</h3>
-            <p class="text-xs text-slate-600 mb-6 leading-relaxed">กรุณายืนยันสมาชิกผ่านอีเมล์ ระบบจะทำการส่งลิงก์ยืนยันตัวตนไปยังอีเมลที่คุณได้ลงทะเบียนไว้</p>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">กรุณายืนยันสมาชิกผ่านอีเมล์</h3>
+            <p class="text-xs text-slate-600 mb-6 leading-relaxed">ระบบจะทำการส่งลิงก์ยืนยันตัวตนไปยังอีเมล์คุณ</p>
             <div class="flex space-x-2">
                 <button type="button" onclick="closeConfirmRegisterModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition">ยกเลิก</button>
                 <button type="button" onclick="executeRegistration()" class="w-1/2 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md transition">ยืนยันการลงทะเบียน</button>
@@ -1238,13 +1238,17 @@
         function closeConfirmRegisterModal() { document.getElementById('confirmRegisterModal').classList.add('hidden'); }
 
         function setAuthRole(role) {
+            if (isSignUpMode && role === 'staff') return; // Prevent selecting staff during registration
+
             currentRoleSelection = role;
             const studentBtn = document.getElementById('roleStudentBtn');
             const staffBtn = document.getElementById('roleStaffBtn');
 
             if (role === 'student') {
                 studentBtn.className = "py-2 rounded-lg text-sm font-semibold transition bg-white text-amber-700 shadow-sm flex items-center justify-center space-x-1.5";
-                staffBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
+                if (!isSignUpMode) {
+                    staffBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
+                }
             } else {
                 staffBtn.className = "py-2 rounded-lg text-sm font-semibold transition bg-white text-rose-700 shadow-sm flex items-center justify-center space-x-1.5";
                 studentBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
@@ -1258,6 +1262,7 @@
             const toggleText = document.getElementById('authToggleText');
             const toggleBtn = document.getElementById('authToggleBtn');
             const nameContainer = document.getElementById('displayNameContainer');
+            const roleStaffBtn = document.getElementById('roleStaffBtn');
 
             if (isSignUpMode) {
                 modalTitle.innerText = "สมัครสมาชิก";
@@ -1265,12 +1270,24 @@
                 toggleText.innerText = "มีบัญชีผู้ใช้งานอยู่แล้ว?";
                 toggleBtn.innerText = "เข้าสู่ระบบ";
                 nameContainer.classList.remove('hidden');
+                
+                // Switch role to student and disable staff option during signup
+                setAuthRole('student');
+                if (roleStaffBtn) {
+                    roleStaffBtn.disabled = true;
+                    roleStaffBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-400 bg-slate-200/60 cursor-not-allowed opacity-50 flex items-center justify-center space-x-1.5";
+                }
             } else {
-                modalTitle.innerText = "เข้าสู่ระบบ CatalogView";
+                modalTitle.innerText = "เข้าสู่ระบบ";
                 submitBtn.innerText = "เข้าสู่ระบบ";
                 toggleText.innerText = "ยังไม่มีบัญชีสมาชิก?";
                 toggleBtn.innerText = "สมัครสมาชิก";
                 nameContainer.classList.add('hidden');
+
+                if (roleStaffBtn) {
+                    roleStaffBtn.disabled = false;
+                    roleStaffBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
+                }
             }
         }
 
