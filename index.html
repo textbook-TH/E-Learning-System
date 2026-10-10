@@ -603,6 +603,11 @@
         // Temporary storage for registration credentials during confirmation popup
         let pendingRegistrationData = null;
 
+        // Helper Function to strictly enforce @kmitl.ac.th domain
+        function isKmitlEmail(email) {
+            return email && typeof email === 'string' && email.toLowerCase().endsWith('@kmitl.ac.th');
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
             await initAuthCheck();
             await fetchUnitsData();
@@ -637,6 +642,17 @@
         }
 
         async function loadUserProfile(authUser) {
+            // STRICT SECURITY RULE 1: Direct Denial for Non-KMITL Domains
+            if (!isKmitlEmail(authUser.email)) {
+                if (supabaseClient) {
+                    await supabaseClient.auth.signOut();
+                }
+                currentUser = null;
+                updateUserInterface();
+                showToast("เกิดข้อผิดพลาด: อนุญาตเฉพาะอีเมลสถาบัน (@kmitl.ac.th) เท่านั้น", "error");
+                return false;
+            }
+
             let role = 'student';
             let name = authUser.user_metadata?.full_name || authUser.email.split('@')[0];
             let userRecordFound = false;
@@ -659,7 +675,7 @@
                 }
             }
 
-            // CRITICAL CHECK: If user record does not exist in elearning_users, deny access & sign out
+            // STRICT SECURITY RULE 2: If user profile record is not found in elearning_users, deny access & logout
             if (!userRecordFound) {
                 if (supabaseClient) {
                     await supabaseClient.auth.signOut();
@@ -1423,11 +1439,16 @@
 
             if (!supabaseClient) {
                 showToast("ไม่สามารถเชื่อมต่อ Supabase ได้", "error");
-                return;
+                return false;
+            }
+
+            // STRICT DOMAIN CHECK: Must end with @kmitl.ac.th for Login, Sign Up, and Forgot Password
+            if (authMode !== 'reset_password' && !isKmitlEmail(email)) {
+                showToast("เกิดข้อผิดพลาด: อนุญาตเฉพาะอีเมลสถาบัน (@kmitl.ac.th) เท่านั้น", "error");
+                return false;
             }
 
             if (authMode === 'forgot') {
-                // Step 1: Check if email exists in elearning_users table
                 try {
                     const { data, error } = await supabaseClient
                         .from('elearning_users')
@@ -1437,10 +1458,9 @@
 
                     if (error || !data) {
                         showToast("กรุณาลงทะเบียนสมัครสมาชิก", "error");
-                        return;
+                        return false;
                     }
 
-                    // Step 2: Email exists, send password reset link
                     const redirectUrl = window.location.origin + window.location.pathname;
                     const { error: resetErr } = await supabaseClient.auth.resetPasswordForEmail(email, {
                         redirectTo: redirectUrl
@@ -1453,12 +1473,12 @@
                 } catch (err) {
                     console.error("Forgot password error:", err);
                     showToast(getThaiErrorMessage(err), "error");
+                    return false;
                 }
             } else if (authMode === 'reset_password') {
-                // Update password for recovery mode
                 if (!newPassword || newPassword.length < 6) {
                     showToast("เกิดข้อผิดพลาด: รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร", "error");
-                    return;
+                    return false;
                 }
 
                 try {
@@ -1471,9 +1491,9 @@
                 } catch (err) {
                     console.error("Reset password error:", err);
                     showToast(getThaiErrorMessage(err), "error");
+                    return false;
                 }
             } else if (authMode === 'signup') {
-                // Store pending data and show popup modal asking for confirmation
                 pendingRegistrationData = { email, password, displayName };
                 openConfirmRegisterModal();
             } else if (authMode === 'login') {
@@ -1489,7 +1509,7 @@
                         const success = await loadUserProfile(data.user);
                         if (!success) {
                             showToast("เกิดข้อผิดพลาด: กรุณาสมัครสมาชิกก่อนเข้าระบบ", "error");
-                            return;
+                            return false; // Prevent Security Bypass
                         }
                         showToast(`เข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ ${currentUser.name}`, 'success');
                     }
@@ -1504,16 +1524,23 @@
                 } catch (err) {
                     console.error("Auth Error:", err);
                     showToast(getThaiErrorMessage(err), "error");
+                    return false; // Prevent Security Bypass
                 }
             }
         }
 
-        // Triggered upon pressing "ยืนยัน" inside confirmation popup
         async function executeRegistration() {
-            if (!pendingRegistrationData || !supabaseClient) return;
+            if (!pendingRegistrationData || !supabaseClient) return false;
             closeConfirmRegisterModal();
 
             const { email, password, displayName } = pendingRegistrationData;
+
+            // Strict Validation Before Proceeding with API
+            if (!isKmitlEmail(email)) {
+                showToast("เกิดข้อผิดพลาด: อนุญาตเฉพาะอีเมลสถาบัน (@kmitl.ac.th) เท่านั้น", "error");
+                pendingRegistrationData = null;
+                return false;
+            }
 
             try {
                 const { data, error } = await supabaseClient.auth.signUp({
@@ -1524,15 +1551,23 @@
 
                 if (error) throw error;
 
+                // UX Bug Fix: Prevent fake registration success if user already exists in Auth
+                if (data.user && data.user.identities && data.user.identities.length === 0) {
+                    showToast("เกิดข้อผิดพลาด: อีเมลนี้ได้รับการลงทะเบียนในระบบเรียบร้อยแล้ว", "error");
+                    pendingRegistrationData = null;
+                    return false;
+                }
+
                 if (data.user) {
                     try {
+                        // Safe row creation with strictly enforced student role
                         await supabaseClient.from('elearning_users').upsert({
                             id: data.user.id,
                             email: email,
                             full_name: displayName,
                             role: 'student',
                             is_admin: false
-                        });
+                        }, { onConflict: 'id' });
                     } catch(e) { console.warn("User table record warning:", e); }
 
                     showToast(`สมัครสมาชิกเรียบร้อยแล้ว! กรุณาตรวจสอบอีเมลเพื่อทำการยืนยันการใช้งาน`, 'success');
@@ -1543,6 +1578,7 @@
             } catch (err) {
                 console.error("Auth Error:", err);
                 showToast(getThaiErrorMessage(err), "error");
+                return false;
             }
         }
 
@@ -1988,120 +2024,155 @@
                         if (fallbackErr) throw fallbackErr;
                     }
                 } else {
-                    let newUnit = null;
-
-                    const res1 = await supabaseClient
+                    const { data: newUnit, error: createErr } = await supabaseClient
                         .from('units')
                         .insert([unitPayload])
                         .select()
                         .single();
 
-                    if (res1.error) {
-                        const res2 = await supabaseClient
+                    if (createErr) {
+                        const { data: fbUnit, error: fbErr } = await supabaseClient
                             .from('units')
                             .insert([{ title, description, category }])
                             .select()
                             .single();
-                        if (res2.error) throw res2.error;
-                        newUnit = res2.data;
+                        if (fbErr) throw fbErr;
+                        unitId = fbUnit.id;
                     } else {
-                        newUnit = res1.data;
+                        unitId = newUnit.id;
+                    }
+                }
+
+                // Handle unit_videos insertion/update
+                if (unitId) {
+                    if (id) {
+                        await supabaseClient
+                            .from('unit_videos')
+                            .delete()
+                            .eq('unit_id', unitId);
                     }
 
-                    unitId = newUnit.id;
-                }
-
-                const targetUnitId = (typeof unitId === 'string' && !isNaN(unitId)) ? parseInt(unitId) : unitId;
-
-                await supabaseClient.from('unit_videos').delete().eq('unit_id', targetUnitId);
-                const videoInserts = youtubeList.map((vItem, idx) => ({
-                    unit_id: targetUnitId,
-                    title: vItem.title || `${title} - คลิปที่ ${idx + 1}`,
-                    video_url: vItem.url,
-                    order_index: idx + 1
-                }));
-                const { error: vidErr } = await supabaseClient.from('unit_videos').insert(videoInserts);
-                if (vidErr) console.warn("Video insert error:", vidErr);
-
-                await supabaseClient.from('pre_test_questions').delete().eq('unit_id', targetUnitId);
-                if (pretestFormQuestions.length > 0) {
-                    const preInsert = pretestFormQuestions.map(q => ({
-                        unit_id: targetUnitId,
-                        question: q.q,
-                        options: q.choices,
-                        correct_answer: q.answer
+                    const videoInserts = youtubeList.map((v, idx) => ({
+                        unit_id: unitId,
+                        video_url: v.url,
+                        title: v.title,
+                        order_index: idx + 1
                     }));
-                    const { error: preErr } = await supabaseClient.from('pre_test_questions').insert(preInsert);
-                    if (preErr) console.warn("Pretest insert error:", preErr);
+
+                    await supabaseClient
+                        .from('unit_videos')
+                        .insert(videoInserts);
+
+                    // Handle pre_test_questions
+                    if (id) {
+                        await supabaseClient
+                            .from('pre_test_questions')
+                            .delete()
+                            .eq('unit_id', unitId);
+                    }
+                    if (pretestFormQuestions.length > 0) {
+                        const preInserts = pretestFormQuestions.map(q => ({
+                            unit_id: unitId,
+                            question: q.q,
+                            options: q.choices,
+                            correct_answer: q.answer
+                        }));
+                        await supabaseClient.from('pre_test_questions').insert(preInserts);
+                    }
+
+                    // Handle post_test_questions
+                    if (id) {
+                        await supabaseClient
+                            .from('post_test_questions')
+                            .delete()
+                            .eq('unit_id', unitId);
+                    }
+                    if (posttestFormQuestions.length > 0) {
+                        const postInserts = posttestFormQuestions.map(q => ({
+                            unit_id: unitId,
+                            question: q.q,
+                            options: q.choices,
+                            correct_answer: q.answer
+                        }));
+                        await supabaseClient.from('post_test_questions').insert(postInserts);
+                    }
                 }
 
-                await supabaseClient.from('post_test_questions').delete().eq('unit_id', targetUnitId);
-                if (posttestFormQuestions.length > 0) {
-                    const postInsert = posttestFormQuestions.map(q => ({
-                        unit_id: targetUnitId,
-                        question: q.q,
-                        options: q.choices,
-                        correct_answer: q.answer
-                    }));
-                    const { error: postErr } = await supabaseClient.from('post_test_questions').insert(postInsert);
-                    if (postErr) console.warn("Posttest insert error:", postErr);
-                }
-
-                showToast("บันทึกข้อมูลบทเรียนลง Supabase เรียบร้อยแล้ว", "success");
-                await fetchUnitsData();
+                showToast("บันทึกข้อมูลบทเรียนเรียบร้อยแล้ว", "success");
                 closeUnitFormModal();
+                await fetchUnitsData();
             } catch (err) {
-                console.error("Save error:", err);
-                showToast("เกิดข้อผิดพลาดในการบันทึก: " + (err.message || "กรุณาลองใหม่อีกครั้ง"), "error");
+                console.error("Save unit error:", err);
+                showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (err.message || err), "error");
             }
         }
 
-        function editUnit(unitId) {
-            const unit = allUnits.find(u => u.id == unitId);
+        async function editUnit(unitId) {
+            const unit = allUnits.find(u => String(u.id) === String(unitId));
             if (unit) {
                 openUnitFormModal(unit);
             }
         }
 
         async function deleteUnit(unitId) {
-            if (supabaseClient) {
-                try {
-                    const { error } = await supabaseClient.from('units').delete().eq('id', unitId);
-                    if (error) throw error;
-                    showToast("ลบบทเรียนออกจากฐานข้อมูลเรียบร้อยแล้ว", 'info');
-                    await fetchUnitsData();
-                } catch (err) {
-                    console.error("Delete error:", err);
-                    showToast("ไม่สามารถลบได้: " + err.message, 'error');
-                }
+            if (!confirm("คุณต้องการลบบทเรียนนี้ใช่หรือไม่?")) return;
+            if (!supabaseClient) return;
+
+            try {
+                // Delete child records
+                await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
+                await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
+                await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
+
+                const { error } = await supabaseClient.from('units').delete().eq('id', unitId);
+                if (error) throw error;
+
+                showToast("ลบบทเรียนเรียบร้อยแล้ว", "success");
+                await fetchUnitsData();
+            } catch (err) {
+                console.error("Delete unit error:", err);
+                showToast("เกิดข้อผิดพลาดในการลบบทเรียน: " + (err.message || err), "error");
             }
         }
 
-        // Center Screen Notification Modal Function
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
-            container.innerHTML = ''; // Clear previous notifications
+            if (!container) return;
 
             const toast = document.createElement('div');
-            let bg = 'bg-slate-900 border-slate-700 text-white';
-            let icon = 'fa-circle-info text-amber-400';
+            let bgClass = "bg-slate-800 text-white";
+            let iconClass = "fa-circle-info text-blue-400";
 
             if (type === 'success') {
-                bg = 'bg-slate-900 border-emerald-500/50 text-white';
-                icon = 'fa-circle-check text-emerald-400';
+                bgClass = "bg-emerald-900 text-emerald-100 border border-emerald-700";
+                iconClass = "fa-circle-check text-emerald-400";
             } else if (type === 'error') {
-                bg = 'bg-slate-900 border-rose-500/50 text-white';
-                icon = 'fa-triangle-exclamation text-rose-400';
+                bgClass = "bg-rose-900 text-rose-100 border border-rose-700";
+                iconClass = "fa-circle-exclamation text-rose-400";
+            } else if (type === 'warning') {
+                bgClass = "bg-amber-900 text-amber-100 border border-amber-700";
+                iconClass = "fa-triangle-exclamation text-amber-400";
             }
 
-            toast.className = `p-5 px-6 rounded-2xl shadow-2xl border backdrop-blur-md text-sm sm:text-base flex items-center space-x-3 pointer-events-auto transform transition-all duration-300 max-w-md w-full justify-center text-center ${bg}`;
-            toast.innerHTML = `<i class="fa-solid ${icon} text-xl"></i><span class="font-medium">${message}</span>`;
+            toast.className = `${bgClass} pointer-events-auto max-w-md px-5 py-3.5 rounded-2xl shadow-2xl text-xs sm:text-sm font-medium flex items-center space-x-3 transform transition-all duration-300 translate-y-2 opacity-0 mb-2 border border-white/10`;
+            toast.innerHTML = `
+                <i class="fa-solid ${iconClass} text-lg"></i>
+                <span class="flex-grow">${message}</span>
+                <button onclick="this.parentElement.remove()" class="text-white/60 hover:text-white ml-2">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
 
             container.appendChild(toast);
+
             setTimeout(() => {
-                toast.classList.add('opacity-0', 'scale-95');
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-2');
                 setTimeout(() => toast.remove(), 300);
-            }, 3200);
+            }, 4000);
         }
     </script>
 </body>
