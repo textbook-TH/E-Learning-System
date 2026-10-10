@@ -384,15 +384,27 @@
                         </div>
                     </div>
 
-                    <!-- New Password Field (For Password Recovery) -->
-                    <div id="newPasswordContainer" class="mb-4 hidden">
-                        <label class="block text-xs font-medium text-slate-700 mb-1">รหัสผ่านใหม่</label>
-                        <div class="relative">
-                            <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
-                            <input type="password" id="authNewPassword" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                            <button type="button" onclick="togglePasswordVisibility('authNewPassword', 'newEyeIcon')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-1">
-                                <i id="newEyeIcon" class="fa-solid fa-eye"></i>
-                            </button>
+                    <!-- New Password & Confirm Password Fields (For Password Recovery) -->
+                    <div id="newPasswordContainer" class="mb-4 hidden space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">รหัสผ่านใหม่</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
+                                <input type="password" id="authNewPassword" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <button type="button" onclick="togglePasswordVisibility('authNewPassword', 'newEyeIcon')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-1">
+                                    <i id="newEyeIcon" class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">ยืนยันรหัสผ่านใหม่</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
+                                <input type="password" id="authConfirmNewPassword" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <button type="button" onclick="togglePasswordVisibility('authConfirmNewPassword', 'confirmEyeIcon')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-1">
+                                    <i id="confirmEyeIcon" class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -418,7 +430,7 @@
         </div>
     </div>
 
-    <!-- MODAL POPUP 1.5: CONFIRM EMAIL REGISTER POPUP -->
+    <!-- MODAL POPUP 1.5: CONFIRM EMAIL REGISTER PRE-SEND POPUP -->
     <div id="confirmRegisterModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center border border-slate-100">
             <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 shadow-inner">
@@ -430,6 +442,20 @@
                 <button type="button" onclick="closeConfirmRegisterModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition">ยกเลิก</button>
                 <button type="button" onclick="executeRegistration()" class="w-1/2 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md transition">ยืนยัน</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP 1.6: CONFIRM REGISTRATION AFTER CLICKING EMAIL LINK POPUP -->
+    <div id="confirmSignupModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center border border-slate-100">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 shadow-inner">
+                <i class="fa-solid fa-user-check"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">ยืนยันการลงทะเบียน</h3>
+            <p class="text-xs text-slate-600 mb-6 leading-relaxed">อีเมลของคุณได้รับการตรวจสอบแล้ว กดปุ่มด้านล่างเพื่อยืนยันการลงทะเบียนและเข้าสู่ระบบ</p>
+            <button type="button" onclick="completeRegistrationConfirm()" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow-md transition">
+                ยืนยันการลงทะเบียน
+            </button>
         </div>
     </div>
 
@@ -671,6 +697,7 @@
             // 1. Check URL Hash immediately upon opening the page
             const hash = window.location.hash || '';
             let isPasswordRecoverySession = false;
+            let isSignupConfirmationSession = false;
 
             if (hash) {
                 const searchParams = new URLSearchParams(hash.substring(1));
@@ -681,44 +708,48 @@
 
                 // Check if the link is expired or invalid
                 if (error || errorCode || errorDesc || hash.includes('expired') || hash.includes('invalid')) {
-                    showToast("ลิงก์หมดอายุหรือไม่ถูกต้อง กรุณาขอลิงก์รีเซ็ตรหัสผ่านใหม่อีกครั้ง", "error");
-                    // Clean hash from URL without refreshing
+                    showToast("ลิงก์หมดอายุหรือไม่ถูกต้อง กรุณาทำรายการใหม่อีกครั้ง", "error");
                     history.replaceState(null, "", window.location.pathname + window.location.search);
                     openLoginModal();
-                    switchToForgotPasswordMode();
                     return;
                 }
 
-                // Check if hash indicates recovery token
-                if (type === 'recovery' || hash.includes('type=recovery') || hash.includes('access_token=')) {
+                // Check type of flow in hash
+                if (type === 'recovery' || hash.includes('type=recovery')) {
                     isPasswordRecoverySession = true;
+                } else if (type === 'signup' || type === 'email_confirmation' || hash.includes('type=signup') || hash.includes('type=email_confirmation')) {
+                    isSignupConfirmationSession = true;
                 }
             }
 
             try {
-                // If hash contains recovery parameters, auto display the reset password modal
                 if (isPasswordRecoverySession) {
                     openLoginModal();
                     switchToResetPasswordMode();
+                } else if (isSignupConfirmationSession) {
+                    openConfirmSignupModal();
                 }
 
                 const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session && session.user && !isPasswordRecoverySession) {
+                if (session && session.user && !isPasswordRecoverySession && !isSignupConfirmationSession) {
                     await loadUserProfile(session.user);
                 }
 
                 // Listen to auth state changes dynamically
                 supabaseClient.auth.onAuthStateChange(async (event, session) => {
-                    if (event === 'PASSWORD_RECOVERY') {
-                        // User clicked recovery link from email -> Show new password reset mode automatically
+                    const currentHash = window.location.hash || '';
+                    
+                    if (event === 'PASSWORD_RECOVERY' || currentHash.includes('type=recovery')) {
                         openLoginModal();
                         switchToResetPasswordMode();
+                    } else if (currentHash.includes('type=signup') || currentHash.includes('type=email_confirmation')) {
+                        openConfirmSignupModal();
                     } else if (event === 'SIGNED_IN' && session?.user) {
-                        // Check if hash had recovery type when signing in
-                        const currentHash = window.location.hash || '';
                         if (currentHash.includes('type=recovery') || isPasswordRecoverySession) {
                             openLoginModal();
                             switchToResetPasswordMode();
+                        } else if (currentHash.includes('type=signup') || isSignupConfirmationSession) {
+                            openConfirmSignupModal();
                         } else if (!currentUser || currentUser.id !== session.user.id) {
                             await loadUserProfile(session.user);
                         }
@@ -1369,8 +1400,11 @@
         function openConfirmRegisterModal() { document.getElementById('confirmRegisterModal').classList.remove('hidden'); }
         function closeConfirmRegisterModal() { document.getElementById('confirmRegisterModal').classList.add('hidden'); }
 
+        function openConfirmSignupModal() { document.getElementById('confirmSignupModal').classList.remove('hidden'); }
+        function closeConfirmSignupModal() { document.getElementById('confirmSignupModal').classList.add('hidden'); }
+
         function setAuthRole(role) {
-            if (authMode === 'signup' && role === 'staff') return; // Disabled staff selection in signup mode
+            if (authMode === 'signup' && role === 'staff') return;
             currentRoleSelection = role;
             const studentBtn = document.getElementById('roleStudentBtn');
             const staffBtn = document.getElementById('roleStaffBtn');
@@ -1445,7 +1479,6 @@
             const passInput = document.getElementById('authPassword');
             const emailInput = document.getElementById('authEmail');
 
-            // Reset inputs required states
             passInput.required = false;
             emailInput.required = true;
 
@@ -1479,7 +1512,7 @@
                 headerIcon.className = "fa-solid fa-key";
                 modalTitle.innerText = "ลืมรหัสผ่าน";
                 modalSubTitle.innerText = "กรอกอีเมลที่คุณลงทะเบียนไว้เพื่อรับลิงก์รีเซ็ตรหัสผ่าน";
-                submitBtn.innerText = "ลืมรหัสผ่าน";
+                submitBtn.innerText = "ส่งลิงก์รีเซ็ตรหัสผ่าน";
                 toggleText.innerText = "จำรหัสผ่านได้แล้ว?";
                 toggleBtn.innerText = "เข้าสู่ระบบ";
                 
@@ -1487,9 +1520,9 @@
                 passwordContainer.classList.add('hidden');
             } else if (authMode === 'reset_password') {
                 headerIcon.className = "fa-solid fa-shield-halved";
-                modalTitle.innerText = "ตั้งรหัสผ่านใหม่";
-                modalSubTitle.innerText = "กรุณากรอกรหัสผ่านใหม่ที่คุณต้องการใช้งาน";
-                submitBtn.innerText = "ยืนยัน";
+                modalTitle.innerText = "ลืมรหัสผ่าน";
+                modalSubTitle.innerText = "กรุณากรอกรหัสผ่านใหม่และยืนยันรหัสผ่านเพื่ออัปเดต";
+                submitBtn.innerText = "บันทึกรหัสผ่านใหม่";
                 
                 roleContainer.classList.add('hidden');
                 emailContainer.classList.add('hidden');
@@ -1499,7 +1532,6 @@
             }
         }
 
-        // Translation helper for Supabase error messages
         function getThaiErrorMessage(err) {
             if (!err) return "เกิดข้อผิดพลาดในการทำรายการ";
             const msg = (typeof err === 'string' ? err : err.message || '').toLowerCase();
@@ -1528,6 +1560,7 @@
             const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value;
             const newPassword = document.getElementById('authNewPassword').value;
+            const confirmNewPassword = document.getElementById('authConfirmNewPassword').value;
             const displayName = document.getElementById('authDisplayName').value.trim() || email.split('@')[0];
 
             if (!supabaseClient) {
@@ -1535,7 +1568,6 @@
                 return false;
             }
 
-            // STRICT DOMAIN CHECK: Must end with @kmitl.ac.th for Login, Sign Up, and Forgot Password
             if (authMode !== 'reset_password' && !isKmitlEmail(email)) {
                 showToast("เกิดข้อผิดพลาด: อนุญาตเฉพาะอีเมลสถาบัน (@kmitl.ac.th) เท่านั้น", "error");
                 return false;
@@ -1574,11 +1606,16 @@
                     return false;
                 }
 
+                if (newPassword !== confirmNewPassword) {
+                    showToast("เกิดข้อผิดพลาด: รหัสผ่านใหม่และยืนยันรหัสผ่านไม่ตรงกัน", "error");
+                    return false;
+                }
+
                 try {
                     const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
                     if (error) throw error;
 
-                    showToast("ตั้งรหัสผ่านใหม่เรียบร้อยแล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่", "success");
+                    showToast("บันทึกรหัสผ่านใหม่เข้า Supabase สำเร็จเรียบร้อยแล้ว", "success");
                     history.replaceState(null, "", window.location.pathname + window.location.search);
                     closeLoginModal();
                     switchToLoginMode();
@@ -1603,7 +1640,7 @@
                         const success = await loadUserProfile(data.user);
                         if (!success) {
                             showToast("เกิดข้อผิดพลาด: กรุณาสมัครสมาชิกก่อนเข้าระบบ", "error");
-                            return false; // Prevent Security Bypass
+                            return false;
                         }
                         showToast(`เข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ ${currentUser.name}`, 'success');
                     }
@@ -1618,7 +1655,7 @@
                 } catch (err) {
                     console.error("Auth Error:", err);
                     showToast(getThaiErrorMessage(err), "error");
-                    return false; // Prevent Security Bypass
+                    return false;
                 }
             }
         }
@@ -1629,7 +1666,6 @@
 
             const { email, password, displayName } = pendingRegistrationData;
 
-            // Strict Validation Before Proceeding with API
             if (!isKmitlEmail(email)) {
                 showToast("เกิดข้อผิดพลาด: อนุญาตเฉพาะอีเมลสถาบัน (@kmitl.ac.th) เท่านั้น", "error");
                 pendingRegistrationData = null;
@@ -1637,15 +1673,18 @@
             }
 
             try {
+                const redirectUrl = window.location.origin + window.location.pathname;
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
-                    options: { data: { full_name: displayName } }
+                    options: {
+                        emailRedirectTo: redirectUrl,
+                        data: { full_name: displayName }
+                    }
                 });
 
                 if (error) throw error;
 
-                // UX Bug Fix: Prevent fake registration success if user already exists in Auth
                 if (data.user && data.user.identities && data.user.identities.length === 0) {
                     showToast("เกิดข้อผิดพลาด: อีเมลนี้ได้รับการลงทะเบียนในระบบเรียบร้อยแล้ว", "error");
                     pendingRegistrationData = null;
@@ -1654,7 +1693,6 @@
 
                 if (data.user) {
                     try {
-                        // Safe row creation with strictly enforced student role
                         await supabaseClient.from('elearning_users').upsert({
                             id: data.user.id,
                             email: email,
@@ -1664,7 +1702,7 @@
                         }, { onConflict: 'id' });
                     } catch(e) { console.warn("User table record warning:", e); }
 
-                    showToast(`สมัครสมาชิกเรียบร้อยแล้ว! กรุณาตรวจสอบอีเมลเพื่อทำการยืนยันการใช้งาน`, 'success');
+                    showToast(`ระบบส่งอีเมลยืนยันตัวตนเรียบร้อยแล้ว กรุณาตรวจสอบอีเมลของคุณ`, 'success');
                 }
 
                 closeLoginModal();
@@ -1673,6 +1711,43 @@
                 console.error("Auth Error:", err);
                 showToast(getThaiErrorMessage(err), "error");
                 return false;
+            }
+        }
+
+        async function completeRegistrationConfirm() {
+            closeConfirmSignupModal();
+            if (!supabaseClient) return;
+
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    const user = session.user;
+                    const email = user.email;
+                    const displayName = user.user_metadata?.full_name || email.split('@')[0];
+
+                    await supabaseClient.from('elearning_users').upsert({
+                        id: user.id,
+                        email: email,
+                        full_name: displayName,
+                        role: 'student',
+                        is_admin: false
+                    }, { onConflict: 'id' });
+
+                    await loadUserProfile(user);
+                    showToast("ยืนยันการลงทะเบียนและเข้าสู่ระบบเสร็จสมบูรณ์", "success");
+                    history.replaceState(null, "", window.location.pathname + window.location.search);
+
+                    if (currentUser && currentUser.role === 'staff') {
+                        switchTab('staffView');
+                    } else if (currentUser && currentUser.role === 'student') {
+                        switchTab('studentView');
+                    }
+                } else {
+                    showToast("เข้าสู่ระบบเสร็จสมบูรณ์", "success");
+                }
+            } catch (err) {
+                console.error("Confirm registration error:", err);
+                showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
             }
         }
 
@@ -2007,22 +2082,21 @@
             if (questions.length === 0) {
                 container.innerHTML = `
                     <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                        ยังไม่มีข้อสอบในส่วนนี้ กดปุ่ม "+ เพิ่มข้อสอบ" ด้านบน
+                        ยังไม่มีข้อสอบในหมวดนี้ กดปุ่ม "+ เพิ่มข้อสอบ" ด้านบน
                     </div>`;
                 return;
             }
 
-            questions.forEach((qItem, qIndex) => {
+            questions.forEach((q, qIndex) => {
                 const card = document.createElement('div');
-                card.className = "p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 relative";
+                card.className = "p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 relative";
 
-                let choicesHtml = '';
-                const choices = Array.isArray(qItem.choices) ? qItem.choices : [];
-                choices.forEach((cText, cIndex) => {
-                    choicesHtml += `
+                let choicesInputs = '';
+                q.choices.forEach((cText, cIndex) => {
+                    choicesInputs += `
                         <div class="flex items-center space-x-2">
-                            <input type="radio" name="correct_${type}_${qIndex}" ${qItem.answer === cIndex ? 'checked' : ''} onchange="updateQuestionAnswer('${type}', ${qIndex}, ${cIndex})" class="text-amber-600 focus:ring-amber-500" title="เลือกเป็นข้อเฉลย">
-                            <input type="text" value="${cText}" onchange="updateQuestionChoice('${type}', ${qIndex}, ${cIndex}, this.value)" class="flex-grow px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
+                            <input type="radio" name="correct_${type}_${qIndex}" ${q.answer === cIndex ? 'checked' : ''} onchange="${type === 'pretest' ? 'pretestFormQuestions' : 'posttestFormQuestions'}[${qIndex}].answer = ${cIndex}" class="text-amber-600 focus:ring-amber-500">
+                            <input type="text" value="${cText}" onchange="${type === 'pretest' ? 'pretestFormQuestions' : 'posttestFormQuestions'}[${qIndex}].choices[${cIndex}] = this.value" class="flex-grow px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
                         </div>
                     `;
                 });
@@ -2031,145 +2105,124 @@
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-slate-700">ข้อที่ ${qIndex + 1}</span>
                         <button type="button" onclick="removeQuestion('${type}', ${qIndex})" class="text-xs text-red-500 hover:text-red-700 font-semibold">
-                            <i class="fa-solid fa-trash mr-1"></i> ลบข้อนี้
+                            <i class="fa-solid fa-trash"></i> ลบข้อนี้
                         </button>
                     </div>
                     <div>
-                        <input type="text" value="${qItem.q}" onchange="updateQuestionTitle('${type}', ${qIndex}, this.value)" placeholder="พิมพ์โจทย์คำถาม..." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        <input type="text" value="${q.q}" onchange="${type === 'pretest' ? 'pretestFormQuestions' : 'posttestFormQuestions'}[${qIndex}].q = this.value" placeholder="พิมพ์คำถาม..." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-amber-500 focus:outline-none">
                     </div>
-                    <div class="space-y-1.5 pt-1">
-                        <span class="text-[11px] font-semibold text-slate-500">ตัวเลือกตอบ (ติ๊กปุ่มวงกลมหน้าข้อเพื่อเลือกเป็นเฉลยข้อที่ถูกต้อง):</span>
-                        ${choicesHtml}
+                    <div class="space-y-2 pt-1">
+                        <span class="text-[11px] text-slate-500 font-medium">ตัวเลือก (เลือกปุ่มวิทยุหน้าข้อที่เป็นคำตอบที่ถูกต้อง):</span>
+                        ${choicesInputs}
                     </div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        function updateQuestionTitle(type, qIndex, val) {
-            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
-            list[qIndex].q = val;
-        }
-
-        function updateQuestionChoice(type, qIndex, cIndex, val) {
-            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
-            list[qIndex].choices[cIndex] = val;
-        }
-
-        function updateQuestionAnswer(type, qIndex, cIndex) {
-            const list = type === 'pretest' ? pretestFormQuestions : posttestFormQuestions;
-            list[qIndex].answer = cIndex;
-        }
-
-        async function handleSaveUnit(e) {
-            e.preventDefault();
-            const rawId = document.getElementById('editingUnitId').value;
-            const id = rawId ? (isNaN(rawId) ? rawId : parseInt(rawId)) : null;
-            const unit_code = document.getElementById('unitCodeInput').value.trim().toUpperCase() || 'UNIT-001';
-            const title = document.getElementById('unitTitleInput').value.trim();
-            const category = document.getElementById('unitCategoryInput').value.trim() || 'วิทยาการคอมพิวเตอร์';
-            const cover_url = document.getElementById('unitCoverInput').value.trim();
-            const description = document.getElementById('unitDescriptionInput').value.trim();
-
-            const rows = document.querySelectorAll('.youtube-input-row');
-            const videoInputs = [];
-            rows.forEach((row, idx) => {
-                const url = row.querySelector('.youtube-url-val')?.value.trim() || '';
-                const t = row.querySelector('.youtube-title-val')?.value.trim() || `ตอนที่ ${idx + 1}`;
-                if (url) {
-                    videoInputs.push({ title: t, url: url });
-                }
-            });
-
-            if (!title) {
-                showToast("กรุณากรอกชื่อบทเรียน", "error");
-                return;
-            }
-
+        async function handleSaveUnit(event) {
+            event.preventDefault();
             if (!supabaseClient) {
                 showToast("ไม่สามารถเชื่อมต่อ Supabase ได้", "error");
                 return;
             }
 
+            const editingId = document.getElementById('editingUnitId').value;
+            const unitCode = document.getElementById('unitCodeInput').value.trim().toUpperCase();
+            const title = document.getElementById('unitTitleInput').value.trim();
+            const category = document.getElementById('unitCategoryInput').value.trim() || 'วิทยาการคอมพิวเตอร์';
+            const coverUrl = document.getElementById('unitCoverInput').value.trim();
+            const description = document.getElementById('unitDescriptionInput').value.trim();
+
+            const urlInputs = document.querySelectorAll('.youtube-url-val');
+            const titleInputs = document.querySelectorAll('.youtube-title-val');
+
+            const videoList = [];
+            urlInputs.forEach((uEl, idx) => {
+                const urlVal = uEl.value.trim();
+                const titleVal = titleInputs[idx] ? titleInputs[idx].value.trim() : '';
+                if (urlVal) {
+                    videoList.push({
+                        url: urlVal,
+                        title: titleVal || `ตอนที่ ${idx + 1}`
+                    });
+                }
+            });
+
+            if (videoList.length === 0) {
+                showToast("กรุณากรอกลิงก์วิดีโอ YouTubeอย่างน้อย 1 คลิป", "warning");
+                return;
+            }
+
             try {
-                let savedUnitId = id;
+                let unitId = editingId;
 
-                if (id) {
-                    const { error: uErr } = await supabaseClient
+                const payload = {
+                    unit_code: unitCode,
+                    title: title,
+                    category: category,
+                    cover_url: coverUrl,
+                    description: description
+                };
+
+                if (editingId) {
+                    const { error } = await supabaseClient
                         .from('units')
-                        .update({
-                            unit_code: unit_code,
-                            title: title,
-                            category: category,
-                            cover_url: cover_url,
-                            description: description
-                        })
-                        .eq('id', id);
-
-                    if (uErr) throw uErr;
+                        .update(payload)
+                        .eq('id', editingId);
+                    if (error) throw error;
                 } else {
-                    const { data: inserted, error: iErr } = await supabaseClient
+                    const { data, error } = await supabaseClient
                         .from('units')
-                        .insert([{
-                            unit_code: unit_code,
-                            title: title,
-                            category: category,
-                            cover_url: cover_url,
-                            description: description
-                        }])
-                        .select()
-                        .single();
-
-                    if (iErr) throw iErr;
-                    if (inserted) savedUnitId = inserted.id;
+                        .insert([payload])
+                        .select();
+                    if (error) throw error;
+                    if (data && data[0]) unitId = data[0].id;
                 }
 
-                if (savedUnitId) {
-                    await supabaseClient.from('unit_videos').delete().eq('unit_id', savedUnitId);
-                    await supabaseClient.from('pre_test_questions').delete().eq('unit_id', savedUnitId);
-                    await supabaseClient.from('post_test_questions').delete().eq('unit_id', savedUnitId);
+                if (unitId) {
+                    await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
+                    const videoInserts = videoList.map((v, i) => ({
+                        unit_id: unitId,
+                        video_url: v.url,
+                        title: v.title,
+                        order_index: i + 1
+                    }));
+                    await supabaseClient.from('unit_videos').insert(videoInserts);
 
-                    if (videoInputs.length > 0) {
-                        const videoRows = videoInputs.map((v, i) => ({
-                            unit_id: savedUnitId,
-                            title: v.title,
-                            video_url: v.url,
-                            order_index: i
-                        }));
-                        await supabaseClient.from('unit_videos').insert(videoRows);
-                    }
-
+                    await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
                     if (pretestFormQuestions.length > 0) {
-                        const preRows = pretestFormQuestions.map(q => ({
-                            unit_id: savedUnitId,
+                        const preInserts = pretestFormQuestions.map(q => ({
+                            unit_id: unitId,
                             question: q.q,
                             options: q.choices,
                             correct_answer: q.answer
                         }));
-                        await supabaseClient.from('pre_test_questions').insert(preRows);
+                        await supabaseClient.from('pre_test_questions').insert(preInserts);
                     }
 
+                    await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
                     if (posttestFormQuestions.length > 0) {
-                        const postRows = posttestFormQuestions.map(q => ({
-                            unit_id: savedUnitId,
+                        const postInserts = posttestFormQuestions.map(q => ({
+                            unit_id: unitId,
                             question: q.q,
                             options: q.choices,
                             correct_answer: q.answer
                         }));
-                        await supabaseClient.from('post_test_questions').insert(postRows);
+                        await supabaseClient.from('post_test_questions').insert(postInserts);
                     }
                 }
 
-                showToast("บันทึกข้อมูลบทเรียนเรียบร้อยแล้ว", "success");
+                showToast("บันทึกข้อมูลบทเรียนลง Supabase เรียบร้อยแล้ว", "success");
                 closeUnitFormModal();
                 await fetchUnitsData();
             } catch (err) {
                 console.error("Save unit error:", err);
-                showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (err.message || err), "error");
+                showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูลบทเรียน", "error");
             }
         }
 
-        function editUnit(unitId) {
+        async function editUnit(unitId) {
             const unit = allUnits.find(u => String(u.id) === String(unitId));
             if (unit) {
                 openUnitFormModal(unit);
@@ -2177,22 +2230,23 @@
         }
 
         async function deleteUnit(unitId) {
-            if (!confirm("คุณต้องการลบบทเรียนนี้ใช่หรือไม่?")) return;
+            if (!confirm("คุณแน่ใจหรือว่าต้องการลบบทเรียนนี้? การลบจะมีผลทันทีใน Supabase")) return;
+
             if (!supabaseClient) return;
 
             try {
-                await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
-                await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
-                await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
+                const { error } = await supabaseClient
+                    .from('units')
+                    .delete()
+                    .eq('id', unitId);
 
-                const { error } = await supabaseClient.from('units').delete().eq('id', unitId);
                 if (error) throw error;
 
                 showToast("ลบบทเรียนเรียบร้อยแล้ว", "success");
                 await fetchUnitsData();
             } catch (err) {
                 console.error("Delete unit error:", err);
-                showToast("เกิดข้อผิดพลาดในการลบบทเรียน: " + (err.message || err), "error");
+                showToast("เกิดข้อผิดพลาดในการลบบทเรียน", "error");
             }
         }
     </script>
