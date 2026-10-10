@@ -329,7 +329,7 @@
         </div>
     </footer>
 
-    <!-- MODAL 1: LOGIN & REGISTER POPUP -->
+    <!-- MODAL 1: LOGIN, REGISTER & FORGOT PASSWORD POPUP -->
     <div id="loginModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
             <div class="bg-catalog-gradient p-6 text-white text-center relative">
@@ -337,14 +337,15 @@
                     <i class="fa-solid fa-xmark"></i>
                 </button>
                 <div class="w-12 h-12 bg-amber-500/20 rounded-full mx-auto flex items-center justify-center text-amber-300 text-2xl mb-2">
-                    <i class="fa-solid fa-user-lock"></i>
+                    <i id="authModalHeaderIcon" class="fa-solid fa-user-lock"></i>
                 </div>
                 <h3 class="text-xl font-bold" id="authModalTitle">เข้าสู่ระบบ</h3>
-                <p class="text-xs text-blue-100/80 mt-1">เลือกสิทธิ์การใช้งานผ่านอีเมล์สถาบัน</p>
+                <p class="text-xs text-blue-100/80 mt-1" id="authModalSubTitle">เลือกสิทธิ์การใช้งานผ่านอีเมล์สถาบัน</p>
             </div>
 
             <div class="p-6">
-                <div class="mb-5">
+                <!-- Role Selector (Hidden in Forgot Password Mode) -->
+                <div id="roleSelectContainer" class="mb-5">
                     <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">เลือกสิทธิ์เข้าใช้งาน</label>
                     <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
                         <button type="button" id="roleStudentBtn" onclick="setAuthRole('student')" class="py-2 rounded-lg text-sm font-semibold transition bg-white text-amber-700 shadow-sm flex items-center justify-center space-x-1.5">
@@ -359,7 +360,8 @@
                 </div>
 
                 <form id="authForm" onsubmit="handleAuthSubmit(event)">
-                    <div class="mb-4">
+                    <!-- Email Field -->
+                    <div class="mb-4" id="emailInputContainer">
                         <label class="block text-xs font-medium text-slate-700 mb-1">อีเมลผู้ใช้</label>
                         <div class="relative">
                             <i class="fa-solid fa-envelope absolute left-3 top-3 text-slate-400 text-sm"></i>
@@ -367,10 +369,11 @@
                         </div>
                     </div>
 
-                    <div class="mb-4">
+                    <!-- Password Field (Hidden in Forgot Password Mode) -->
+                    <div class="mb-4" id="passwordInputContainer">
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-medium text-slate-700">รหัสผ่าน</label>
-                            <button type="button" onclick="showForgotPasswordPrompt()" class="text-xs text-amber-600 hover:underline">ลืมรหัสผ่าน?</button>
+                            <button type="button" onclick="switchToForgotPasswordMode()" class="text-xs text-amber-600 hover:underline" id="forgotPasswordBtnLink">ลืมรหัสผ่าน?</button>
                         </div>
                         <div class="relative">
                             <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
@@ -381,6 +384,19 @@
                         </div>
                     </div>
 
+                    <!-- New Password Field (For Password Recovery) -->
+                    <div id="newPasswordContainer" class="mb-4 hidden">
+                        <label class="block text-xs font-medium text-slate-700 mb-1">รหัสผ่านใหม่</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
+                            <input type="password" id="authNewPassword" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <button type="button" onclick="togglePasswordVisibility('authNewPassword', 'newEyeIcon')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-1">
+                                <i id="newEyeIcon" class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Full Name Field (Sign Up Mode) -->
                     <div id="displayNameContainer" class="mb-4 hidden">
                         <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อ-นามสกุล</label>
                         <div class="relative">
@@ -393,7 +409,7 @@
                         เข้าสู่ระบบ
                     </button>
 
-                    <div class="text-center text-xs text-slate-500">
+                    <div class="text-center text-xs text-slate-500" id="authFooterToggle">
                         <span id="authToggleText">ยังไม่มีบัญชีสมาชิก?</span>
                         <button type="button" onclick="toggleAuthMode()" id="authToggleBtn" class="text-amber-600 font-semibold hover:underline ml-1">สมัครสมาชิก</button>
                     </div>
@@ -412,7 +428,7 @@
             <p class="text-xs text-slate-600 mb-6 leading-relaxed">ระบบจะทำการส่งลิงก์ยืนยันตัวตนไปยังอีเมล์คุณ</p>
             <div class="flex space-x-2">
                 <button type="button" onclick="closeConfirmRegisterModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition">ยกเลิก</button>
-                <button type="button" onclick="executeRegistration()" class="w-1/2 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md transition">ยืนยันการลงทะเบียน</button>
+                <button type="button" onclick="executeRegistration()" class="w-1/2 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md transition">ยืนยัน</button>
             </div>
         </div>
     </div>
@@ -570,7 +586,7 @@
         // Global State
         let currentUser = null; // { id, email, role: 'student'|'staff', name }
         let currentRoleSelection = 'student';
-        let isSignUpMode = false;
+        let authMode = 'login'; // 'login' | 'signup' | 'forgot' | 'reset_password'
         let currentTabState = 'publicHome';
 
         let allUnits = [];
@@ -602,7 +618,11 @@
                 }
 
                 supabaseClient.auth.onAuthStateChange(async (event, session) => {
-                    if (event === 'SIGNED_IN' && session?.user) {
+                    if (event === 'PASSWORD_RECOVERY') {
+                        // User clicked recovery link from email -> Show new password reset mode
+                        openLoginModal();
+                        switchToResetPasswordMode();
+                    } else if (event === 'SIGNED_IN' && session?.user) {
                         if (!currentUser || currentUser.id !== session.user.id) {
                             await loadUserProfile(session.user);
                         }
@@ -1229,7 +1249,10 @@
             }
         }
 
-        function openLoginModal() { document.getElementById('loginModal').classList.remove('hidden'); }
+        function openLoginModal() { 
+            document.getElementById('loginModal').classList.remove('hidden'); 
+            switchToLoginMode();
+        }
         function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
         function openAuthGuardModal() { document.getElementById('authGuardModal').classList.remove('hidden'); }
         function closeAuthGuardModal() { document.getElementById('authGuardModal').classList.add('hidden'); }
@@ -1238,77 +1261,222 @@
         function closeConfirmRegisterModal() { document.getElementById('confirmRegisterModal').classList.add('hidden'); }
 
         function setAuthRole(role) {
-            if (isSignUpMode && role === 'staff') return; // Prevent selecting staff during registration
-
+            if (authMode === 'signup' && role === 'staff') return; // Disabled staff selection in signup mode
             currentRoleSelection = role;
             const studentBtn = document.getElementById('roleStudentBtn');
             const staffBtn = document.getElementById('roleStaffBtn');
 
             if (role === 'student') {
-                studentBtn.className = "py-2 rounded-lg text-sm font-semibold transition bg-white text-amber-700 shadow-sm flex items-center justify-center space-x-1.5";
-                if (!isSignUpMode) {
-                    staffBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
-                }
+                studentBtn.className = "py-2 rounded-lg text-sm font-semibold transition bg-white text-amber-700 shadow-sm flex items-center justify-center space-x-1.5 opacity-100 cursor-pointer";
+                staffBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
             } else {
                 staffBtn.className = "py-2 rounded-lg text-sm font-semibold transition bg-white text-rose-700 shadow-sm flex items-center justify-center space-x-1.5";
                 studentBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
             }
         }
 
+        function updateRoleButtonsState() {
+            const staffBtn = document.getElementById('roleStaffBtn');
+            if (!staffBtn) return;
+
+            if (authMode === 'signup') {
+                setAuthRole('student');
+                staffBtn.disabled = true;
+                staffBtn.classList.add('opacity-40', 'cursor-not-allowed');
+                staffBtn.title = "การสมัครสิทธิ์เจ้าหน้าที่ ต้องได้รับการอนุมัติจากผู้ดูแลระบบเท่านั้น";
+            } else {
+                staffBtn.disabled = false;
+                staffBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+                staffBtn.removeAttribute('title');
+            }
+        }
+
+        function switchToLoginMode() {
+            authMode = 'login';
+            updateAuthModalUI();
+        }
+
+        function switchToSignUpMode() {
+            authMode = 'signup';
+            updateAuthModalUI();
+        }
+
+        function switchToForgotPasswordMode() {
+            authMode = 'forgot';
+            updateAuthModalUI();
+        }
+
+        function switchToResetPasswordMode() {
+            authMode = 'reset_password';
+            updateAuthModalUI();
+        }
+
         function toggleAuthMode() {
-            isSignUpMode = !isSignUpMode;
+            if (authMode === 'login') {
+                switchToSignUpMode();
+            } else {
+                switchToLoginMode();
+            }
+        }
+
+        function updateAuthModalUI() {
             const modalTitle = document.getElementById('authModalTitle');
+            const modalSubTitle = document.getElementById('authModalSubTitle');
+            const headerIcon = document.getElementById('authModalHeaderIcon');
             const submitBtn = document.getElementById('authSubmitBtn');
             const toggleText = document.getElementById('authToggleText');
             const toggleBtn = document.getElementById('authToggleBtn');
+            const roleContainer = document.getElementById('roleSelectContainer');
+            const emailContainer = document.getElementById('emailInputContainer');
+            const passwordContainer = document.getElementById('passwordInputContainer');
+            const newPasswordContainer = document.getElementById('newPasswordContainer');
             const nameContainer = document.getElementById('displayNameContainer');
-            const roleStaffBtn = document.getElementById('roleStaffBtn');
+            const footerToggle = document.getElementById('authFooterToggle');
 
-            if (isSignUpMode) {
+            const passInput = document.getElementById('authPassword');
+            const emailInput = document.getElementById('authEmail');
+
+            // Reset inputs required states
+            passInput.required = false;
+            emailInput.required = true;
+
+            roleContainer.classList.remove('hidden');
+            emailContainer.classList.remove('hidden');
+            passwordContainer.classList.remove('hidden');
+            newPasswordContainer.classList.add('hidden');
+            nameContainer.classList.add('hidden');
+            footerToggle.classList.remove('hidden');
+
+            if (authMode === 'login') {
+                headerIcon.className = "fa-solid fa-user-lock";
+                modalTitle.innerText = "เข้าสู่ระบบ";
+                modalSubTitle.innerText = "เลือกสิทธิ์การใช้งานผ่านอีเมล์สถาบัน";
+                submitBtn.innerText = "เข้าสู่ระบบ";
+                toggleText.innerText = "ยังไม่มีบัญชีสมาชิก?";
+                toggleBtn.innerText = "สมัครสมาชิก";
+                passInput.required = true;
+                updateRoleButtonsState();
+            } else if (authMode === 'signup') {
+                headerIcon.className = "fa-solid fa-user-plus";
                 modalTitle.innerText = "สมัครสมาชิก";
+                modalSubTitle.innerText = "กรอกข้อมูลเพื่อลงทะเบียนเข้าใช้งานระบบ";
                 submitBtn.innerText = "ลงทะเบียนสมัครสมาชิก";
                 toggleText.innerText = "มีบัญชีผู้ใช้งานอยู่แล้ว?";
                 toggleBtn.innerText = "เข้าสู่ระบบ";
                 nameContainer.classList.remove('hidden');
+                passInput.required = true;
+                updateRoleButtonsState();
+            } else if (authMode === 'forgot') {
+                headerIcon.className = "fa-solid fa-key";
+                modalTitle.innerText = "ลืมรหัสผ่าน";
+                modalSubTitle.innerText = "กรอกอีเมลที่คุณลงทะเบียนไว้เพื่อรับลิงก์รีเซ็ตรหัสผ่าน";
+                submitBtn.innerText = "ลืมรหัสผ่าน";
+                toggleText.innerText = "จำรหัสผ่านได้แล้ว?";
+                toggleBtn.innerText = "เข้าสู่ระบบ";
                 
-                // Switch role to student and disable staff option during signup
-                setAuthRole('student');
-                if (roleStaffBtn) {
-                    roleStaffBtn.disabled = true;
-                    roleStaffBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-400 bg-slate-200/60 cursor-not-allowed opacity-50 flex items-center justify-center space-x-1.5";
-                }
-            } else {
-                modalTitle.innerText = "เข้าสู่ระบบ";
-                submitBtn.innerText = "เข้าสู่ระบบ";
-                toggleText.innerText = "ยังไม่มีบัญชีสมาชิก?";
-                toggleBtn.innerText = "สมัครสมาชิก";
-                nameContainer.classList.add('hidden');
-
-                if (roleStaffBtn) {
-                    roleStaffBtn.disabled = false;
-                    roleStaffBtn.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
-                }
+                roleContainer.classList.add('hidden');
+                passwordContainer.classList.add('hidden');
+            } else if (authMode === 'reset_password') {
+                headerIcon.className = "fa-solid fa-shield-halved";
+                modalTitle.innerText = "ตั้งรหัสผ่านใหม่";
+                modalSubTitle.innerText = "กรุณากรอกรหัสผ่านใหม่ที่คุณต้องการใช้งาน";
+                submitBtn.innerText = "ยืนยัน";
+                
+                roleContainer.classList.add('hidden');
+                emailContainer.classList.add('hidden');
+                passwordContainer.classList.add('hidden');
+                newPasswordContainer.classList.remove('hidden');
+                footerToggle.classList.add('hidden');
             }
         }
 
-        function showForgotPasswordPrompt() {
-            const email = document.getElementById('authEmail').value;
-            showToast(`ระบบได้ส่งคำขอรีเซ็ตรหัสผ่านไปยัง ${email || 'อีเมลของคุณ'} เรียบร้อยแล้ว`, 'info');
+        // Translation helper for Supabase error messages
+        function getThaiErrorMessage(err) {
+            if (!err) return "เกิดข้อผิดพลาดในการทำรายการ";
+            const msg = (typeof err === 'string' ? err : err.message || '').toLowerCase();
+
+            if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials") || msg.includes("user not found")) {
+                return "เกิดข้อผิดพลาด: กรุณาสมัครสมาชิกก่อนเข้าระบบ";
+            }
+            if (msg.includes("user already registered") || msg.includes("already exists")) {
+                return "เกิดข้อผิดพลาด: อีเมลนี้ได้รับการลงทะเบียนในระบบเรียบร้อยแล้ว";
+            }
+            if (msg.includes("password should be at least")) {
+                return "เกิดข้อผิดพลาด: รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร";
+            }
+            if (msg.includes("email not confirmed")) {
+                return "เกิดข้อผิดพลาด: กรุณายืนยันการใช้งานผ่านลิงก์ในอีเมลของคุณก่อนเข้าสู่ระบบ";
+            }
+            if (msg.includes("rate limit") || msg.includes("too many requests")) {
+                return "เกิดข้อผิดพลาด: ทำรายการถี่เกินไป กรุณารอครู่หนึ่งแล้วลองใหม่อีกครั้ง";
+            }
+
+            return "เกิดข้อผิดพลาด: " + (err.message || "ไม่สามารถดำเนินการได้ กรุณาลองใหม่อีกครั้ง");
         }
 
         async function handleAuthSubmit(event) {
             event.preventDefault();
-            const email = document.getElementById('authEmail').value;
+            const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value;
-            const displayName = document.getElementById('authDisplayName').value || email.split('@')[0];
+            const newPassword = document.getElementById('authNewPassword').value;
+            const displayName = document.getElementById('authDisplayName').value.trim() || email.split('@')[0];
 
-            if (!supabaseClient) return;
+            if (!supabaseClient) {
+                showToast("ไม่สามารถเชื่อมต่อ Supabase ได้", "error");
+                return;
+            }
 
-            if (isSignUpMode) {
+            if (authMode === 'forgot') {
+                // Step 1: Check if email exists in elearning_users table
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('elearning_users')
+                        .select('email')
+                        .eq('email', email)
+                        .maybeSingle();
+
+                    if (error || !data) {
+                        showToast("กรุณาลงทะเบียนสมัครสมาชิก", "error");
+                        return;
+                    }
+
+                    // Step 2: Email exists, send password reset link
+                    const redirectUrl = window.location.origin + window.location.pathname;
+                    const { error: resetErr } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                        redirectTo: redirectUrl
+                    });
+
+                    if (resetErr) throw resetErr;
+
+                    showToast(`ระบบได้ส่งลิงก์ตั้งรหัสผ่านใหม่ไปยัง ${email} เรียบร้อยแล้ว`, 'success');
+                    closeLoginModal();
+                } catch (err) {
+                    console.error("Forgot password error:", err);
+                    showToast(getThaiErrorMessage(err), "error");
+                }
+            } else if (authMode === 'reset_password') {
+                // Update password for recovery mode
+                if (!newPassword || newPassword.length < 6) {
+                    showToast("เกิดข้อผิดพลาด: รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร", "error");
+                    return;
+                }
+
+                try {
+                    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+                    if (error) throw error;
+
+                    showToast("ตั้งรหัสผ่านใหม่เรียบร้อยแล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่", "success");
+                    closeLoginModal();
+                    switchToLoginMode();
+                } catch (err) {
+                    console.error("Reset password error:", err);
+                    showToast(getThaiErrorMessage(err), "error");
+                }
+            } else if (authMode === 'signup') {
                 // Store pending data and show popup modal asking for confirmation
                 pendingRegistrationData = { email, password, displayName };
                 openConfirmRegisterModal();
-            } else {
+            } else if (authMode === 'login') {
                 try {
                     const { data, error } = await supabaseClient.auth.signInWithPassword({
                         email: email,
@@ -1320,7 +1488,8 @@
                     if (data.user) {
                         const success = await loadUserProfile(data.user);
                         if (!success) {
-                            throw new Error("ไม่พบข้อมูลสมาชิกในระบบ (กรุณาสมัครสมาชิกก่อนเข้าใช้งาน หรือบัญชีของคุณถูกลบ)");
+                            showToast("เกิดข้อผิดพลาด: กรุณาสมัครสมาชิกก่อนเข้าระบบ", "error");
+                            return;
                         }
                         showToast(`เข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ ${currentUser.name}`, 'success');
                     }
@@ -1334,12 +1503,12 @@
                     }
                 } catch (err) {
                     console.error("Auth Error:", err);
-                    showToast("เกิดข้อผิดพลาด: " + (err.message || "ไม่สามารถทำรายการได้"), "error");
+                    showToast(getThaiErrorMessage(err), "error");
                 }
             }
         }
 
-        // Triggered upon pressing "ยืนยันการลงทะเบียน" inside popup
+        // Triggered upon pressing "ยืนยัน" inside confirmation popup
         async function executeRegistration() {
             if (!pendingRegistrationData || !supabaseClient) return;
             closeConfirmRegisterModal();
@@ -1361,8 +1530,8 @@
                             id: data.user.id,
                             email: email,
                             full_name: displayName,
-                            role: currentRoleSelection === 'staff' ? 'admin' : 'student',
-                            is_admin: currentRoleSelection === 'staff'
+                            role: 'student',
+                            is_admin: false
                         });
                     } catch(e) { console.warn("User table record warning:", e); }
 
@@ -1373,7 +1542,7 @@
                 pendingRegistrationData = null;
             } catch (err) {
                 console.error("Auth Error:", err);
-                showToast("เกิดข้อผิดพลาด: " + (err.message || "ไม่สามารถทำรายการได้"), "error");
+                showToast(getThaiErrorMessage(err), "error");
             }
         }
 
@@ -1908,7 +2077,7 @@
             }
         }
 
-        // Updated Center Screen Notification Modal Function
+        // Center Screen Notification Modal Function
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             container.innerHTML = ''; // Clear previous notifications
