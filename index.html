@@ -1167,7 +1167,7 @@
 
                     card.innerHTML = `
                         <div class="relative h-44 overflow-hidden bg-slate-900">
-                            <img src="${escapeHtml(unit.cover_url)}" alt="${escapeHtml(unit.title)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
+                            <img src="${safeUrl(unit.cover_url)}" alt="${escapeHtml(unit.title)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
                             <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-md border border-amber-500/30">
                                 ${escapeHtml(unit.category)}
                             </span>
@@ -1260,7 +1260,7 @@
 
                     card.innerHTML = `
                         <div class="relative h-44 overflow-hidden bg-slate-900">
-                            <img src="${escapeHtml(unit.cover_url)}" alt="${escapeHtml(unit.title)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
+                            <img src="${safeUrl(unit.cover_url)}" alt="${escapeHtml(unit.title)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100">
                             <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-emerald-300 text-[10px] font-bold px-2.5 py-1 rounded-md border border-emerald-500/30">
                                 ${escapeHtml(unit.category)}
                             </span>
@@ -2248,6 +2248,15 @@
                 return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
             }
             return url;
+        }
+
+        function safeUrl(url) {
+            if (!url) return '';
+            const trimmed = String(url).trim();
+            if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/')) {
+                return escapeHtml(trimmed);
+            }
+            return '';
         }
 
         function escapeHtml(text) {
