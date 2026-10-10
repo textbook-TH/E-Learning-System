@@ -584,7 +584,17 @@
                 }
 
                 supabaseClient.auth.onAuthStateChange(async (event, session) => {
-                    if (event === 'SIGNED_IN' && session?.user) {
+                    if (event === 'PASSWORD_RECOVERY') {
+                        const newPassword = prompt("กรุณากรอกรหัสผ่านใหม่ของคุณ:");
+                        if (newPassword && newPassword.trim() !== '') {
+                            const { error } = await supabaseClient.auth.updateUser({ password: newPassword.trim() });
+                            if (error) {
+                                showToast("เปลี่ยนรหัสผ่านไม่สำเร็จ: " + error.message, "error");
+                            } else {
+                                showToast("เปลี่ยนรหัสผ่านสำเร็จเรียบร้อยแล้ว!", "success");
+                            }
+                        }
+                    } else if (event === 'SIGNED_IN' && session?.user) {
                         if (!currentUser || currentUser.id !== session.user.id) {
                             await loadUserProfile(session.user);
                         }
@@ -615,6 +625,24 @@
                         userRecordFound = true;
                         role = (data.role === 'admin' || data.is_admin) ? 'staff' : 'student';
                         if (data.full_name) name = data.full_name;
+                    } else if (!data) {
+                        try {
+                            const newRecord = {
+                                id: authUser.id,
+                                email: authUser.email,
+                                full_name: name,
+                                role: 'student',
+                                is_admin: false
+                            };
+                            const { error: insErr } = await supabaseClient
+                                .from('elearning_users')
+                                .insert([newRecord]);
+                            if (!insErr) {
+                                userRecordFound = true;
+                            }
+                        } catch (e) {
+                            console.warn("Auto profile creation warning:", e);
+                        }
                     }
                 } catch (e) {
                     console.warn("Error loading user profile:", e);
@@ -1254,16 +1282,39 @@
             }
         }
 
-        function showForgotPasswordPrompt() {
-            const email = document.getElementById('authEmail').value;
-            showToast(`ระบบได้ส่งคำขอรีเซ็ตรหัสผ่านไปยัง ${email || 'อีเมลของคุณ'} เรียบร้อยแล้ว`, 'info');
+        async function showForgotPasswordPrompt() {
+            const emailInput = document.getElementById('authEmail');
+            const email = emailInput ? emailInput.value.trim() : '';
+
+            if (!email) {
+                showToast('กรุณากรอกอีเมลในช่อง "อีเมลผู้ใช้" ก่อนกดลืมรหัสผ่าน', 'error');
+                return;
+            }
+
+            if (!supabaseClient) {
+                showToast('ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + window.location.pathname
+                });
+
+                if (error) throw error;
+
+                showToast(`ระบบได้ส่งอีเมลเปลี่ยนรหัสผ่านไปยัง ${email} เรียบร้อยแล้ว กรุณาตรวจสอบกล่องจดหมายของคุณ`, 'success');
+            } catch (err) {
+                console.error("Reset password error:", err);
+                showToast("เกิดข้อผิดพลาด: " + (err.message || "ไม่สามารถส่งอีเมลเปลี่ยนรหัสผ่านได้"), "error");
+            }
         }
 
         async function handleAuthSubmit(event) {
             event.preventDefault();
-            const email = document.getElementById('authEmail').value;
+            const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value;
-            const displayName = document.getElementById('authDisplayName').value || email.split('@')[0];
+            const displayName = document.getElementById('authDisplayName').value.trim() || email.split('@')[0];
 
             if (!supabaseClient) return;
 
@@ -1272,7 +1323,10 @@
                     const { data, error } = await supabaseClient.auth.signUp({
                         email: email,
                         password: password,
-                        options: { data: { full_name: displayName } }
+                        options: {
+                            data: { full_name: displayName },
+                            emailRedirectTo: window.location.origin + window.location.pathname
+                        }
                     });
 
                     if (error) throw error;
@@ -1287,6 +1341,12 @@
                                 is_admin: currentRoleSelection === 'staff'
                             });
                         } catch(e) { console.warn("User table record warning:", e); }
+
+                        if (!data.session) {
+                            showToast(`สมัครสมาชิกสำเร็จ! ระบบได้ส่งอีเมลยืนยันตัวตนไปยัง ${email} กรุณาตรวจสอบกล่องจดหมายของคุณเพื่อยืนยันบัญชีก่อนเข้าสู่ระบบ`, 'success');
+                            closeLoginModal();
+                            return;
+                        }
 
                         const success = await loadUserProfile(data.user);
                         if (!success) {
@@ -1303,7 +1363,6 @@
                     if (error) throw error;
 
                     if (data.user) {
-                        // Check if user exists in elearning_users table
                         const success = await loadUserProfile(data.user);
                         if (!success) {
                             throw new Error("ไม่พบข้อมูลสมาชิกในระบบ (กรุณาสมัครสมาชิกก่อนเข้าใช้งาน หรือบัญชีของคุณถูกลบ)");
