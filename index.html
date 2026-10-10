@@ -567,7 +567,7 @@
     </div>
 
     <!-- CENTER SCREEN POPUP CONTAINER FOR ALL NOTIFICATIONS -->
-    <div id="toastContainer" class="fixed inset-0 z-50 pointer-events-none flex items-center justify-center p-4"></div>
+    <div id="toastContainer" class="fixed inset-0 z-50 pointer-events-none flex flex-col items-center justify-start pt-6 px-4 space-y-3"></div>
 
     <script>
         // Supabase Client Initialization
@@ -608,6 +608,57 @@
             return email && typeof email === 'string' && email.toLowerCase().endsWith('@kmitl.ac.th');
         }
 
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto max-w-sm w-full bg-white shadow-2xl rounded-2xl p-4 border flex items-start space-x-3 transition-all duration-300 transform -translate-y-2 opacity-0 z-50`;
+
+            let iconClass = "fa-circle-info text-blue-500";
+            let borderColor = "border-slate-200";
+
+            if (type === 'success') {
+                iconClass = "fa-circle-check text-emerald-500";
+                borderColor = "border-emerald-200";
+            } else if (type === 'error') {
+                iconClass = "fa-circle-xmark text-rose-500";
+                borderColor = "border-rose-200";
+            } else if (type === 'warning') {
+                iconClass = "fa-triangle-exclamation text-amber-500";
+                borderColor = "border-amber-200";
+            }
+
+            toast.classList.add(borderColor);
+
+            toast.innerHTML = `
+                <div class="text-lg flex-shrink-0 mt-0.5">
+                    <i class="fa-solid ${iconClass}"></i>
+                </div>
+                <div class="flex-grow text-xs sm:text-sm font-medium text-slate-800 leading-tight">
+                    ${message}
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 text-xs p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('-translate-y-2', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            }, 10);
+
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.remove('translate-y-0', 'opacity-100');
+                    toast.classList.add('-translate-y-2', 'opacity-0');
+                    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 300);
+                }
+            }, 5000);
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
             await initAuthCheck();
             await fetchUnitsData();
@@ -616,19 +667,59 @@
 
         async function initAuthCheck() {
             if (!supabaseClient) return;
+
+            // 1. Check URL Hash immediately upon opening the page
+            const hash = window.location.hash || '';
+            let isPasswordRecoverySession = false;
+
+            if (hash) {
+                const searchParams = new URLSearchParams(hash.substring(1));
+                const error = searchParams.get('error');
+                const errorCode = searchParams.get('error_code');
+                const errorDesc = searchParams.get('error_description');
+                const type = searchParams.get('type');
+
+                // Check if the link is expired or invalid
+                if (error || errorCode || errorDesc || hash.includes('expired') || hash.includes('invalid')) {
+                    showToast("ลิงก์หมดอายุหรือไม่ถูกต้อง กรุณาขอลิงก์รีเซ็ตรหัสผ่านใหม่อีกครั้ง", "error");
+                    // Clean hash from URL without refreshing
+                    history.replaceState(null, "", window.location.pathname + window.location.search);
+                    openLoginModal();
+                    switchToForgotPasswordMode();
+                    return;
+                }
+
+                // Check if hash indicates recovery token
+                if (type === 'recovery' || hash.includes('type=recovery') || hash.includes('access_token=')) {
+                    isPasswordRecoverySession = true;
+                }
+            }
+
             try {
+                // If hash contains recovery parameters, auto display the reset password modal
+                if (isPasswordRecoverySession) {
+                    openLoginModal();
+                    switchToResetPasswordMode();
+                }
+
                 const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session && session.user) {
+                if (session && session.user && !isPasswordRecoverySession) {
                     await loadUserProfile(session.user);
                 }
 
+                // Listen to auth state changes dynamically
                 supabaseClient.auth.onAuthStateChange(async (event, session) => {
                     if (event === 'PASSWORD_RECOVERY') {
-                        // User clicked recovery link from email -> Show new password reset mode
+                        // User clicked recovery link from email -> Show new password reset mode automatically
                         openLoginModal();
                         switchToResetPasswordMode();
                     } else if (event === 'SIGNED_IN' && session?.user) {
-                        if (!currentUser || currentUser.id !== session.user.id) {
+                        // Check if hash had recovery type when signing in
+                        const currentHash = window.location.hash || '';
+                        if (currentHash.includes('type=recovery') || isPasswordRecoverySession) {
+                            openLoginModal();
+                            switchToResetPasswordMode();
+                        } else if (!currentUser || currentUser.id !== session.user.id) {
                             await loadUserProfile(session.user);
                         }
                     } else if (event === 'SIGNED_OUT') {
@@ -1267,7 +1358,9 @@
 
         function openLoginModal() { 
             document.getElementById('loginModal').classList.remove('hidden'); 
-            switchToLoginMode();
+            if (authMode !== 'reset_password' && authMode !== 'forgot') {
+                switchToLoginMode();
+            }
         }
         function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
         function openAuthGuardModal() { document.getElementById('authGuardModal').classList.remove('hidden'); }
@@ -1486,6 +1579,7 @@
                     if (error) throw error;
 
                     showToast("ตั้งรหัสผ่านใหม่เรียบร้อยแล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่", "success");
+                    history.replaceState(null, "", window.location.pathname + window.location.search);
                     closeLoginModal();
                     switchToLoginMode();
                 } catch (err) {
@@ -1978,20 +2072,17 @@
             const description = document.getElementById('unitDescriptionInput').value.trim();
 
             const rows = document.querySelectorAll('.youtube-input-row');
-            const youtubeList = [];
-
+            const videoInputs = [];
             rows.forEach((row, idx) => {
-                const urlInput = row.querySelector('.youtube-url-val');
-                const titleInput = row.querySelector('.youtube-title-val');
-                const urlVal = urlInput ? urlInput.value.trim() : '';
-                const titleVal = titleInput ? titleInput.value.trim() : `ตอนที่ ${idx + 1}`;
-                if (urlVal) {
-                    youtubeList.push({ url: urlVal, title: titleVal });
+                const url = row.querySelector('.youtube-url-val')?.value.trim() || '';
+                const t = row.querySelector('.youtube-title-val')?.value.trim() || `ตอนที่ ${idx + 1}`;
+                if (url) {
+                    videoInputs.push({ title: t, url: url });
                 }
             });
 
-            if (youtubeList.length === 0) {
-                showToast("กรุณากรอกลิงก์วิดีโอ YouTube อย่างน้อย 1 คลิป", "error");
+            if (!title) {
+                showToast("กรุณากรอกชื่อบทเรียน", "error");
                 return;
             }
 
@@ -2001,100 +2092,71 @@
             }
 
             try {
-                let unitId = id;
-                const unitPayload = {
-                    unit_code: unit_code,
-                    title: title,
-                    description: description,
-                    category: category,
-                    cover_url: cover_url
-                };
+                let savedUnitId = id;
 
                 if (id) {
-                    const { error: unitErr } = await supabaseClient
+                    const { error: uErr } = await supabaseClient
                         .from('units')
-                        .update(unitPayload)
+                        .update({
+                            unit_code: unit_code,
+                            title: title,
+                            category: category,
+                            cover_url: cover_url,
+                            description: description
+                        })
                         .eq('id', id);
 
-                    if (unitErr) {
-                        const { error: fallbackErr } = await supabaseClient
-                            .from('units')
-                            .update({ title, description, category })
-                            .eq('id', id);
-                        if (fallbackErr) throw fallbackErr;
-                    }
+                    if (uErr) throw uErr;
                 } else {
-                    const { data: newUnit, error: createErr } = await supabaseClient
+                    const { data: inserted, error: iErr } = await supabaseClient
                         .from('units')
-                        .insert([unitPayload])
+                        .insert([{
+                            unit_code: unit_code,
+                            title: title,
+                            category: category,
+                            cover_url: cover_url,
+                            description: description
+                        }])
                         .select()
                         .single();
 
-                    if (createErr) {
-                        const { data: fbUnit, error: fbErr } = await supabaseClient
-                            .from('units')
-                            .insert([{ title, description, category }])
-                            .select()
-                            .single();
-                        if (fbErr) throw fbErr;
-                        unitId = fbUnit.id;
-                    } else {
-                        unitId = newUnit.id;
-                    }
+                    if (iErr) throw iErr;
+                    if (inserted) savedUnitId = inserted.id;
                 }
 
-                // Handle unit_videos insertion/update
-                if (unitId) {
-                    if (id) {
-                        await supabaseClient
-                            .from('unit_videos')
-                            .delete()
-                            .eq('unit_id', unitId);
+                if (savedUnitId) {
+                    await supabaseClient.from('unit_videos').delete().eq('unit_id', savedUnitId);
+                    await supabaseClient.from('pre_test_questions').delete().eq('unit_id', savedUnitId);
+                    await supabaseClient.from('post_test_questions').delete().eq('unit_id', savedUnitId);
+
+                    if (videoInputs.length > 0) {
+                        const videoRows = videoInputs.map((v, i) => ({
+                            unit_id: savedUnitId,
+                            title: v.title,
+                            video_url: v.url,
+                            order_index: i
+                        }));
+                        await supabaseClient.from('unit_videos').insert(videoRows);
                     }
 
-                    const videoInserts = youtubeList.map((v, idx) => ({
-                        unit_id: unitId,
-                        video_url: v.url,
-                        title: v.title,
-                        order_index: idx + 1
-                    }));
-
-                    await supabaseClient
-                        .from('unit_videos')
-                        .insert(videoInserts);
-
-                    // Handle pre_test_questions
-                    if (id) {
-                        await supabaseClient
-                            .from('pre_test_questions')
-                            .delete()
-                            .eq('unit_id', unitId);
-                    }
                     if (pretestFormQuestions.length > 0) {
-                        const preInserts = pretestFormQuestions.map(q => ({
-                            unit_id: unitId,
+                        const preRows = pretestFormQuestions.map(q => ({
+                            unit_id: savedUnitId,
                             question: q.q,
                             options: q.choices,
                             correct_answer: q.answer
                         }));
-                        await supabaseClient.from('pre_test_questions').insert(preInserts);
+                        await supabaseClient.from('pre_test_questions').insert(preRows);
                     }
 
-                    // Handle post_test_questions
-                    if (id) {
-                        await supabaseClient
-                            .from('post_test_questions')
-                            .delete()
-                            .eq('unit_id', unitId);
-                    }
                     if (posttestFormQuestions.length > 0) {
-                        const postInserts = posttestFormQuestions.map(q => ({
-                            unit_id: unitId,
+                        const postRows = posttestFormQuestions.map(q => ({
+                            unit_id: savedUnitId,
                             question: q.q,
                             options: q.choices,
                             correct_answer: q.answer
                         }));
-                        await supabaseClient.from('post_test_questions').insert(postInserts);
+                        await supabaseClient.from('post_test_questions').insert(postRows);
                     }
                 }
 
@@ -2107,7 +2169,7 @@
             }
         }
 
-        async function editUnit(unitId) {
+        function editUnit(unitId) {
             const unit = allUnits.find(u => String(u.id) === String(unitId));
             if (unit) {
                 openUnitFormModal(unit);
@@ -2119,7 +2181,6 @@
             if (!supabaseClient) return;
 
             try {
-                // Delete child records
                 await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
                 await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
                 await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
@@ -2133,46 +2194,6 @@
                 console.error("Delete unit error:", err);
                 showToast("เกิดข้อผิดพลาดในการลบบทเรียน: " + (err.message || err), "error");
             }
-        }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            if (!container) return;
-
-            const toast = document.createElement('div');
-            let bgClass = "bg-slate-800 text-white";
-            let iconClass = "fa-circle-info text-blue-400";
-
-            if (type === 'success') {
-                bgClass = "bg-emerald-900 text-emerald-100 border border-emerald-700";
-                iconClass = "fa-circle-check text-emerald-400";
-            } else if (type === 'error') {
-                bgClass = "bg-rose-900 text-rose-100 border border-rose-700";
-                iconClass = "fa-circle-exclamation text-rose-400";
-            } else if (type === 'warning') {
-                bgClass = "bg-amber-900 text-amber-100 border border-amber-700";
-                iconClass = "fa-triangle-exclamation text-amber-400";
-            }
-
-            toast.className = `${bgClass} pointer-events-auto max-w-md px-5 py-3.5 rounded-2xl shadow-2xl text-xs sm:text-sm font-medium flex items-center space-x-3 transform transition-all duration-300 translate-y-2 opacity-0 mb-2 border border-white/10`;
-            toast.innerHTML = `
-                <i class="fa-solid ${iconClass} text-lg"></i>
-                <span class="flex-grow">${message}</span>
-                <button onclick="this.parentElement.remove()" class="text-white/60 hover:text-white ml-2">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            `;
-
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', '-translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
         }
     </script>
 </body>
