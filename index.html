@@ -1526,7 +1526,7 @@
                     return false;
                 }
             } 
-            // FLOW 2: FORGOT PASSWORD (ลืมรหัสผ่านแบบไม่ต้องยืนยันอีเมล์)
+            // FLOW 2: FORGOT / CHANGE PASSWORD
             else if (authMode === 'forgot') {
                 if (!newPassword || newPassword.length < 6) {
                     showToast("เกิดข้อผิดพลาด: รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร", "error");
@@ -1550,13 +1550,67 @@
                         return false;
                     }
 
-                    // Attempt password update via active session or auth update
-                    const { error: updateErr } = await supabaseClient.auth.updateUser({ password: newPassword });
+                    let passwordUpdated = false;
+                    let lastError = null;
 
-                    showToast("บันทึกรหัสผ่านใหม่เรียบร้อยแล้ว ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที", "success");
-                    closeLoginModal();
-                    switchToLoginMode();
-                    document.getElementById('authEmail').value = email;
+                    // 1. If currently logged in as this user, update active user password directly
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session && session.user && session.user.email?.toLowerCase() === email.toLowerCase()) {
+                        const { error: updateErr } = await supabaseClient.auth.updateUser({ password: newPassword });
+                        if (!updateErr) {
+                            passwordUpdated = true;
+                        } else {
+                            lastError = updateErr;
+                        }
+                    }
+
+                    // 2. Try stored RPC procedures if present in database
+                    if (!passwordUpdated) {
+                        const rpcList = [
+                            { name: 'change_user_password', params: { p_email: email, p_new_password: newPassword } },
+                            { name: 'change_user_password', params: { email: email, new_password: newPassword } },
+                            { name: 'reset_user_password', params: { p_email: email, p_new_password: newPassword } },
+                            { name: 'reset_user_password', params: { email: email, new_password: newPassword } },
+                            { name: 'update_user_password', params: { p_email: email, p_new_password: newPassword } },
+                            { name: 'update_user_password', params: { email: email, new_password: newPassword } }
+                        ];
+
+                        for (const rpc of rpcList) {
+                            try {
+                                const { data: rpcData, error: rpcErr } = await supabaseClient.rpc(rpc.name, rpc.params);
+                                if (!rpcErr && rpcData !== false) {
+                                    passwordUpdated = true;
+                                    break;
+                                } else if (rpcErr && !rpcErr.message.includes('function') && !rpcErr.message.includes('not found')) {
+                                    lastError = rpcErr;
+                                }
+                            } catch (e) {
+                                // continue RPC signature lookup
+                            }
+                        }
+                    }
+
+                    // 3. Fallback: Request password reset link / email standard auth reset
+                    if (!passwordUpdated) {
+                        const { error: resetErr } = await supabaseClient.auth.resetPasswordForEmail(email);
+                        if (!resetErr) {
+                            showToast("ระบบส่งลิงก์สำหรับเปลี่ยนรหัสผ่านไปยังอีเมลสถาบันของคุณแล้ว", "success");
+                            closeLoginModal();
+                            switchToLoginMode();
+                            document.getElementById('authEmail').value = email;
+                            return true;
+                        } else {
+                            if (lastError) throw lastError;
+                            else throw resetErr;
+                        }
+                    }
+
+                    if (passwordUpdated) {
+                        showToast("บันทึกรหัสผ่านใหม่เรียบร้อยแล้ว ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที", "success");
+                        closeLoginModal();
+                        switchToLoginMode();
+                        document.getElementById('authEmail').value = email;
+                    }
                 } catch (err) {
                     console.error("Forgot password error:", err);
                     showToast(getThaiErrorMessage(err), "error");
@@ -2005,22 +2059,22 @@
                 const titleInput = row.querySelector('.youtube-title-val');
                 if (urlInput && urlInput.value.trim()) {
                     videosData.push({
-                        url: urlInput.value.trim(),
-                        title: titleInput && titleInput.value.trim() ? titleInput.value.trim() : `ตอนที่ ${idx + 1}`,
+                        title: (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : `ตอนที่ ${idx + 1}`,
+                        video_url: urlInput.value.trim(),
                         order_index: idx
                     });
                 }
             });
 
             if (videosData.length === 0) {
-                showToast("กรุณากรอก URL วิดีโออย่างน้อย 1 รายการ", "warning");
+                showToast("กรุณาใส่ URL วิดีโออย่างน้อย 1 คลิป", "error");
                 return;
             }
 
             try {
                 let savedUnitId = unitId;
 
-                const unitPayload = {
+                const payload = {
                     unit_code: unitCode,
                     title: title,
                     category: category,
@@ -2031,89 +2085,90 @@
                 if (unitId) {
                     const { error } = await supabaseClient
                         .from('units')
-                        .update(unitPayload)
+                        .update(payload)
                         .eq('id', unitId);
                     if (error) throw error;
                 } else {
                     const { data, error } = await supabaseClient
                         .from('units')
-                        .insert([unitPayload])
+                        .insert([payload])
                         .select();
                     if (error) throw error;
-                    if (data && data.length > 0) savedUnitId = data[0].id;
+                    if (data && data.length > 0) {
+                        savedUnitId = data[0].id;
+                    }
                 }
 
                 if (savedUnitId) {
-                    // Delete old sub-records & insert updated ones
+                    // Update videos
                     await supabaseClient.from('unit_videos').delete().eq('unit_id', savedUnitId);
-                    if (videosData.length > 0) {
-                        const vRecords = videosData.map(v => ({
-                            unit_id: savedUnitId,
-                            title: v.title,
-                            video_url: v.url,
-                            order_index: v.order_index
-                        }));
-                        await supabaseClient.from('unit_videos').insert(vRecords);
+                    const videosToInsert = videosData.map(v => ({
+                        unit_id: savedUnitId,
+                        title: v.title,
+                        video_url: v.video_url,
+                        order_index: v.order_index
+                    }));
+                    if (videosToInsert.length > 0) {
+                        await supabaseClient.from('unit_videos').insert(videosToInsert);
                     }
 
-                    // Pre-test questions
+                    // Update pre-test questions
                     await supabaseClient.from('pre_test_questions').delete().eq('unit_id', savedUnitId);
                     if (pretestFormQuestions.length > 0) {
-                        const preRecords = pretestFormQuestions.map(q => ({
+                        const preQuestionsToInsert = pretestFormQuestions.map(q => ({
                             unit_id: savedUnitId,
                             question: q.q,
                             options: q.choices,
                             correct_answer: q.answer
                         }));
-                        await supabaseClient.from('pre_test_questions').insert(preRecords);
+                        await supabaseClient.from('pre_test_questions').insert(preQuestionsToInsert);
                     }
 
-                    // Post-test questions
+                    // Update post-test questions
                     await supabaseClient.from('post_test_questions').delete().eq('unit_id', savedUnitId);
                     if (posttestFormQuestions.length > 0) {
-                        const postRecords = posttestFormQuestions.map(q => ({
+                        const postQuestionsToInsert = posttestFormQuestions.map(q => ({
                             unit_id: savedUnitId,
                             question: q.q,
                             options: q.choices,
                             correct_answer: q.answer
                         }));
-                        await supabaseClient.from('post_test_questions').insert(postRecords);
+                        await supabaseClient.from('post_test_questions').insert(postQuestionsToInsert);
                     }
                 }
 
-                showToast("บันทึกข้อมูลบทเรียนลง Supabase เรียบร้อยแล้ว", "success");
+                showToast("บันทึกข้อมูลบทเรียนเรียบร้อยแล้ว", "success");
                 closeUnitFormModal();
                 await fetchUnitsData();
             } catch (err) {
-                console.error("Save Unit Error:", err);
-                showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (err.message || err), "error");
+                console.error("Save unit error:", err);
+                showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (err.message || ""), "error");
+            }
+        }
+
+        function editUnit(unitId) {
+            const unit = allUnits.find(u => String(u.id) === String(unitId));
+            if (unit) {
+                openUnitFormModal(unit);
             }
         }
 
         async function deleteUnit(unitId) {
-            if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบบทเรียนนี้ออกจากระบบ?")) return;
+            if (!confirm("คุณแน่ใจหรือว่าต้องการลบบทเรียนนี้?")) return;
             if (!supabaseClient) return;
 
             try {
                 await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
                 await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
                 await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
-
                 const { error } = await supabaseClient.from('units').delete().eq('id', unitId);
                 if (error) throw error;
 
                 showToast("ลบบทเรียนเรียบร้อยแล้ว", "success");
                 await fetchUnitsData();
             } catch (err) {
-                console.error("Delete Unit Error:", err);
-                showToast("เกิดข้อผิดพลาดในการลบ: " + (err.message || err), "error");
-            }
-        }
-
-        function editUnit(unitId) {
-            const unit = allUnits.find(u => u.id == unitId);
-            if (unit) {
-                openUnitFormModal(unit);
+                console.error("Delete unit error:", err);
+                showToast("เกิดข้อผิดพลาดในการลบบทเรียน", "error");
             }
         }
     </script>
