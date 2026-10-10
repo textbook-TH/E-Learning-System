@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatalogView Learning Hub - ระบบสืบค้นและเรียนรู้ออนไลน์</title>
+    <title>E-Learning System - ระบบคลังความรู้ออนไลน์เพื่อพัฒนาทักษะ</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -46,6 +46,7 @@
             overflow: hidden;
         }
 
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -54,8 +55,19 @@
             background: #f1f1f1;
         }
         ::-webkit-scrollbar-thumb {
-            background: #a44a3f;
+            background: #4b5563; /* สีเทาแก่ */
             border-radius: 4px;
+        }
+
+        /* Custom Select Arrow Styling for better right margin layout */
+        .custom-select-dropdown {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%20334155' stroke-width='2.5'><path stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.1rem;
         }
     </style>
 </head>
@@ -66,42 +78,41 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <!-- Brand Logo & Title -->
             <div class="flex items-center space-x-3 cursor-pointer" onclick="handleBrandLogoClick()">
-                <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-2xl shadow-inner">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-2xl shadow-inner flex-shrink-0">
                     <i class="fa-solid fa-book-bookmark"></i>
                 </div>
                 <div>
                     <div class="flex items-center space-x-2">
-                        <span class="text-2xl font-bold tracking-wide text-amber-200">CatalogView</span>
-                        <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 font-normal">Hub</span>
+                        <span class="text-xl sm:text-2xl font-bold tracking-wide text-amber-200">E-Learning System</span>
                     </div>
-                    <p class="text-xs text-blue-200/80 tracking-wider">ระบบสืบค้นและเรียนรู้ออนไลน์</p>
+                    <p class="text-[11px] sm:text-xs text-blue-200/80 tracking-wider">ระบบคลังความรู้ออนไลน์เพื่อพัฒนาทักษะ</p>
                 </div>
             </div>
 
-            <!-- Right Nav Links (Capsule Menu Dynamic State) -->
-            <nav id="navMenu" class="flex items-center space-x-3 sm:space-x-4">
+            <!-- Right Nav Links (Capsule Menu Dynamic State: แสดงเฉพาะไอคอนบนมือถือ) -->
+            <nav id="navMenu" class="flex items-center space-x-2 sm:space-x-4">
                 <!-- Home Button -->
-                <button id="navHomeBtn" onclick="handleNavHomeClick()" class="px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition flex items-center space-x-2 text-slate-200 hover:text-white">
-                    <i class="fa-solid fa-house"></i>
+                <button id="navHomeBtn" onclick="handleNavHomeClick()" class="px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition flex items-center space-x-2 text-slate-200 hover:text-white" title="หน้าหลัก">
+                    <i class="fa-solid fa-house text-base sm:text-sm"></i>
                     <span class="hidden sm:inline">หน้าหลัก</span>
                 </button>
                 
-                <!-- Guest View Button: Login (Yellow Accent) -->
-                <button id="loginBtn" onclick="openLoginModal()" class="px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-md transition flex items-center space-x-2">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                    <span>เข้าสู่ระบบ</span>
+                <!-- Guest View Button: Login -->
+                <button id="loginBtn" onclick="openLoginModal()" class="px-3.5 sm:px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-md transition flex items-center space-x-2" title="เข้าสู่ระบบ">
+                    <i class="fa-solid fa-right-to-bracket text-base sm:text-sm"></i>
+                    <span class="hidden sm:inline">เข้าสู่ระบบ</span>
                 </button>
 
                 <!-- Logged In View Button: Role Dashboard Button -->
-                <button id="roleTabBtn" onclick="handleRoleTabClick()" class="hidden px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-md transition flex items-center space-x-2">
-                    <i id="roleTabIcon" class="fa-solid fa-user-gear"></i>
-                    <span id="roleTabText">เจ้าหน้าที่</span>
+                <button id="roleTabBtn" onclick="handleRoleTabClick()" class="hidden px-3.5 sm:px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-md transition flex items-center space-x-2" title="เจ้าหน้าที่ / สมาชิก">
+                    <i id="roleTabIcon" class="fa-solid fa-user-gear text-base sm:text-sm"></i>
+                    <span id="roleTabText" class="hidden sm:inline">เจ้าหน้าที่</span>
                 </button>
 
                 <!-- Logged In View Button: Logout Pill Button -->
-                <button id="logoutBtn" onclick="handleLogout()" class="hidden px-3.5 py-1.5 rounded-full text-xs sm:text-sm border border-slate-700 hover:border-red-500 hover:bg-red-500/10 text-slate-300 hover:text-red-300 transition flex items-center space-x-1.5" title="ออกจากระบบ">
-                    <i class="fa-solid fa-power-off"></i>
-                    <span>ออกจากระบบ</span>
+                <button id="logoutBtn" onclick="handleLogout()" class="hidden px-3 sm:px-3.5 py-2 sm:py-1.5 rounded-full text-xs sm:text-sm border border-slate-700 hover:border-red-500 hover:bg-red-500/10 text-slate-300 hover:text-red-300 transition flex items-center space-x-1.5" title="ออกจากระบบ">
+                    <i class="fa-solid fa-power-off text-base sm:text-sm"></i>
+                    <span class="hidden sm:inline">ออกจากระบบ</span>
                 </button>
             </nav>
         </div>
@@ -116,24 +127,26 @@
             <div class="max-w-7xl mx-auto text-center relative z-10">
                 <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 text-amber-300 text-xs sm:text-sm mb-4 border border-white/15">
                     <i class="fa-solid fa-graduation-cap"></i>
-                    <span>ศูนย์รวมบทเรียนออนไลน์ คณะวิศวกรรมศาสตร์ สจล.</span>
+                    <span>ศูนย์รวบรวมคลังความรู้ออนไลน์ คณะวิศวกรรมศาสตร์ สจล.</span>
                 </span>
                 <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
-                    สืบค้นและเรียนรู้บทเรียนออนไลน์
+                    คลังความรู้ออนไลน์เพื่อพัฒนาทักษะ
                 </h1>
                 <p class="text-blue-100/80 text-sm sm:text-base max-w-2xl mx-auto mb-6">
-                    รวบรวมสื่อการสอนคลิปวิดีโอ และแบบทดสอบก่อน/หลังเรียน พร้อมประเมินผลได้ทันที
+                    พร้อมแบบทดสอบก่อน/หลังเรียน และสรุปผลคะแนน
                 </p>
 
                 <!-- Search & Category Filters -->
                 <div class="max-w-2xl mx-auto bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-2xl flex flex-col sm:flex-row gap-2">
                     <div class="relative flex-grow">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400"></i>
-                        <input type="text" id="searchInput" oninput="handleSearch()" placeholder="ค้นหาชื่อบทเรียน หรือคำอธิบาย..." class="w-full pl-10 pr-4 py-2.5 rounded-xl text-slate-800 placeholder-slate-400 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                        <input type="text" id="searchInput" oninput="handleSearch()" oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="ค้นหาชื่อบทเรียน หรือคำอธิบาย..." class="w-full pl-10 pr-4 py-2.5 rounded-xl text-slate-800 placeholder-slate-400 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
                     </div>
-                    <select id="filterCategory" onchange="handleSearch()" class="px-4 py-2.5 rounded-xl text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm font-medium">
-                        <option value="ALL">📚 ทุกหมวดหมู่</option>
-                    </select>
+                    <div class="relative">
+                        <select id="filterCategory" onchange="handleSearch()" class="custom-select-dropdown w-full sm:w-auto pl-4 pr-12 py-2.5 rounded-xl text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm font-medium cursor-pointer">
+                            <option value="ALL">📚 ทุกหมวดหมู่</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </section>
@@ -144,7 +157,7 @@
                 <div>
                     <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
                         <i class="fa-solid fa-layer-group text-amber-600"></i>
-                        <span>คลังบทเรียนออนไลน์สำหรับบุคลากรและนักเรียน สจล.</span>
+                        <span>คลังบทเรียนออนไลน์สำหรับสมาชิก</span>
                     </h2>
                 </div>
             </div>
@@ -167,7 +180,7 @@
                 <div>
                     <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
                         <i class="fa-solid fa-users text-emerald-600"></i>
-                        <span>คลังบทเรียนสำหรับสมาชิก</span>
+                        <span>คลังบทเรียนออนไลน์สำหรับสมาชิก</span>
                     </h2>
                 </div>
             </div>
@@ -189,6 +202,7 @@
             <div class="bg-white rounded-2xl p-6 shadow-catalog border border-slate-100 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-sliders text-amber-600 text-xl"></i>
                         <h2 class="text-xl font-bold text-slate-800">ระบบจัดการบทเรียนออนไลน์และแบบทดสอบ</h2>
                     </div>
                 </div>
@@ -318,11 +332,16 @@
         </section>
     </main>
 
-    <!-- FOOTER -->
+    <!-- FOOTER (ตัดเป็น 2 แถวบนมือถือตามสั่ง) -->
     <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs sm:text-sm">
-            <p class="font-medium text-slate-300">© 2026 CatalogView Learning Hub - ระบบสืบค้นและบทเรียนดิจิทัล</p>
-            <p class="text-slate-500 mt-1">เชื่อมต่อข้อมูล Supabase REST Engine (Live Database Connection Active)</p>
+            <p class="font-medium text-slate-300 leading-relaxed block sm:hidden">
+                2026 งานเทคโนโลยีการศึกษา คณะวิศวกรรมศาสตร์<br>
+                สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง
+            </p>
+            <p class="font-medium text-slate-300 leading-relaxed hidden sm:block">
+                2026 งานเทคโนโลยีการศึกษา คณะวิศวกรรมศาสตร์ สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง
+            </p>
         </div>
     </footer>
 
@@ -362,7 +381,7 @@
                         <label class="block text-xs font-medium text-slate-700 mb-1" id="emailLabelText">อีเมลผู้ใช้</label>
                         <div class="relative">
                             <i class="fa-solid fa-envelope absolute left-3 top-3 text-slate-400 text-sm"></i>
-                            <input type="email" id="authEmail" required placeholder="user@kmitl.ac.th" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <input type="email" id="authEmail" required oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="user@kmitl.ac.th" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                         </div>
                     </div>
 
@@ -373,7 +392,7 @@
                         </div>
                         <div class="relative">
                             <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
-                            <input type="password" id="authPassword" required placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <input type="password" id="authPassword" required oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                             <button type="button" onclick="togglePasswordVisibility('authPassword', 'eyeIcon')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-1">
                                 <i id="eyeIcon" class="fa-solid fa-eye"></i>
                             </button>
@@ -385,7 +404,7 @@
                         <label class="block text-xs font-medium text-slate-700 mb-1">รหัสผ่านใหม่</label>
                         <div class="relative">
                             <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
-                            <input type="password" id="authNewPassword" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <input type="password" id="authNewPassword" oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                             <button type="button" onclick="togglePasswordVisibility('authNewPassword', 'newEyeIcon')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-1">
                                 <i id="newEyeIcon" class="fa-solid fa-eye"></i>
                             </button>
@@ -397,7 +416,7 @@
                         <label class="block text-xs font-medium text-slate-700 mb-1">ยืนยันรหัสผ่านอีกครั้ง</label>
                         <div class="relative">
                             <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
-                            <input type="password" id="authConfirmPassword" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <input type="password" id="authConfirmPassword" oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                             <button type="button" onclick="togglePasswordVisibility('authConfirmPassword', 'confirmEyeIcon')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-1">
                                 <i id="confirmEyeIcon" class="fa-solid fa-eye"></i>
                             </button>
@@ -409,7 +428,7 @@
                         <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อ-นามสกุล</label>
                         <div class="relative">
                             <i class="fa-solid fa-id-card absolute left-3 top-3 text-slate-400 text-sm"></i>
-                            <input type="text" id="authDisplayName" placeholder="สมชาย ใจดี" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <input type="text" id="authDisplayName" oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="สมชาย ใจดี" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                         </div>
                     </div>
 
@@ -479,15 +498,15 @@
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">รหัสบทเรียน <span class="text-red-500">*</span></label>
-                                <input type="text" id="unitCodeInput" required placeholder="เช่น UNIT-001" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none uppercase font-semibold">
+                                <input type="text" id="unitCodeInput" required oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="เช่น UNIT-001" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none uppercase font-semibold">
                             </div>
                             <div class="sm:col-span-2">
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อบทเรียน <span class="text-red-500">*</span></label>
-                                <input type="text" id="unitTitleInput" required placeholder="เช่น การเขียนโปรแกรมเบื้องต้น" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <input type="text" id="unitTitleInput" required oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="เช่น การเขียนโปรแกรมเบื้องต้น" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">หมวดหมู่วิชา <span class="text-red-500">*</span></label>
-                                <input type="text" id="unitCategoryInput" list="categorySuggestions" placeholder="เช่น วิทยาการคอมพิวเตอร์" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white">
+                                <input type="text" id="unitCategoryInput" list="categorySuggestions" oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="เช่น วิทยาการคอมพิวเตอร์" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white">
                                 <datalist id="categorySuggestions">
                                     <option value="วิทยาการคอมพิวเตอร์"></option>
                                     <option value="วิศวกรรมศาสตร์"></option>
@@ -498,7 +517,7 @@
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">URL รูปภาพปก</label>
-                            <input type="url" id="unitCoverInput" placeholder="ใส่ URL ของ รูปภาพ หรือ YouTube" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <input type="url" id="unitCoverInput" oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="ใส่ URL ของ รูปภาพ หรือ YouTube" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                         </div>
 
                         <div>
@@ -561,6 +580,39 @@
         </div>
     </div>
 
+    <!-- MODAL 4: CENTRAL SYSTEM NOTIFICATION POPUP -->
+    <div id="systemNotificationModal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center border border-slate-100 transform transition-all">
+            <div id="notificationModalIconBox" class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-emerald-200">
+                <i id="notificationModalIcon" class="fa-solid fa-circle-check"></i>
+            </div>
+            <h3 id="notificationModalTitle" class="text-lg font-bold text-slate-800 mb-2">แจ้งเตือนระบบ</h3>
+            <p id="notificationModalMessage" class="text-xs sm:text-sm text-slate-600 mb-6 leading-relaxed">รายละเอียดการแจ้งเตือน</p>
+            <button id="notificationModalBtn" onclick="closeNotificationModal()" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow-sm transition">
+                ตกลง
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 5: CENTRAL CONFIRMATION DIALOG POPUP -->
+    <div id="systemConfirmModal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center border border-slate-100 transform transition-all">
+            <div id="confirmModalIconBox" class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-rose-200">
+                <i id="confirmModalIcon" class="fa-solid fa-trash-can text-2xl"></i>
+            </div>
+            <h3 id="confirmModalTitle" class="text-lg font-bold text-slate-800 mb-2">ยืนยันการทำรายการ</h3>
+            <p id="confirmModalMessage" class="text-xs sm:text-sm text-slate-600 mb-6 leading-relaxed">คุณแน่ใจหรือไม่ว่าต้องการดำเนินการนี้?</p>
+            <div class="flex space-x-2">
+                <button onclick="closeConfirmModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition">
+                    ยกเลิก
+                </button>
+                <button id="confirmModalSubmitBtn" onclick="executeConfirmAction()" class="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold shadow-sm transition">
+                    ยืนยัน
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Supabase Client Initialization
         const SUPABASE_URL = "https://soveyqvggppjklddrwja.supabase.co";
@@ -592,13 +644,105 @@
         let pretestFormQuestions = [];
         let posttestFormQuestions = [];
 
+        let notificationOnCloseCallback = null;
+        let confirmCallback = null;
+
+        // Central Notification Popup Handler
+        function showNotificationModal(title, message, type = 'info', onCloseCallback = null) {
+            const modal = document.getElementById('systemNotificationModal');
+            const titleEl = document.getElementById('notificationModalTitle');
+            const msgEl = document.getElementById('notificationModalMessage');
+            const iconBoxEl = document.getElementById('notificationModalIconBox');
+            const iconEl = document.getElementById('notificationModalIcon');
+            const btnEl = document.getElementById('notificationModalBtn');
+
+            if (!modal || !titleEl || !msgEl) return;
+
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+
+            if (type === 'success') {
+                iconBoxEl.className = "w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-emerald-200";
+                iconEl.className = "fa-solid fa-circle-check";
+                btnEl.className = "w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-sm transition";
+            } else if (type === 'error') {
+                iconBoxEl.className = "w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-rose-200";
+                iconEl.className = "fa-solid fa-triangle-exclamation";
+                btnEl.className = "w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold shadow-sm transition";
+            } else if (type === 'warning') {
+                iconBoxEl.className = "w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-amber-200";
+                iconEl.className = "fa-solid fa-circle-exclamation";
+                btnEl.className = "w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow-sm transition";
+            } else if (type === 'key') {
+                iconBoxEl.className = "w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-emerald-200";
+                iconEl.className = "fa-solid fa-key";
+                btnEl.className = "w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-sm transition";
+            } else if (type === 'user-success') {
+                iconBoxEl.className = "w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-emerald-200";
+                iconEl.className = "fa-solid fa-user-check";
+                btnEl.className = "w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-sm transition";
+            } else {
+                iconBoxEl.className = "w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-blue-200";
+                iconEl.className = "fa-solid fa-circle-info";
+                btnEl.className = "w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold shadow-sm transition";
+            }
+
+            notificationOnCloseCallback = onCloseCallback;
+            modal.classList.remove('hidden');
+        }
+
+        function closeNotificationModal() {
+            const modal = document.getElementById('systemNotificationModal');
+            if (modal) modal.classList.add('hidden');
+            if (notificationOnCloseCallback) {
+                const cb = notificationOnCloseCallback;
+                notificationOnCloseCallback = null;
+                cb();
+            }
+        }
+
+        // Central Confirmation Dialog Handler
+        function showConfirmModal(title, message, iconClass, iconBgClass, confirmBtnClass, confirmText, callback) {
+            const modal = document.getElementById('systemConfirmModal');
+            if (!modal) return;
+
+            document.getElementById('confirmModalTitle').innerText = title;
+            document.getElementById('confirmModalMessage').innerText = message;
+            document.getElementById('confirmModalIcon').className = iconClass;
+            document.getElementById('confirmModalIconBox').className = `w-16 h-16 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 ${iconBgClass}`;
+            
+            const confirmBtn = document.getElementById('confirmModalSubmitBtn');
+            confirmBtn.className = `w-1/2 py-2.5 rounded-xl text-white text-sm font-semibold shadow-sm transition ${confirmBtnClass}`;
+            confirmBtn.innerText = confirmText || 'ยืนยัน';
+            
+            confirmCallback = callback;
+            modal.classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('systemConfirmModal');
+            if (modal) modal.classList.add('hidden');
+            confirmCallback = null;
+        }
+
+        function executeConfirmAction() {
+            if (confirmCallback) {
+                const cb = confirmCallback;
+                confirmCallback = null;
+                closeConfirmModal();
+                cb();
+            } else {
+                closeConfirmModal();
+            }
+        }
+
         // Helper Function to strictly enforce @kmitl.ac.th domain
         function isKmitlEmail(email) {
             return email && typeof email === 'string' && email.toLowerCase().trim().endsWith('@kmitl.ac.th');
         }
 
         function showToast(message, type = 'info') {
-            // Notifications disabled cleanly
+            showNotificationModal("แจ้งเตือน", message, type);
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -697,10 +841,10 @@
 
                 if (currentUser.role === 'staff') {
                     if (roleTabText) roleTabText.innerText = 'เจ้าหน้าที่';
-                    if (roleTabIcon) roleTabIcon.className = 'fa-solid fa-user-gear';
+                    if (roleTabIcon) roleTabIcon.className = 'fa-solid fa-user-gear text-base sm:text-sm';
                 } else {
                     if (roleTabText) roleTabText.innerText = 'สมาชิก';
-                    if (roleTabIcon) roleTabIcon.className = 'fa-solid fa-users';
+                    if (roleTabIcon) roleTabIcon.className = 'fa-solid fa-users text-base sm:text-sm';
                 }
             } else {
                 if (loginBtn) loginBtn.classList.remove('hidden');
@@ -718,7 +862,7 @@
 
             if (!navHomeBtn) return;
 
-            const activeBtnClasses = "px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-md transition flex items-center space-x-2";
+            const activeBtnClasses = "px-3 sm:px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-md transition flex items-center space-x-2";
             const inactiveBtnClasses = "px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition flex items-center space-x-2 text-slate-200 hover:text-white bg-transparent shadow-none";
 
             if (currentUser && currentUser.role === 'staff') {
@@ -1357,7 +1501,7 @@
                 modalTitle.innerText = "สมัครสมาชิก";
                 modalSubTitle.innerText = "กรอกข้อมูลเพื่อลงทะเบียนเข้าใช้งานระบบ";
                 submitBtn.innerText = "ลงทะเบียนสมัครสมาชิก";
-                if (toggleText) toggleText.innerText = "มีบัญชีผู้ใช้งานอยู่แล้ว?";
+                if (toggleText) toggleText.innerText = "";
                 toggleBtn.innerText = "เข้าสู่ระบบ";
                 nameContainer.classList.remove('hidden');
                 passInput.required = true;
@@ -1367,7 +1511,7 @@
             } else if (authMode === 'forgot') {
                 headerIcon.className = "fa-solid fa-key";
                 modalTitle.innerText = "ลืมรหัสผ่าน";
-                modalSubTitle.innerText = "กรอกอีเมลสมาชิผู้ใช้งานและตั้งรหัสผ่านใหม่";
+                modalSubTitle.innerText = "กรอกอีเมลสมาชิกผู้ใช้งานและตั้งรหัสผ่านใหม่";
                 submitBtn.innerText = "บันทึกรหัสผ่าน";
                 if (toggleText) toggleText.innerText = "";
                 toggleBtn.innerText = "เข้าสู่ระบบ";
@@ -1391,11 +1535,23 @@
 
             if (!supabaseClient) return false;
 
-            if (!isKmitlEmail(email)) return false;
+            if (!isKmitlEmail(email)) {
+                if (authMode === 'signup') {
+                    showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "กรุณาใช้อีเมลสถาบัน @kmitl.ac.th เท่านั้น", "error");
+                } else if (authMode === 'forgot') {
+                    showNotificationModal("แก้ไขรหัสผ่านไม่สำเร็จ", "กรุณาใช้อีเมลสถาบัน @kmitl.ac.th เท่านั้น", "error");
+                } else {
+                    showNotificationModal("การเข้าสู่ระบบไม่สำเร็จ", "กรุณาใช้อีเมลสถาบัน @kmitl.ac.th เท่านั้น", "error");
+                }
+                return false;
+            }
 
             // FLOW 1: SIGN UP
             if (authMode === 'signup') {
-                if (!password || password.length < 6) return false;
+                if (!password || password.length < 6) {
+                    showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร", "error");
+                    return false;
+                }
 
                 try {
                     const { data: existingUser } = await supabaseClient
@@ -1404,7 +1560,10 @@
                         .eq('email', email)
                         .maybeSingle();
 
-                    if (existingUser) return false;
+                    if (existingUser) {
+                        showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "อีเมลนี้ถูกใช้งานในระบบแล้ว กรุณาเข้าสู่ระบบหรือใช้เมนูลืมรหัสผ่าน", "warning");
+                        return false;
+                    }
 
                     const { data, error } = await supabaseClient.auth.signUp({
                         email: email,
@@ -1412,7 +1571,14 @@
                         options: { data: { full_name: displayName } }
                     });
 
-                    if (error) throw error;
+                    if (error) {
+                        if (error.message && error.message.toLowerCase().includes('already registered')) {
+                            showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "อีเมลนี้ถูกใช้งานในระบบแล้ว กรุณาเข้าสู่ระบบหรือใช้เมนูลืมรหัสผ่าน", "warning");
+                        } else {
+                            showNotificationModal("สมัครสมาชิกไม่สำเร็จ", error.message || "เกิดข้อผิดพลาดในการลงทะเบียน", "error");
+                        }
+                        return false;
+                    }
 
                     if (data.user) {
                         try {
@@ -1428,16 +1594,24 @@
                         closeLoginModal();
                         switchToLoginMode();
                         document.getElementById('authEmail').value = email;
+                        showNotificationModal("สมัครสมาชิกสำเร็จ", "ลงทะเบียนสำเร็จแล้ว สามารถเข้าสู่ระบบได้ทันที", "user-success");
                     }
                 } catch (err) {
                     console.error("SignUp Error:", err);
+                    showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง", "error");
                     return false;
                 }
             } 
             // FLOW 2: FORGOT / RESET PASSWORD
             else if (authMode === 'forgot') {
-                if (!newPassword || newPassword.length < 6) return false;
-                if (newPassword !== confirmPassword) return false;
+                if (!newPassword || newPassword.length < 6) {
+                    showNotificationModal("แก้ไขรหัสผ่านไม่สำเร็จ", "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร", "error");
+                    return false;
+                }
+                if (newPassword !== confirmPassword) {
+                    showNotificationModal("แก้ไขรหัสผ่านไม่สำเร็จ", "รหัสผ่านใหม่ไม่ตรงกัน", "error");
+                    return false;
+                }
 
                 try {
                     const { data: userRec, error: userErr } = await supabaseClient
@@ -1446,7 +1620,10 @@
                         .eq('email', email)
                         .maybeSingle();
 
-                    if (userErr || !userRec) return false;
+                    if (userErr || !userRec) {
+                        showNotificationModal("แก้ไขรหัสผ่านไม่สำเร็จ", "ไม่พบอีเมลนี้ในระบบ", "error");
+                        return false;
+                    }
 
                     let passwordUpdated = false;
 
@@ -1483,11 +1660,17 @@
                         } catch(e) {}
                     }
 
-                    closeLoginModal();
-                    switchToLoginMode();
-                    document.getElementById('authEmail').value = email;
+                    if (passwordUpdated) {
+                        closeLoginModal();
+                        switchToLoginMode();
+                        document.getElementById('authEmail').value = email;
+                        showNotificationModal("เปลี่ยนรหัสผ่านสำเร็จ", "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว", "key");
+                    } else {
+                        showNotificationModal("แก้ไขรหัสผ่านไม่สำเร็จ", "ไม่สามารถเปลี่ยนรหัสผ่านได้ กรุณาลองใหม่อีกครั้ง", "error");
+                    }
                 } catch (err) {
                     console.error("Forgot password error:", err);
+                    showNotificationModal("แก้ไขรหัสผ่านไม่สำเร็จ", "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง", "error");
                     return false;
                 }
             } 
@@ -1499,11 +1682,17 @@
                         password: password
                     });
 
-                    if (error) throw error;
+                    if (error) {
+                        showNotificationModal("การเข้าสู่ระบบไม่สำเร็จ", "อีเมลหรือรหัสผ่านไม่ถูกต้อง", "error");
+                        return false;
+                    }
 
                     if (data.user) {
                         const success = await loadUserProfile(data.user);
-                        if (!success) return false;
+                        if (!success) {
+                            showNotificationModal("การเข้าสู่ระบบไม่สำเร็จ", "ไม่พบสิทธิ์การใช้งานในระบบ", "error");
+                            return false;
+                        }
                     }
 
                     closeLoginModal();
@@ -1513,8 +1702,11 @@
                     } else if (currentUser && currentUser.role === 'student') {
                         switchTab('studentView');
                     }
+
+                    showNotificationModal("เข้าสู่ระบบสำเร็จ", `เข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ ${currentUser ? currentUser.name : ''}`, "success");
                 } catch (err) {
                     console.error("Auth Error:", err);
+                    showNotificationModal("การเข้าสู่ระบบไม่สำเร็จ", "อีเมลหรือรหัสผ่านไม่ถูกต้อง", "error");
                     return false;
                 }
             }
@@ -1740,7 +1932,7 @@
                     </div>
                     <div class="sm:col-span-2 relative">
                         <i class="fa-brands fa-youtube absolute left-3 top-2.5 text-red-500 text-sm"></i>
-                        <input type="url" required placeholder="https://www.youtube.com/watch?v=..." value="${urlVal}" class="youtube-url-val w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
+                        <input type="url" required oninvalid="this.setCustomValidity('กรุณากรอกข้อมูล')" oninput="this.setCustomValidity('')" placeholder="https://www.youtube.com/watch?v=..." value="${urlVal}" class="youtube-url-val w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none">
                     </div>
                 </div>
             `;
