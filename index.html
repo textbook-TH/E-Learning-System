@@ -146,7 +146,6 @@
                         <i class="fa-solid fa-layer-group text-amber-600"></i>
                         <span>คลังบทเรียนออนไลน์สำหรับบุคลากรและนักเรียน สจล.</span>
                     </h2>
-                    <p class="text-xs text-slate-500 mt-0.5">กรุณา Login ด้วยอีเมล์สถาบันเท่านั้น</p>
                 </div>
             </div>
 
@@ -170,7 +169,6 @@
                         <i class="fa-solid fa-users text-emerald-600"></i>
                         <span>คลังบทเรียนสำหรับสมาชิก</span>
                     </h2>
-                    <p class="text-xs text-slate-500 mt-0.5">เลือกบทเรียนที่ต้องการเพื่อรับชมวิดีโอและทำแบบทดสอบประเมินผล</p>
                 </div>
             </div>
 
@@ -191,8 +189,7 @@
             <div class="bg-white rounded-2xl p-6 shadow-catalog border border-slate-100 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div class="flex items-center space-x-2">
-                        <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-700">Staff Portal</span>
-                        <h2 class="text-xl font-bold text-slate-800">ระบบจัดการบทเรียนและแบบทดสอบ</h2>
+                        <h2 class="text-xl font-bold text-slate-800">ระบบจัดการบทเรียนออนไลน์และแบบทดสอบ</h2>
                     </div>
                 </div>
                 <button onclick="openUnitFormModal()" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-sm shadow-md transition flex items-center justify-center space-x-2">
@@ -385,7 +382,7 @@
 
                     <!-- New Password Field (For Password Reset / Forgot Password) -->
                     <div id="newPasswordContainer" class="mb-4 hidden">
-                        <label class="block text-xs font-medium text-slate-700 mb-1">รหัสผ่านใหม่ (กรอกใหม่)</label>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">รหัสผ่านใหม่</label>
                         <div class="relative">
                             <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
                             <input type="password" id="authNewPassword" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
@@ -397,7 +394,7 @@
 
                     <!-- Confirm New Password Field (For Forgot Password) -->
                     <div id="confirmPasswordContainer" class="mb-4 hidden">
-                        <label class="block text-xs font-medium text-slate-700 mb-1">ยืนยันรหัสผ่านใหม่ (กรอกให้ตรงกับช่องบน รหัสผ่านใหม่)</label>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">ยืนยันรหัสผ่านอีกครั้ง</label>
                         <div class="relative">
                             <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
                             <input type="password" id="authConfirmPassword" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
@@ -421,7 +418,7 @@
                     </button>
 
                     <div class="text-center text-xs text-slate-500 flex items-center justify-center space-x-1" id="authFooterToggle">
-                        <span id="authToggleText">ยังไม่มีบัญชีสมาชิก?</span>
+                        <span id="authToggleText"></span>
                         <button type="button" onclick="toggleAuthMode()" id="authToggleBtn" class="text-amber-600 font-semibold hover:underline">สมัครสมาชิก</button>
                         <span id="forgotDivider" class="text-slate-300">|</span>
                         <button type="button" onclick="switchToForgotPasswordMode()" id="forgotPasswordBtnLink" class="text-amber-600 font-semibold hover:underline">ลืมรหัสผ่าน</button>
@@ -600,7 +597,6 @@
             return email && typeof email === 'string' && email.toLowerCase().trim().endsWith('@kmitl.ac.th');
         }
 
-        // Toast notifications disabled per user preference
         function showToast(message, type = 'info') {
             // Notifications disabled cleanly
         }
@@ -1352,7 +1348,7 @@
                 modalTitle.innerText = "เข้าสู่ระบบ";
                 modalSubTitle.innerText = "เลือกสิทธิ์การใช้งานผ่านอีเมล์สถาบัน";
                 submitBtn.innerText = "เข้าสู่ระบบ";
-                toggleText.innerText = "ยังไม่มีบัญชีสมาชิก?";
+                if (toggleText) toggleText.innerText = "";
                 toggleBtn.innerText = "สมัครสมาชิก";
                 passInput.required = true;
                 updateRoleButtonsState();
@@ -1361,7 +1357,7 @@
                 modalTitle.innerText = "สมัครสมาชิก";
                 modalSubTitle.innerText = "กรอกข้อมูลเพื่อลงทะเบียนเข้าใช้งานระบบ";
                 submitBtn.innerText = "ลงทะเบียนสมัครสมาชิก";
-                toggleText.innerText = "มีบัญชีผู้ใช้งานอยู่แล้ว?";
+                if (toggleText) toggleText.innerText = "มีบัญชีผู้ใช้งานอยู่แล้ว?";
                 toggleBtn.innerText = "เข้าสู่ระบบ";
                 nameContainer.classList.remove('hidden');
                 passInput.required = true;
@@ -1371,9 +1367,9 @@
             } else if (authMode === 'forgot') {
                 headerIcon.className = "fa-solid fa-key";
                 modalTitle.innerText = "ลืมรหัสผ่าน";
-                modalSubTitle.innerText = "กรอกอีเมลผู้ใช้และตั้งรหัสผ่านใหม่";
+                modalSubTitle.innerText = "กรอกอีเมลสมาชิผู้ใช้งานและตั้งรหัสผ่านใหม่";
                 submitBtn.innerText = "บันทึกรหัสผ่าน";
-                toggleText.innerText = "จำรหัสผ่านได้แล้ว?";
+                if (toggleText) toggleText.innerText = "";
                 toggleBtn.innerText = "เข้าสู่ระบบ";
                 if (forgotDivider) forgotDivider.classList.add('hidden');
                 if (forgotPasswordBtn) forgotPasswordBtn.classList.add('hidden');
@@ -1397,7 +1393,7 @@
 
             if (!isKmitlEmail(email)) return false;
 
-            // FLOW 1: SIGN UP (สมัครสมาชิกโดยตรงไม่ต้องยืนยันอีเมล)
+            // FLOW 1: SIGN UP
             if (authMode === 'signup') {
                 if (!password || password.length < 6) return false;
 
@@ -1438,7 +1434,7 @@
                     return false;
                 }
             } 
-            // FLOW 2: FORGOT / RESET PASSWORD (บันทึกรหัสผ่านใหม่ลง Supabase ตรง ไม่ผ่านอีเมล)
+            // FLOW 2: FORGOT / RESET PASSWORD
             else if (authMode === 'forgot') {
                 if (!newPassword || newPassword.length < 6) return false;
                 if (newPassword !== confirmPassword) return false;
@@ -1454,14 +1450,12 @@
 
                     let passwordUpdated = false;
 
-                    // 1. Try logged in session password update
                     const { data: { session } } = await supabaseClient.auth.getSession();
                     if (session && session.user && session.user.email?.toLowerCase() === email.toLowerCase()) {
                         const { error: updateErr } = await supabaseClient.auth.updateUser({ password: newPassword });
                         if (!updateErr) passwordUpdated = true;
                     }
 
-                    // 2. Direct RPC password updates in Supabase
                     if (!passwordUpdated) {
                         const rpcList = [
                             { name: 'update_user_password', params: { p_email: email, p_new_password: newPassword } },
@@ -1480,7 +1474,6 @@
                         }
                     }
 
-                    // 3. Fallback: Update user metadata or record directly in Supabase
                     if (!passwordUpdated) {
                         try {
                             await supabaseClient.from('elearning_users').update({
