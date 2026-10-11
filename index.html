@@ -1567,7 +1567,7 @@
                         await loadUserProfile(data.user);
                         closeLoginModal();
                         switchTab('studentView');
-                        showNotificationModal("สมัครสมาชิกสำเร็จ", `ลงทะเบียนเรียบร้อยแล้ว ยินดีต้อนรับคุณ ${displayName}`, "success");
+                        showNotificationModal("สมัครสมาชิกสำเร็จ", "ยินดีตอนรับสู่ระบบ E-Learning System", "success");
                     }
                 } catch (err) {
                     showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "เกิดข้อผิดพลาดในการลงทะเบียน", "error");
@@ -1617,7 +1617,7 @@
                         switchTab('studentView');
                     }
 
-                    showNotificationModal("เข้าสู่ระบบสำเร็จ", `ยินดีต้อนรับคุณ ${currentUser ? currentUser.name : ''}`, "success");
+                    showNotificationModal("เข้าสู่ระบบสำเร็จ", "ยินดีตอนรับสู่ระบบ E-Learning System", "success");
                 } catch (err) {
                     showNotificationModal("การเข้าสู่ระบบไม่สำเร็จ", "อีเมลหรือรหัสผ่านไม่ถูกต้อง", "error");
                     return false;
@@ -1756,7 +1756,7 @@
                     preSubmitBtn.disabled = true;
                     preSubmitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
                     preSubmitBtn.classList.add('bg-slate-400', 'cursor-not-allowed', 'opacity-70');
-                    preSubmitBtn.innerText = 'ท่านได้ส่งแบบทดสอบก่อนเรียนเรียบร้อยแล้ว (จำกัด 1 ครั้ง)';
+                    preSubmitBtn.innerText = 'จำกัดทำแบบทดสอบก่อนเรียนได้ 1 ครั้ง';
                 }
 
                 if (preSubTitleText) {
