@@ -1768,7 +1768,7 @@
                 submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
                 try {
-                    // ตรวจสอบการมีอยู่ของอีเมลผู้ใช้ในระบบ
+                    // 1. ตรวจสอบว่าอีเมลนี้ตรงกันกับข้อมูลที่มีอยู่ในตาราง elearning_users ของ Supabase
                     const { data: userData, error: userErr } = await supabaseClient
                         .from('elearning_users')
                         .select('id, email')
@@ -1776,11 +1776,11 @@
                         .maybeSingle();
 
                     if (userErr || !userData) {
-                        showNotificationModal("รีเซ็ตรหัสผ่านไม่สำเร็จ", "ไม่พบอีเมลผู้ใช้นี้ในระบบ กรุณาตรวจสอบอีเมลอีกครั้ง", "error");
+                        showNotificationModal("รีเซ็ตรหัสผ่านไม่สำเร็จ", "ไม่พบอีเมลผู้ใช้นี้ในระบบ Supabase กรุณาตรวจสอบอีเมลอีกครั้ง", "error");
                         return false;
                     }
 
-                    // สั่งการอัปเดตรหัสผ่านลง Supabase Direct/RPC
+                    // 2. อัปเดตรหัสผ่านใหม่ไปยัง Supabase Auth / RPC
                     let resetDone = false;
 
                     try {
@@ -1804,7 +1804,7 @@
                         }
                     }
 
-                    // อัปเดตเวลาใช้งานล่าสุดใน elearning_users
+                    // 3. บันทึกข้อมูลเวลาการปรับปรุงรหัสผ่านล่าสุดลงในตาราง elearning_users บน Supabase
                     await supabaseClient
                         .from('elearning_users')
                         .update({ updated_at: new Date().toISOString() })
@@ -1812,7 +1812,7 @@
 
                     showNotificationModal(
                         "รีเซ็ตรหัสผ่านสำเร็จ", 
-                        "ระบบทำการเปลี่ยนรหัสผ่านเรียบร้อยแล้ว ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที", 
+                        "ระบบทำการเปลี่ยนและบันทึกรหัสผ่านใหม่ลง Supabase เรียบร้อยแล้ว ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที", 
                         "success", 
                         () => {
                             switchToLoginMode();
@@ -2439,8 +2439,8 @@
                         <span class="text-[11px] font-semibold text-slate-500">ตัวเลือก (เลือกปุ่มวิทยุหน้าข้อที่เป็นคำตอบที่ถูกต้อง):</span>
                         ${choices.map((cText, cIdx) => `
                             <div class="flex items-center space-x-2">
-                                <input type="radio" name="correct_${type}_${qIdx}" value="${cIdx}" ${parseInt(qItem.answer) === cIdx ? 'checked' : ''} onchange="updateCorrectAnswer('${type}', ${qIdx}, ${cIdx})" class="w-4 h-4 text-amber-600 focus:ring-amber-500">
-                                <input type="text" value="${cText}" onchange="updateChoiceText('${type}', ${qIdx}, ${cIdx}, this.value)" placeholder="ตัวเลือกที่ ${cIdx + 1}" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none bg-white">
+                                <input type="radio" name="correct_${type}_${qIdx}" value="${cIdx}" ${parseInt(qItem.answer) === cIdx ? 'checked' : ''} onchange="updateCorrectAnswer('${type}', ${qIdx},${cIdx})" class="w-4 h-4 text-amber-600 focus:ring-amber-500">
+                                <input type="text" value="${cText}" onchange="updateChoiceText('${type}',${qIdx}, ${cIdx}, this.value)" placeholder="ตัวเลือกที่ ${cIdx + 1}" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none bg-white">
                             </div>
                         `).join('')}
                     </div>
