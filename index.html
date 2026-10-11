@@ -287,7 +287,8 @@
                                 <span class="font-bold">📝 แบบทดสอบก่อนเรียน (Pre-test)</span>
                                 <p class="text-xs text-blue-600 mt-0.5" id="pretestSubTitleText">ตอบคำถามเพื่อวัดความรู้พื้นฐานก่อนเข้าสู่เนื้อหา</p>
                             </div>
-                            <div id="pretestScoreBadge" class="hidden px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold"></div>
+                            <!-- ซ่อนคะแนนบนมือถือด้วย hidden sm:inline-block ตามข้อ 7 -->
+                            <div id="pretestScoreBadge" class="hidden sm:inline-block px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold"></div>
                         </div>
                         <form id="pretestForm" class="space-y-6">
                             <div id="pretestQuestionsContainer" class="space-y-6"></div>
@@ -302,9 +303,10 @@
                         <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-xs sm:text-sm text-emerald-800 flex justify-between items-center">
                             <div>
                                 <span class="font-bold">🎯 แบบทดสอบหลังเรียน (Post-test)</span>
-                                <p class="text-xs text-emerald-600 mt-0.5">วัดระดับความเข้าใจหลังจากเรียนจบเรียบร้อยแล้ว</p>
+                                <p class="text-xs text-emerald-600 mt-0.5" id="posttestSubTitleText">วัดระดับความเข้าใจหลังจากเรียนจบเรียบร้อยแล้ว</p>
                             </div>
-                            <div id="posttestScoreBadge" class="hidden px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold"></div>
+                            <!-- ซ่อนคะแนนบนมือถือด้วย hidden sm:inline-block ตามข้อ 8 -->
+                            <div id="posttestScoreBadge" class="hidden sm:inline-block px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold"></div>
                         </div>
                         <form id="posttestForm" class="space-y-6">
                             <div id="posttestQuestionsContainer" class="space-y-6"></div>
@@ -323,7 +325,8 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <!-- จัด Layout มือถือให้อยู่แถวเดียวกันตามข้อ 9 (grid-cols-2 sm:grid-cols-3) -->
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
                                 <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">คะแนนสอบก่อนเรียน</span>
                                 <div id="scoreDisplayPre" class="text-2xl sm:text-3xl font-extrabold text-blue-600 my-2">- / -</div>
@@ -336,7 +339,7 @@
                                 <p id="scorePercentPost" class="text-xs text-slate-500">ยังไม่มีข้อมูลการทดสอบ</p>
                             </div>
 
-                            <div class="bg-gradient-to-br from-amber-500 to-amber-600 text-white p-5 rounded-2xl shadow-sm text-center flex flex-col justify-center items-center">
+                            <div class="col-span-2 sm:col-span-1 bg-gradient-to-br from-amber-500 to-amber-600 text-white p-5 rounded-2xl shadow-sm text-center flex flex-col justify-center items-center">
                                 <span class="text-xs font-semibold text-amber-100 uppercase tracking-wider block mb-1">พัฒนาการความรู้ (Gain Score)</span>
                                 <div id="scoreDisplayGain" class="text-2xl sm:text-3xl font-extrabold my-2">-</div>
                                 <p id="scoreGainText" class="text-xs text-amber-100">ทำแบบทดสอบทั้งสองส่วนเพื่อคำนวณ</p>
@@ -442,11 +445,12 @@
                         เข้าสู่ระบบ
                     </button>
 
+                    <!-- ปรับปรุงปุ่มลืมรหัสผ่าน ให้เปลี่ยนข้อความ และปรับสีส้มตามข้อ 2 -->
                     <div class="text-center text-xs text-slate-500 flex items-center justify-center space-x-1" id="authFooterToggle">
                         <span id="authToggleText"></span>
                         <button type="button" onclick="toggleAuthMode()" id="authToggleBtn" class="text-amber-600 font-semibold hover:underline">สมัครสมาชิก</button>
                         <span id="forgotDivider" class="text-slate-300">|</span>
-                        <button type="button" onclick="showForgotPasswordNotice()" id="forgotPasswordBtnLink" class="text-slate-500 hover:text-amber-600 font-medium hover:underline">ลืมรหัสผ่าน?</button>
+                        <button type="button" onclick="showForgotPasswordNotice()" id="forgotPasswordBtnLink" class="text-amber-600 font-semibold hover:underline">ลืมรหัสผ่าน</button>
                     </div>
                 </form>
             </div>
@@ -944,7 +948,6 @@
             return [];
         }
 
-        /* 🔐 ปรับปรุงความปลอดภัย: เลือกตัด correct_answer ออกในการดึงลิสต์บทเรียนทั่วไป ไม่ให้เฉลยหลุดไปฝั่ง Client */
         async function fetchUnitsData() {
             if (!supabaseClient) return;
 
@@ -1006,7 +1009,7 @@
                         
                         let coverUrlVal = u.cover_url && u.cover_url.trim() ? u.cover_url : getUnitCoverImage(u.id, u.title);
                         if (coverUrlVal.includes('drive.google.com/file/d/')) {
-                            const fileId = coverUrlUrlVal.split('/d/')[1].split('/')[0];
+                            const fileId = coverUrlVal.split('/d/')[1].split('/')[0];
                             coverUrlVal = `https://lh3.googleusercontent.com/d/${fileId}`;
                         }
 
@@ -1643,7 +1646,6 @@
             }
         }
 
-        /* 🐛 แก้ไขบั๊กปุ่มสมัครสมาชิกค้าง: ย้ายการตรวจสอบข้อมูล (Validation) มาไว้ก่อนที่จะสั่งสั่งปุ่ม disabled */
         async function handleAuthSubmit(event) {
             event.preventDefault();
             const submitBtn = document.getElementById('authSubmitBtn');
@@ -1681,7 +1683,8 @@
                     });
 
                     if (error) {
-                        showNotificationModal("สมัครสมาชิกไม่สำเร็จ", error.message || "เกิดข้อผิดพลาดในการลงทะเบียน", "error");
+                        // ปรับปรุงข้อความตามข้อ 1
+                        showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "มีอีเมล์ผู้ใช้งานอยู่ในระบบแล้ว", "error");
                         return false;
                     }
 
@@ -1744,14 +1747,12 @@
             await switchTab('publicHome');
         }
 
-        /* 🔐 ปรับปรุงความปลอดภัย: ดึงข้อสอบแยกเมื่อเข้าดูบทเรียน โดยไม่ดึง correct_answer มาใส่ฝั่ง Client สมาชิก */
         async function loadUnitQuestionsDirectly(unitId) {
             if (!supabaseClient || !unitId) return { pre: [], post: [] };
             let pre = [];
             let post = [];
 
             try {
-                // หากเป็น staff จะดึง correct_answer มาแก้ไขได้ แต่ถ้าเป็นสมาชิกทั่วไป ดึงเฉพาะคำถามและตัวเลือก
                 const selectFields = (currentUser && currentUser.role === 'staff') 
                     ? 'id, question, options, correct_answer' 
                     : 'id, question, options';
@@ -1863,6 +1864,10 @@
             const preSubmitBtn = document.getElementById('pretestSubmitBtn');
             const preSubTitleText = document.getElementById('pretestSubTitleText');
             const preBadge = document.getElementById('pretestScoreBadge');
+            
+            const postSubTitleText = document.getElementById('posttestSubTitleText');
+            const postBadge = document.getElementById('posttestScoreBadge');
+            
             const record = currentUnitScoreRecord;
 
             const hasCompletedPre = record && (record.pre_attempts > 0 || (record.pre_score !== null && record.pre_score !== undefined));
@@ -1890,17 +1895,18 @@
                     preSubmitBtn.textContent = 'จำกัดทำแบบทดสอบก่อนเรียนได้ 1 ครั้ง';
                 }
 
+                // ปรับเปลี่ยนข้อความตามข้อ 3
                 if (preSubTitleText) {
-                    preSubTitleText.textContent = 'คุณได้ทำแบบทดสอบก่อนเรียนไปแล้ว (อนุญาตให้ทำได้เพียง 1 ครั้งเท่านั้น)';
+                    preSubTitleText.textContent = 'คุณได้ทำแบบทดสอบก่อนเรียนเรียบร้อยแล้ว';
                 }
 
                 const preInputs = document.querySelectorAll('#pretestQuestionsContainer input[type="radio"]');
                 preInputs.forEach(input => input.disabled = true);
 
+                // แสดงเฉพาะคะแนน ไม่แสดงเปอร์เซ็นต์ตามข้อ 5
                 if (preBadge && record.pre_score !== null && record.pre_score !== undefined) {
                     const total = record.pre_max_score || (activeUnitForViewer?.pre_test?.length || 1);
-                    const pct = Math.round((record.pre_score / total) * 100);
-                    preBadge.textContent = `คะแนนที่ได้: ${record.pre_score} / ${total} (${pct}%)`;
+                    preBadge.textContent = `คะแนนที่ได้: ${record.pre_score} / ${total}`;
                     preBadge.classList.remove('hidden');
                 }
             } else {
@@ -1918,12 +1924,23 @@
                 if (preBadge) preBadge.classList.add('hidden');
             }
 
-            const postBadge = document.getElementById('posttestScoreBadge');
+            // จัดการข้อความและเปอเซ็นต์สำหรับ Post-test ตามข้อ 4 และ 6
+            const hasCompletedPost = record && (record.post_attempts > 0 || (record.post_score !== null && record.post_score !== undefined));
+            if (hasCompletedPost) {
+                if (postSubTitleText) {
+                    postSubTitleText.textContent = 'คุณได้ทำแบบทดสอบหลังเรียนเรียบร้อยแล้ว';
+                }
+            } else {
+                if (postSubTitleText) {
+                    postSubTitleText.textContent = 'วัดระดับความเข้าใจหลังจากเรียนจบเรียบร้อยแล้ว';
+                }
+            }
+
             if (postBadge) {
                 if (record && record.post_score !== null && record.post_score !== undefined) {
                     const total = record.post_max_score || (activeUnitForViewer?.post_test?.length || 1);
-                    const pct = Math.round((record.post_score / total) * 100);
-                    postBadge.textContent = `คะแนนที่ได้: ${record.post_score} / ${total} (${pct}%)`;
+                    // แสดงเฉพาะคะแนน ไม่แสดงเปอร์เซ็นต์ตามข้อ 6
+                    postBadge.textContent = `คะแนนที่ได้: ${record.post_score} / ${total}`;
                     postBadge.classList.remove('hidden');
                 } else {
                     postBadge.classList.add('hidden');
@@ -2079,7 +2096,6 @@
             });
         }
 
-        /* 🔐 ปรับปรุงความปลอดภัย: ดึงข้อสอบพร้อมเฉลยจาก DB เฉพาะขั้นตอนส่งตรวจคะแนนเท่านั้น */
         async function gradeQuiz(type) {
             if (!currentUser) {
                 openAuthGuardModal();
@@ -2128,7 +2144,6 @@
                 return;
             }
 
-            // ดึงเฉลยมาคำนวณคะแนนเฉพาะตอนกดส่งแบบทดสอบ
             let score = 0;
             try {
                 const tableName = (type === 'pretest') ? 'pre_test_questions' : 'post_test_questions';
@@ -2142,7 +2157,6 @@
                         }
                     });
                 } else {
-                    // สำรองกรณีฉุกเฉิน
                     questions.forEach((q, idx) => {
                         if (selectedAnswers[idx] !== null && selectedAnswers[idx] === parseInt(q.answer, 10)) {
                             score++;
