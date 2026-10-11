@@ -55,11 +55,10 @@
             background: #f1f1f1;
         }
         ::-webkit-scrollbar-thumb {
-            background: #4b5563; /* สีเทาแก่ */
+            background: #4b5563;
             border-radius: 4px;
         }
 
-        /* Custom Select Arrow Styling for better right margin layout */
         .custom-select-dropdown {
             appearance: none;
             -webkit-appearance: none;
@@ -76,7 +75,6 @@
     <!-- TOP NAVIGATION BAR -->
     <header class="sticky top-0 z-40 bg-slate-900 text-white shadow-md border-b border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <!-- Brand Logo & Title -->
             <div class="flex items-center space-x-3 cursor-pointer" onclick="handleBrandLogoClick()">
                 <div class="w-12 h-12 rounded-xl bg-black border-2 border-slate-800 flex items-center justify-center overflow-hidden shadow-md flex-shrink-0">
                     <img src="https://raw.githubusercontent.com/textbook-TH/E-Learning-System/main/logo.png" alt="Logo" class="w-full h-full object-cover">
@@ -89,27 +87,22 @@
                 </div>
             </div>
 
-            <!-- Right Nav Links -->
             <nav id="navMenu" class="flex items-center space-x-2 sm:space-x-4">
-                <!-- Home Button -->
                 <button id="navHomeBtn" onclick="handleNavHomeClick()" class="px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition flex items-center space-x-2 text-slate-200 hover:text-white" title="หน้าหลัก">
                     <i class="fa-solid fa-house text-base sm:text-sm"></i>
                     <span class="hidden sm:inline">หน้าหลัก</span>
                 </button>
                 
-                <!-- Guest View Button: Login -->
                 <button id="loginBtn" onclick="openLoginModal()" class="px-3.5 sm:px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-md transition flex items-center space-x-2" title="เข้าสู่ระบบ">
                     <i class="fa-solid fa-right-to-bracket text-base sm:text-sm"></i>
                     <span class="hidden sm:inline">เข้าสู่ระบบ</span>
                 </button>
 
-                <!-- Logged In View Button: Role Dashboard Button -->
                 <button id="roleTabBtn" onclick="handleRoleTabClick()" class="hidden px-3.5 sm:px-5 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-md transition flex items-center space-x-2" title="เจ้าหน้าที่ / สมาชิก">
                     <i id="roleTabIcon" class="fa-solid fa-user-gear text-base sm:text-sm"></i>
                     <span id="roleTabText" class="hidden sm:inline">เจ้าหน้าที่</span>
                 </button>
 
-                <!-- Logged In View Button: Logout Pill Button -->
                 <button id="logoutBtn" onclick="handleLogout()" class="hidden px-3 sm:px-3.5 py-2 sm:py-1.5 rounded-full text-xs sm:text-sm border border-slate-700 hover:border-red-500 hover:bg-red-500/10 text-slate-300 hover:text-red-300 transition flex items-center space-x-1.5" title="ออกจากระบบ">
                     <i class="fa-solid fa-power-off text-base sm:text-sm"></i>
                     <span class="hidden sm:inline">ออกจากระบบ</span>
@@ -120,8 +113,6 @@
 
     <!-- MAIN CONTENT AREA -->
     <main class="flex-grow">
-        
-        <!-- HERO BANNER SECTION -->
         <section id="heroBannerSection" class="bg-catalog-gradient text-white pt-8 pb-14 px-4 sm:px-6 relative overflow-hidden">
             <div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
             <div class="max-w-7xl mx-auto text-center relative z-10">
@@ -136,7 +127,6 @@
                     พร้อมแบบทดสอบก่อน/หลังเรียน และสรุปผลคะแนน
                 </p>
 
-                <!-- Search & Category Filters -->
                 <div class="max-w-2xl mx-auto bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-2xl flex flex-col sm:flex-row gap-2">
                     <div class="relative flex-grow">
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
@@ -162,10 +152,8 @@
                 </div>
             </div>
 
-            <!-- 3 x 3 Grid Cards Container -->
             <div id="publicUnitsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
-            <!-- PUBLIC HOME PAGINATION CONTROLS -->
             <div class="mt-10 flex flex-col sm:flex-row items-center justify-between bg-white px-6 py-4 rounded-xl shadow-sm border border-slate-200 gap-4">
                 <p id="publicPageInfoText" class="text-xs sm:text-sm text-slate-600">
                     กำลังแสดง <span class="font-semibold text-slate-800" id="publicPageStart">1</span> - <span class="font-semibold text-slate-800" id="publicPageEnd">9</span> จากทั้งหมด <span class="font-semibold text-slate-800" id="publicTotalUnitsCount">0</span> เรื่อง
@@ -185,10 +173,8 @@
                 </div>
             </div>
 
-            <!-- Grid Container -->
             <div id="studentUnitsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
-            <!-- PAGINATION CONTROLS -->
             <div class="mt-10 flex flex-col sm:flex-row items-center justify-between bg-white px-6 py-4 rounded-xl shadow-sm border border-slate-200 gap-4">
                 <p id="pageInfoText" class="text-xs sm:text-sm text-slate-600">
                     กำลังแสดง <span class="font-semibold text-slate-800" id="pageStart">1</span> - <span class="font-semibold text-slate-800" id="pageEnd">9</span> จากทั้งหมด <span class="font-semibold text-slate-800" id="totalUnitsCount">0</span> เรื่อง
@@ -212,7 +198,6 @@
                 </button>
             </div>
 
-            <!-- Staff Units Table -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -247,7 +232,6 @@
                 </div>
 
                 <div class="p-4 sm:p-6">
-                    <!-- Tabs Header -->
                     <div class="flex border-b border-slate-200 mb-6 space-x-2 overflow-x-auto">
                         <button onclick="switchViewerTab('video')" id="tabBtnVideo" class="py-2.5 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center space-x-2 whitespace-nowrap">
                             <i class="fa-solid fa-video"></i>
@@ -267,7 +251,7 @@
                         </button>
                     </div>
 
-                    <!-- Tab 1: Video Player & Info -->
+                    <!-- Tab 1: Video -->
                     <div id="viewerTabVideo" class="space-y-4">
                         <div id="videoPlaylistContainer" class="hidden p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                             <div class="text-xs font-bold text-slate-700 flex items-center space-x-1">
@@ -328,7 +312,7 @@
                         </form>
                     </div>
 
-                    <!-- Tab 4: Score / Gain Score Summary -->
+                    <!-- Tab 4: Score Summary -->
                     <div id="viewerTabScore" class="hidden space-y-6">
                         <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 text-xs sm:text-sm text-amber-900 flex justify-between items-center">
                             <div>
@@ -338,21 +322,18 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <!-- Pre-test Card -->
                             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
                                 <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">คะแนนสอบก่อนเรียน</span>
                                 <div id="scoreDisplayPre" class="text-2xl sm:text-3xl font-extrabold text-blue-600 my-2">- / -</div>
                                 <p id="scorePercentPre" class="text-xs text-slate-500">ยังไม่มีข้อมูลการทดสอบ</p>
                             </div>
 
-                            <!-- Post-test Card -->
                             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
                                 <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">คะแนนสอบหลังเรียน</span>
                                 <div id="scoreDisplayPost" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 my-2">- / -</div>
                                 <p id="scorePercentPost" class="text-xs text-slate-500">ยังไม่มีข้อมูลการทดสอบ</p>
                             </div>
 
-                            <!-- Gain Score Card -->
                             <div class="bg-gradient-to-br from-amber-500 to-amber-600 text-white p-5 rounded-2xl shadow-sm text-center flex flex-col justify-center items-center">
                                 <span class="text-xs font-semibold text-amber-100 uppercase tracking-wider block mb-1">พัฒนาการความรู้ (Gain Score)</span>
                                 <div id="scoreDisplayGain" class="text-2xl sm:text-3xl font-extrabold my-2">-</div>
@@ -380,7 +361,6 @@
         </section>
     </main>
 
-    <!-- FOOTER -->
     <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs sm:text-sm">
             <p class="font-medium text-slate-300 leading-relaxed block sm:hidden">
@@ -393,7 +373,7 @@
         </div>
     </footer>
 
-    <!-- MODAL 1: LOGIN, REGISTER & FORGOT PASSWORD POPUP -->
+    <!-- MODAL 1: LOGIN -->
     <div id="loginModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
             <div class="bg-catalog-gradient p-6 text-white text-center relative">
@@ -489,7 +469,7 @@
         </div>
     </div>
 
-    <!-- MODAL 2: GUEST ACCESS DENIED WARNING MODAL -->
+    <!-- MODAL 2: GUEST WARNING -->
     <div id="authGuardModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center border border-slate-100">
             <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
@@ -504,7 +484,7 @@
         </div>
     </div>
 
-    <!-- MODAL 3: STAFF ADD/EDIT UNIT MODAL -->
+    <!-- MODAL 3: STAFF EDIT UNIT -->
     <div id="unitFormModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
         <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col my-auto border border-slate-100">
             <div class="bg-catalog-gradient text-white p-4 px-6 flex items-center justify-between">
@@ -622,7 +602,7 @@
         </div>
     </div>
 
-    <!-- MODAL 4: CENTRAL SYSTEM NOTIFICATION POPUP -->
+    <!-- MODAL 4: NOTIFICATION -->
     <div id="systemNotificationModal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center border border-slate-100 transform transition-all">
             <div id="notificationModalIconBox" class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-emerald-200">
@@ -636,7 +616,7 @@
         </div>
     </div>
 
-    <!-- MODAL 5: CENTRAL CONFIRMATION DIALOG POPUP -->
+    <!-- MODAL 5: CONFIRM -->
     <div id="systemConfirmModal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center border border-slate-100 transform transition-all">
             <div id="confirmModalIconBox" class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-rose-200">
@@ -656,7 +636,6 @@
     </div>
 
     <script>
-        // Supabase Client Initialization
         const SUPABASE_URL = "https://soveyqvggppjklddrwja.supabase.co";
         const SUPABASE_KEY = "sb_publishable_OuBKjdxDFH7PiHpXMT2XkA_qh2pzRGq";
         let supabaseClient = null;
@@ -669,7 +648,6 @@
             console.error("Supabase Client Init Error:", e);
         }
 
-        // Global State
         let currentUser = null;
         let currentRoleSelection = 'student';
         let authMode = 'login';
@@ -686,7 +664,6 @@
         let notificationOnCloseCallback = null;
         let confirmCallback = null;
 
-        // Staff form state
         let currentStaffStep = 1;
         let staffPretestQuestions = [];
         let staffPosttestQuestions = [];
@@ -719,7 +696,6 @@
             return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
         }
 
-        // Central Notification Popup Handler
         function showNotificationModal(title, message, type = 'info', onCloseCallback = null) {
             const modal = document.getElementById('systemNotificationModal');
             const titleEl = document.getElementById('notificationModalTitle');
@@ -745,14 +721,6 @@
                 iconBoxEl.className = "w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-amber-200";
                 iconEl.className = "fa-solid fa-circle-exclamation";
                 btnEl.className = "w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow-sm transition";
-            } else if (type === 'key') {
-                iconBoxEl.className = "w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-emerald-200";
-                iconEl.className = "fa-solid fa-key";
-                btnEl.className = "w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-sm transition";
-            } else if (type === 'user-success') {
-                iconBoxEl.className = "w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-emerald-200";
-                iconEl.className = "fa-solid fa-user-check";
-                btnEl.className = "w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-sm transition";
             } else {
                 iconBoxEl.className = "w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-blue-200";
                 iconEl.className = "fa-solid fa-circle-info";
@@ -773,7 +741,6 @@
             }
         }
 
-        // Central Confirmation Dialog Handler
         function showConfirmModal(title, message, iconClass, iconBgClass, confirmBtnClass, confirmText, callback) {
             const modal = document.getElementById('systemConfirmModal');
             if (!modal) return;
@@ -850,9 +817,7 @@
 
         async function loadUserProfile(authUser) {
             if (!isKmitlEmail(authUser.email)) {
-                if (supabaseClient) {
-                    await supabaseClient.auth.signOut();
-                }
+                if (supabaseClient) await supabaseClient.auth.signOut();
                 currentUser = null;
                 updateUserInterface();
                 return false;
@@ -881,9 +846,7 @@
             }
 
             if (!userRecordFound) {
-                if (supabaseClient) {
-                    await supabaseClient.auth.signOut();
-                }
+                if (supabaseClient) await supabaseClient.auth.signOut();
                 currentUser = null;
                 updateUserInterface();
                 return false;
@@ -963,16 +926,12 @@
         }
 
         function handleBrandLogoClick() {
-            if (currentUser && currentUser.role === 'student') {
-                return;
-            }
+            if (currentUser && currentUser.role === 'student') return;
             switchTab('publicHome');
         }
 
         function handleNavHomeClick() {
-            if (currentUser && currentUser.role === 'student') {
-                return;
-            }
+            if (currentUser && currentUser.role === 'student') return;
             switchTab('publicHome');
         }
 
@@ -985,7 +944,6 @@
             }
         }
 
-        // Helper to parse question options
         function parseChoices(options) {
             if (!options) return [];
             if (Array.isArray(options)) return options;
@@ -1027,16 +985,10 @@
                             videosMap[v.unit_id].push(v);
                         });
                     }
-                } catch(e) {
-                    console.warn("Direct unit_videos fetch error:", e);
-                }
+                } catch(e) {}
 
                 if (error) {
-                    const simpleRes = await supabaseClient
-                        .from('units')
-                        .select('*')
-                        .order('id', { ascending: false });
-
+                    const simpleRes = await supabaseClient.from('units').select('*').order('id', { ascending: false });
                     if (!simpleRes.error) {
                         data = simpleRes.data;
                         error = null;
@@ -1118,7 +1070,6 @@
             });
 
             select.innerHTML = htmlOptions;
-
             if (uniqueCategories.includes(selectedValue) || selectedValue === 'ALL') {
                 select.value = selectedValue;
             } else {
@@ -1180,12 +1131,7 @@
 
             filteredUnits = allUnits.filter(unit => {
                 const matchQuery = unit.title.toLowerCase().includes(query) || (unit.description && unit.description.toLowerCase().includes(query)) || (unit.unit_code && unit.unit_code.toLowerCase().includes(query));
-                
-                let matchCategory = true;
-                if (category !== 'ALL') {
-                    matchCategory = (unit.category === category);
-                }
-
+                let matchCategory = (category === 'ALL') || (unit.category === category);
                 return matchQuery && matchCategory;
             });
 
@@ -1206,20 +1152,15 @@
 
             const total = filteredUnits.length;
             const totalPages = Math.ceil(total / ITEMS_PER_PAGE) || 1;
-
             if (publicCurrentPage > totalPages) publicCurrentPage = totalPages;
 
             const startIndex = (publicCurrentPage - 1) * ITEMS_PER_PAGE;
             const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, total);
             const publicDisplayUnits = filteredUnits.slice(startIndex, endIndex);
 
-            const pageStartEl = document.getElementById('publicPageStart');
-            const pageEndEl = document.getElementById('publicPageEnd');
-            const totalCountEl = document.getElementById('publicTotalUnitsCount');
-
-            if (pageStartEl) pageStartEl.innerText = total === 0 ? 0 : startIndex + 1;
-            if (pageEndEl) pageEndEl.innerText = endIndex;
-            if (totalCountEl) totalCountEl.innerText = total;
+            document.getElementById('publicPageStart').innerText = total === 0 ? 0 : startIndex + 1;
+            document.getElementById('publicPageEnd').innerText = endIndex;
+            document.getElementById('publicTotalUnitsCount').innerText = total;
 
             if (publicDisplayUnits.length === 0) {
                 container.innerHTML = `
@@ -1272,7 +1213,6 @@
             const paginationContainer = document.getElementById('publicPaginationButtons');
             if (paginationContainer) {
                 paginationContainer.innerHTML = '';
-
                 const prevBtn = document.createElement('button');
                 prevBtn.className = `w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold transition ${publicCurrentPage === 1 ? 'text-slate-300 cursor-not-allowed bg-slate-100' : 'text-slate-700 hover:bg-slate-200 bg-slate-100'}`;
                 prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
@@ -1303,7 +1243,6 @@
 
             const total = filteredUnits.length;
             const totalPages = Math.ceil(total / ITEMS_PER_PAGE) || 1;
-
             if (currentPage > totalPages) currentPage = totalPages;
 
             const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -1399,7 +1338,6 @@
             allUnits.forEach((unit) => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/80 transition border-b border-slate-100";
-
                 const videoCount = unit.videos ? unit.videos.length : (unit.youtube_url ? 1 : 0);
 
                 tr.innerHTML = `
@@ -1461,9 +1399,7 @@
 
         function openLoginModal() { 
             document.getElementById('loginModal').classList.remove('hidden'); 
-            if (authMode !== 'forgot') {
-                switchToLoginMode();
-            }
+            if (authMode !== 'forgot') switchToLoginMode();
         }
         function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
         function openAuthGuardModal() { document.getElementById('authGuardModal').classList.remove('hidden'); }
@@ -1498,28 +1434,10 @@
             }
         }
 
-        function switchToLoginMode() {
-            authMode = 'login';
-            updateAuthModalUI();
-        }
-
-        function switchToSignUpMode() {
-            authMode = 'signup';
-            updateAuthModalUI();
-        }
-
-        function switchToForgotPasswordMode() {
-            authMode = 'forgot';
-            updateAuthModalUI();
-        }
-
-        function toggleAuthMode() {
-            if (authMode === 'login') {
-                switchToSignUpMode();
-            } else {
-                switchToLoginMode();
-            }
-        }
+        function switchToLoginMode() { authMode = 'login'; updateAuthModalUI(); }
+        function switchToSignUpMode() { authMode = 'signup'; updateAuthModalUI(); }
+        function switchToForgotPasswordMode() { authMode = 'forgot'; updateAuthModalUI(); }
+        function toggleAuthMode() { if (authMode === 'login') switchToSignUpMode(); else switchToLoginMode(); }
 
         function updateAuthModalUI() {
             const modalTitle = document.getElementById('authModalTitle');
@@ -1610,11 +1528,10 @@
             }
 
             if (authMode === 'signup') {
-                if (!displayName || displayName.trim() === '') {
+                if (!displayName) {
                     showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "กรุณากรอกชื่อ-นามสกุล", "error");
                     return false;
                 }
-
                 if (!password || password.length < 6) {
                     showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร", "error");
                     return false;
@@ -1646,10 +1563,9 @@
                         await loadUserProfile(data.user);
                         closeLoginModal();
                         switchTab('studentView');
-                        showNotificationModal("สมัครสมาชิกสำเร็จ", `ลงทะเบียนเรียบร้อยแล้ว ยินดีต้อนรับคุณ ${displayName}`, "user-success");
+                        showNotificationModal("สมัครสมาชิกสำเร็จ", `ลงทะเบียนเรียบร้อยแล้ว ยินดีต้อนรับคุณ ${displayName}`, "success");
                     }
                 } catch (err) {
-                    console.error("SignUp Error:", err);
                     showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "เกิดข้อผิดพลาดในการลงทะเบียน", "error");
                     return false;
                 }
@@ -1666,7 +1582,7 @@
                 try {
                     closeLoginModal();
                     switchToLoginMode();
-                    showNotificationModal("เปลี่ยนรหัสผ่านสำเร็จ", "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่", "key");
+                    showNotificationModal("เปลี่ยนรหัสผ่านสำเร็จ", "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่", "success");
                 } catch (err) {
                     showNotificationModal("แก้ไขรหัสผ่านไม่สำเร็จ", "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง", "error");
                 }
@@ -1691,7 +1607,6 @@
                     }
 
                     closeLoginModal();
-
                     if (currentUser && currentUser.role === 'staff') {
                         switchTab('staffView');
                     } else if (currentUser && currentUser.role === 'student') {
@@ -1700,7 +1615,6 @@
 
                     showNotificationModal("เข้าสู่ระบบสำเร็จ", `ยินดีต้อนรับคุณ ${currentUser ? currentUser.name : ''}`, "success");
                 } catch (err) {
-                    console.error("Auth Error:", err);
                     showNotificationModal("การเข้าสู่ระบบไม่สำเร็จ", "อีเมลหรือรหัสผ่านไม่ถูกต้อง", "error");
                     return false;
                 }
@@ -1708,59 +1622,34 @@
         }
 
         async function handleLogout() {
-            if (supabaseClient) {
-                await supabaseClient.auth.signOut();
-            }
+            if (supabaseClient) await supabaseClient.auth.signOut();
             currentUser = null;
             updateUserInterface();
             switchTab('publicHome');
         }
 
-        // Direct fetch for pre & post test questions
         async function loadUnitQuestionsDirectly(unitId) {
             if (!supabaseClient || !unitId) return { pre: [], post: [] };
             let pre = [];
             let post = [];
 
             try {
-                const { data: preData } = await supabaseClient
-                    .from('pre_test_questions')
-                    .select('*')
-                    .eq('unit_id', unitId)
-                    .order('id', { ascending: true });
+                const { data: preData } = await supabaseClient.from('pre_test_questions').select('*').eq('unit_id', unitId).order('id', { ascending: true });
                 if (preData) pre = preData;
-            } catch (e) {
-                console.warn("Direct pre-test fetch error:", e);
-            }
+            } catch (e) {}
 
             try {
-                const { data: postData } = await supabaseClient
-                    .from('post_test_questions')
-                    .select('*')
-                    .eq('unit_id', unitId)
-                    .order('id', { ascending: true });
+                const { data: postData } = await supabaseClient.from('post_test_questions').select('*').eq('unit_id', unitId).order('id', { ascending: true });
                 if (postData) post = postData;
-            } catch (e) {
-                console.warn("Direct post-test fetch error:", e);
-            }
+            } catch (e) {}
 
             return {
-                pre: pre.map(q => ({
-                    id: q.id,
-                    q: q.question,
-                    choices: parseChoices(q.options),
-                    answer: q.correct_answer
-                })),
-                post: post.map(q => ({
-                    id: q.id,
-                    q: q.question,
-                    choices: parseChoices(q.options),
-                    answer: q.correct_answer
-                }))
+                pre: pre.map(q => ({ id: q.id, q: q.question, choices: parseChoices(q.options), answer: q.correct_answer })),
+                post: post.map(q => ({ id: q.id, q: q.question, choices: parseChoices(q.options), answer: q.correct_answer }))
             };
         }
 
-        // Fetch user_quiz_scores for active user & unit
+        // Fetch user quiz score summary
         async function fetchUserQuizScores(unitId) {
             if (!supabaseClient || !currentUser || !unitId) return null;
             try {
@@ -1771,12 +1660,8 @@
                     .eq('unit_id', unitId)
                     .maybeSingle();
 
-                if (!error && data) {
-                    return data;
-                }
-            } catch (e) {
-                console.warn("Fetch user quiz score error:", e);
-            }
+                if (!error && data) return data;
+            } catch (e) {}
             return null;
         }
 
@@ -1786,14 +1671,12 @@
             document.getElementById('detailUnitCategory').innerText = `${unit.unit_code} | ${unit.category}`;
             document.getElementById('detailUnitDescription').innerText = unit.description || 'ไม่มีรายละเอียดเพิ่มเติม';
 
-            // Ensure test questions are 100% loaded
             if ((!unit.pre_test || unit.pre_test.length === 0) || (!unit.post_test || unit.post_test.length === 0)) {
                 const fetchedQuestions = await loadUnitQuestionsDirectly(unit.id);
                 if (fetchedQuestions.pre.length > 0) unit.pre_test = fetchedQuestions.pre;
                 if (fetchedQuestions.post.length > 0) unit.post_test = fetchedQuestions.post;
             }
 
-            // Direct fetch for unit_videos if missing
             if (!unit.videos || unit.videos.length === 0) {
                 try {
                     const { data: vData } = await supabaseClient
@@ -1802,18 +1685,10 @@
                         .eq('unit_id', unit.id)
                         .order('id', { ascending: true });
                     if (vData && vData.length > 0) {
-                        unit.videos = vData.map(v => ({
-                            id: v.id,
-                            url: v.video_url || '',
-                            title: v.title || ''
-                        })).filter(v => v.url && v.url.trim().length > 0);
-                        if (unit.videos.length > 0 && !unit.youtube_url) {
-                            unit.youtube_url = unit.videos[0].url;
-                        }
+                        unit.videos = vData.map(v => ({ id: v.id, url: v.video_url || '', title: v.title || '' })).filter(v => v.url && v.url.trim().length > 0);
+                        if (unit.videos.length > 0 && !unit.youtube_url) unit.youtube_url = unit.videos[0].url;
                     }
-                } catch(e) {
-                    console.warn("Direct unit_videos fetch on detail error:", e);
-                }
+                } catch(e) {}
             }
 
             let videoList = [];
@@ -1829,7 +1704,6 @@
             if (videoList.length > 1) {
                 playlistContainer.classList.remove('hidden');
                 playlistButtons.innerHTML = '';
-
                 videoList.forEach((vItem, index) => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
@@ -1853,7 +1727,6 @@
             renderQuizForm('pretest', unit.pre_test || []);
             renderQuizForm('posttest', unit.post_test || []);
 
-            // Reset badges & load user history
             const preBadge = document.getElementById('pretestScoreBadge');
             const postBadge = document.getElementById('posttestScoreBadge');
             if (preBadge) preBadge.classList.add('hidden');
@@ -1958,17 +1831,21 @@
                 let choicesHtml = '';
                 const choices = q.choices || [];
                 choices.forEach((choice, cIndex) => {
+                    const inputId = `${type}_q_${qIndex}_opt_${cIndex}`;
                     choicesHtml += `
-                        <label class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-slate-200 hover:border-amber-400 transition cursor-pointer">
-                            <input type="radio" name="${type}_q_${qIndex}" value="${cIndex}" class="w-4 h-4 text-amber-600 focus:ring-amber-500">
+                        <label for="${inputId}" class="flex items-center space-x-3 p-3 bg-white rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50/30 cursor-pointer transition">
+                            <input type="radio" id="${inputId}" name="${type}_q_${qIndex}" value="${cIndex}" class="w-4 h-4 text-amber-600 focus:ring-amber-500 border-slate-300">
                             <span class="text-xs sm:text-sm text-slate-700">${escapeHtml(choice)}</span>
                         </label>
                     `;
                 });
 
                 qCard.innerHTML = `
-                    <p class="font-bold text-slate-800 text-xs sm:text-sm">ข้อที่ ${qIndex + 1}: ${escapeHtml(q.q)}</p>
-                    <div class="space-y-2 mt-2">
+                    <div class="flex items-start space-x-2">
+                        <span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 text-xs font-bold rounded-md flex-shrink-0 mt-0.5">ข้อที่ ${qIndex + 1}</span>
+                        <h4 class="font-semibold text-slate-800 text-xs sm:text-sm leading-snug">${escapeHtml(q.q)}</h4>
+                    </div>
+                    <div class="space-y-2 pl-0 sm:pl-2">
                         ${choicesHtml}
                     </div>
                 `;
@@ -1976,7 +1853,9 @@
             });
         }
 
-        // Quiz Grading & Supabase Score Persistence
+        // ==========================================
+        // GRADE QUIZ FUNCTION - SAVES TO BOTH TABLES
+        // ==========================================
         async function gradeQuiz(type) {
             if (!currentUser) {
                 openAuthGuardModal();
@@ -1984,112 +1863,139 @@
             }
 
             if (!activeUnitForViewer) {
-                showNotificationModal("แจ้งเตือน", "ไม่พบบทเรียนที่กำลังทำรายการ", "error");
+                showNotificationModal("เกิดข้อผิดพลาด", "ไม่พบข้อมูลบทเรียน", "error");
                 return;
             }
 
-            const questions = (type === 'pretest') ? (activeUnitForViewer.pre_test || []) : (activeUnitForViewer.post_test || []);
-            const totalQuestions = questions.length;
-
-            if (totalQuestions === 0) {
-                showNotificationModal("แจ้งเตือน", "ไม่พบข้อสอบในระบบ", "warning");
+            const questions = (type === 'pretest') ? activeUnitForViewer.pre_test : activeUnitForViewer.post_test;
+            if (!questions || questions.length === 0) {
+                showNotificationModal("แจ้งเตือน", "ไม่มีแบบทดสอบในหัวข้อนี้", "warning");
                 return;
             }
 
-            let userScore = 0;
+            let score = 0;
+            const total = questions.length;
             let answeredCount = 0;
 
-            for (let i = 0; i < totalQuestions; i++) {
-                const selected = document.querySelector(`input[name="${type}_q_${i}"]:checked`);
+            questions.forEach((q, qIndex) => {
+                const selected = document.querySelector(`input[name="${type}_q_${qIndex}"]:checked`);
                 if (selected) {
                     answeredCount++;
-                    const selectedVal = selected.value;
-                    const correctAns = questions[i].answer;
-                    if (String(selectedVal) === String(correctAns) || Number(selectedVal) === Number(correctAns)) {
-                        userScore++;
+                    const userChoiceIndex = parseInt(selected.value, 10);
+                    if (userChoiceIndex === parseInt(q.answer, 10)) {
+                        score++;
                     }
                 }
-            }
+            });
 
-            if (answeredCount < totalQuestions) {
-                showNotificationModal("ทำแบบทดสอบยังไม่ครบ", `คุณตอบคำถามไปแล้ว ${answeredCount} จาก ${totalQuestions} ข้อ กรุณาเลือกคำตอบให้ครบทุกข้อ`, "warning");
+            if (answeredCount < total) {
+                showNotificationModal("ตอบคำถามไม่ครบ", `กรุณาตอบคำถามให้ครบทุกข้อ (ทำแล้ว ${answeredCount}/${total} ข้อ)`, "warning");
                 return;
             }
 
-            const unitId = activeUnitForViewer.id;
-            const nowIso = new Date().toISOString();
+            const percentage = Math.round((score / total) * 100);
+            const typeTitle = (type === 'pretest') ? 'ก่อนเรียน (Pre-test)' : 'หลังเรียน (Post-test)';
+            const testTypeVal = (type === 'pretest') ? 'pretest' : 'posttest';
 
-            try {
-                // 1. Save entry to quiz_results
-                if (supabaseClient) {
-                    const { error: resErr } = await supabaseClient
+            // 1. Save Log Entry into `quiz_results` Table
+            if (supabaseClient) {
+                try {
+                    const quizResultPayload = {
+                        user_id: currentUser.id,
+                        unit_id: activeUnitForViewer.id,
+                        test_type: testTypeVal,
+                        score: score,
+                        total_questions: total,
+                        completed_at: new Date().toISOString()
+                    };
+
+                    const { error: logErr } = await supabaseClient
                         .from('quiz_results')
-                        .insert({
-                            user_id: currentUser.id,
-                            unit_id: unitId,
-                            test_type: type,
-                            score: userScore,
-                            total_questions: totalQuestions,
-                            completed_at: nowIso
-                        });
+                        .insert([quizResultPayload]);
 
-                    if (resErr) {
-                        console.warn("Error inserting quiz_results:", resErr);
+                    if (logErr) {
+                        console.warn("quiz_results insert error:", logErr);
                     }
+                } catch (e) {
+                    console.warn("Error inserting quiz_results log:", e);
                 }
-
-                // 2. Fetch or Upsert user_quiz_scores
-                let existingRecord = await fetchUserQuizScores(unitId);
-
-                let updatePayload = {
-                    user_id: currentUser.id,
-                    unit_id: unitId,
-                    updated_at: nowIso
-                };
-
-                if (type === 'pretest') {
-                    updatePayload.pre_score = userScore;
-                    updatePayload.pre_max_score = totalQuestions;
-                } else {
-                    updatePayload.post_score = userScore;
-                    updatePayload.post_max_score = totalQuestions;
-                }
-
-                if (supabaseClient) {
-                    if (existingRecord) {
-                        const { error: scoreErr } = await supabaseClient
-                            .from('user_quiz_scores')
-                            .update(updatePayload)
-                            .eq('id', existingRecord.id);
-
-                        if (scoreErr) {
-                            console.error("Error updating user_quiz_scores:", scoreErr);
-                        }
-                    } else {
-                        updatePayload.created_at = nowIso;
-                        const { error: scoreErr } = await supabaseClient
-                            .from('user_quiz_scores')
-                            .insert(updatePayload);
-
-                        if (scoreErr) {
-                            console.error("Error inserting user_quiz_scores:", scoreErr);
-                        }
-                    }
-                }
-
-                // Refresh score record from database
-                currentUnitScoreRecord = await fetchUserQuizScores(unitId);
-                renderScoreTabContent();
-
-                const typeTitle = (type === 'pretest') ? 'แบบทดสอบก่อนเรียน' : 'แบบทดสอบหลังเรียน';
-                showNotificationModal("ส่งแบบทดสอบเรียบร้อยแล้ว", `ผลการทดสอบ ${typeTitle}: ได้ ${userScore} / ${totalQuestions} คะแนน บันทึกผลสำเร็จ`, "success", () => {
-                    switchViewerTab('score');
-                });
-
-            } catch (err) {
-                console.error("Grade Quiz Error:", err);
-                showNotificationModal("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกคะแนนลงในระบบได้ กรุณาลองใหม่อีกครั้ง", "error");
             }
+
+            // Fetch existing record from `user_quiz_scores` to merge scores
+            let preScore = null;
+            let preMaxScore = null;
+            let postScore = null;
+            let postMaxScore = null;
+
+            if (currentUnitScoreRecord) {
+                preScore = currentUnitScoreRecord.pre_score ?? null;
+                preMaxScore = currentUnitScoreRecord.pre_max_score ?? null;
+                postScore = currentUnitScoreRecord.post_score ?? null;
+                postMaxScore = currentUnitScoreRecord.post_max_score ?? null;
+            }
+
+            if (type === 'pretest') {
+                preScore = score;
+                preMaxScore = total;
+            } else {
+                postScore = score;
+                postMaxScore = total;
+            }
+
+            // 2. Upsert Summary Record into `user_quiz_scores` Table
+            if (supabaseClient) {
+                try {
+                    const summaryPayload = {
+                        user_id: currentUser.id,
+                        unit_id: activeUnitForViewer.id,
+                        pre_score: preScore,
+                        pre_max_score: preMaxScore,
+                        post_score: postScore,
+                        post_max_score: postMaxScore,
+                        updated_at: new Date().toISOString()
+                    };
+
+                    const { error: summaryErr } = await supabaseClient
+                        .from('user_quiz_scores')
+                        .upsert(summaryPayload, { onConflict: 'user_id,unit_id' });
+
+                    if (summaryErr) {
+                        console.warn("user_quiz_scores upsert error:", summaryErr);
+                    }
+                } catch (e) {
+                    console.warn("Error upserting user_quiz_scores:", e);
+                }
+            }
+
+            // Refresh Local Score Record
+            currentUnitScoreRecord = await fetchUserQuizScores(activeUnitForViewer.id);
+            if (!currentUnitScoreRecord) {
+                currentUnitScoreRecord = {
+                    pre_score: preScore,
+                    pre_max_score: preMaxScore,
+                    post_score: postScore,
+                    post_max_score: postMaxScore,
+                    updated_at: new Date().toISOString()
+                };
+            }
+
+            // Update UI Score Badge
+            const badgeEl = document.getElementById(`${type}ScoreBadge`);
+            if (badgeEl) {
+                badgeEl.innerText = `คะแนน: ${score} / ${total} (${percentage}%)`;
+                badgeEl.classList.remove('hidden');
+            }
+
+            renderScoreTabContent();
+
+            showNotificationModal(
+                `ส่งแบบทดสอบ${typeTitle}สำเร็จ`,
+                `คุณทำได้ ${score} จาก ${total} คะแนน (คิดเป็น ${percentage}%)\nบันทึกข้อมูลคะแนนในตาราง quiz_results และ user_quiz_scores เรียบร้อยแล้ว`,
+                "success",
+                () => {
+                    switchViewerTab('score');
+                }
+            );
         }
 
         function renderScoreTabContent() {
@@ -2102,104 +2008,104 @@
             const lastUpdated = document.getElementById('scoreLastUpdated');
             const recommendation = document.getElementById('scoreRecommendation');
 
-            const preBadge = document.getElementById('pretestScoreBadge');
-            const postBadge = document.getElementById('posttestScoreBadge');
+            if (!preDisplay || !postDisplay || !gainDisplay) return;
 
-            const rec = currentUnitScoreRecord;
+            const record = currentUnitScoreRecord;
+            let preScoreVal = record ? record.pre_score : null;
+            let preMaxVal = record ? (record.pre_max_score || 1) : 1;
+            let postScoreVal = record ? record.post_score : null;
+            let postMaxVal = record ? (record.post_max_score || 1) : 1;
 
-            if (rec) {
-                if (rec.pre_score !== null && rec.pre_score !== undefined) {
-                    preDisplay.innerText = `${rec.pre_score} / ${rec.pre_max_score}`;
-                    const pPct = Math.round((rec.pre_score / (rec.pre_max_score || 1)) * 100);
-                    prePercent.innerText = `คิดเป็น ${pPct}% ของคะแนนเต็ม`;
-                    if (preBadge) {
-                        preBadge.innerText = `คะแนนที่ได้: ${rec.pre_score}/${rec.pre_max_score}`;
-                        preBadge.classList.remove('hidden');
-                    }
-                } else {
-                    preDisplay.innerText = "- / -";
-                    prePercent.innerText = "ยังไม่มีข้อมูลการทดสอบ";
-                    if (preBadge) preBadge.classList.add('hidden');
-                }
-
-                if (rec.post_score !== null && rec.post_score !== undefined) {
-                    postDisplay.innerText = `${rec.post_score} / ${rec.post_max_score}`;
-                    const pPct = Math.round((rec.post_score / (rec.post_max_score || 1)) * 100);
-                    postPercent.innerText = `คิดเป็น ${pPct}% ของคะแนนเต็ม`;
-                    if (postBadge) {
-                        postBadge.innerText = `คะแนนที่ได้: ${rec.post_score}/${rec.post_max_score}`;
-                        postBadge.classList.remove('hidden');
-                    }
-                } else {
-                    postDisplay.innerText = "- / -";
-                    postPercent.innerText = "ยังไม่มีข้อมูลการทดสอบ";
-                    if (postBadge) postBadge.classList.add('hidden');
-                }
-
-                if (rec.pre_score !== null && rec.pre_score !== undefined && rec.post_score !== null && rec.post_score !== undefined) {
-                    const prePct = (rec.pre_score / (rec.pre_max_score || 1)) * 100;
-                    const postPct = (rec.post_score / (rec.post_max_score || 1)) * 100;
-                    const diff = Math.round(postPct - prePct);
-
-                    if (diff > 0) {
-                        gainDisplay.innerText = `+${diff}%`;
-                        gainText.innerText = `มีพัฒนาการเพิ่มขึ้นอย่างชัดเจน (+${rec.post_score - rec.pre_score} คะแนน)`;
-                        recommendation.innerText = "ยอดเยี่ยมมาก! คุณมีความเข้าใจในเนื้อหาบทเรียนนี้เพิ่มขึ้นอย่างดี";
-                    } else if (diff === 0) {
-                        gainDisplay.innerText = `0%`;
-                        gainText.innerText = "คะแนนก่อนเรียนและหลังเรียนเท่ากัน";
-                        recommendation.innerText = "ทบทวนเนื้อหาวิดีโอเพิ่มเติมเพื่อเพิ่มความเข้าใจที่ดียิ่งขึ้น";
-                    } else {
-                        gainDisplay.innerText = `${diff}%`;
-                        gainText.innerText = "คะแนนหลังเรียนลดลงจากก่อนเรียน";
-                        recommendation.innerText = "ควรรีวิวเนื้อหาคลิปวิดีโอในบทเรียนอีกครั้งเพื่อทำความเข้าใจย้ำเตือน";
-                    }
-                } else {
-                    gainDisplay.innerText = "-";
-                    gainText.innerText = "ทำแบบทดสอบทั้งสองส่วนเพื่อคำนวณ";
-                    recommendation.innerText = "ควรทำแบบทดสอบให้ครบทั้ง Pre-test และ Post-test เพื่อประเมินผล";
-                }
-
-                if (rec.updated_at || rec.created_at) {
-                    const d = new Date(rec.updated_at || rec.created_at);
-                    lastUpdated.innerText = d.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
-                } else {
-                    lastUpdated.innerText = "-";
-                }
-
+            // Pre-test Display
+            if (preScoreVal !== null && preScoreVal !== undefined) {
+                const pct = Math.round((preScoreVal / preMaxVal) * 100);
+                preDisplay.innerText = `${preScoreVal} / ${preMaxVal}`;
+                prePercent.innerText = `คิดเป็น ${pct}%`;
             } else {
-                preDisplay.innerText = "- / -";
-                prePercent.innerText = "ยังไม่มีข้อมูลการทดสอบ";
-                postDisplay.innerText = "- / -";
-                postPercent.innerText = "ยังไม่มีข้อมูลการทดสอบ";
-                gainDisplay.innerText = "-";
-                gainText.innerText = "ทำแบบทดสอบทั้งสองส่วนเพื่อคำนวณ";
-                lastUpdated.innerText = "-";
-                recommendation.innerText = "ควรทำแบบทดสอบให้ครบถ้วนเพื่อดูผลพัฒนาการ";
+                preDisplay.innerText = `- / -`;
+                prePercent.innerText = `ยังไม่มีข้อมูลการทดสอบ`;
+            }
 
-                if (preBadge) preBadge.classList.add('hidden');
-                if (postBadge) postBadge.classList.add('hidden');
+            // Post-test Display
+            if (postScoreVal !== null && postScoreVal !== undefined) {
+                const pct = Math.round((postScoreVal / postMaxVal) * 100);
+                postDisplay.innerText = `${postScoreVal} / ${postMaxVal}`;
+                postPercent.innerText = `คิดเป็น ${pct}%`;
+            } else {
+                postDisplay.innerText = `- / -`;
+                postPercent.innerText = `ยังไม่มีข้อมูลการทดสอบ`;
+            }
+
+            // Gain Score Display
+            if (preScoreVal !== null && preScoreVal !== undefined && postScoreVal !== null && postScoreVal !== undefined) {
+                const gainPoints = postScoreVal - preScoreVal;
+                const gainPct = Math.round(((postScoreVal - preScoreVal) / Math.max(preMaxVal, postMaxVal)) * 100);
+
+                if (gainPoints > 0) {
+                    gainDisplay.innerText = `+${gainPoints} คะแนน (${gainPct > 0 ? '+' : ''}${gainPct}%)`;
+                    gainText.innerText = `ระดับพัฒนาการเพิ่มขึ้น ${gainPct}%`;
+                } else if (gainPoints === 0) {
+                    gainDisplay.innerText = `0 คะแนน (0%)`;
+                    gainText.innerText = `ระดับคะแนนเท่าเดิม`;
+                } else {
+                    gainDisplay.innerText = `${gainPoints} คะแนน (${gainPct}%)`;
+                    gainText.innerText = `ระดับคะแนนลดลง ${gainPct}%`;
+                }
+            } else {
+                gainDisplay.innerText = `-`;
+                gainText.innerText = `ทำแบบทดสอบทั้งสองส่วนเพื่อคำนวณ`;
+            }
+
+            // Updated At Timestamp
+            if (record && record.updated_at) {
+                try {
+                    const d = new Date(record.updated_at);
+                    lastUpdated.innerText = d.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+                } catch(e) {
+                    lastUpdated.innerText = record.updated_at;
+                }
+            } else {
+                lastUpdated.innerText = `-`;
+            }
+
+            // Recommendations
+            if (preScoreVal === null && postScoreVal === null) {
+                recommendation.innerText = "ควรทำแบบทดสอบให้ครบถ้วนเพื่อดูผลพัฒนาการ";
+            } else if (preScoreVal !== null && postScoreVal === null) {
+                recommendation.innerText = "ควรทำแบบทดสอบหลังเรียน (Post-test) เพื่อเปรียบเทียบผลพัฒนาการ";
+            } else if (preScoreVal === null && postScoreVal !== null) {
+                recommendation.innerText = "ควรทำแบบทดสอบก่อนเรียน (Pre-test) เพื่อให้ระบบคำนวณค่าพัฒนาการได้สมบูรณ์";
+            } else {
+                const diff = postScoreVal - preScoreVal;
+                if (diff > 0) {
+                    recommendation.innerText = "ยอดเยี่ยม! คุณมีพัฒนาการความรู้เพิ่มขึ้นอย่างเห็นได้ชัด";
+                } else if (diff === 0) {
+                    recommendation.innerText = "ผลคะแนนเท่าเดิม ควรทบทวนเนื้อหาวิดีโอบทเรียนเพิ่มเติม";
+                } else {
+                    recommendation.innerText = "คะแนนลดลง ควรศึกษาเนื้อหาวิดีโอและทบทวนบทเรียนอีกครั้ง";
+                }
             }
         }
 
-        // Staff Modal Functions
-        function openUnitFormModal(unitId = null) {
-            currentStaffStep = 1;
-            switchStaffFormStep(1);
-
-            document.getElementById('unitSaveForm').reset();
+        // Staff Admin Modal Handlers
+        function openUnitFormModal() {
             document.getElementById('editingUnitId').value = '';
+            document.getElementById('unitCodeInput').value = '';
+            document.getElementById('unitTitleInput').value = '';
+            document.getElementById('unitCategoryInput').value = '';
+            document.getElementById('unitCoverInput').value = '';
+            document.getElementById('unitDescriptionInput').value = '';
             document.getElementById('youtubeInputsList').innerHTML = '';
+            document.getElementById('staffFormModalTitle').innerText = 'เพิ่มบทเรียนใหม่';
+
             staffPretestQuestions = [];
             staffPosttestQuestions = [];
 
-            if (!unitId) {
-                document.getElementById('staffFormModalTitle').innerText = "เพิ่มบทเรียนใหม่";
-                addYoutubeInputRow('', '');
-            } else {
-                document.getElementById('staffFormModalTitle').innerText = "แก้ไขบทเรียน";
-            }
+            addYoutubeInputRow('', '');
+            renderStaffQuestions('pretest');
+            renderStaffQuestions('posttest');
 
+            switchStaffFormStep(1);
             document.getElementById('unitFormModal').classList.remove('hidden');
         }
 
@@ -2209,14 +2115,14 @@
 
         function switchStaffFormStep(step) {
             currentStaffStep = step;
-            for (let i = 1; i <= 3; i++) {
-                const stepDiv = document.getElementById(`staffFormStep${i}`);
-                const stepBtn = document.getElementById(`staffStepBtn${i}`);
+            [1, 2, 3].forEach(s => {
+                const stepDiv = document.getElementById(`staffFormStep${s}`);
+                const stepBtn = document.getElementById(`staffStepBtn${s}`);
                 if (stepDiv) stepDiv.classList.add('hidden');
                 if (stepBtn) {
                     stepBtn.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5";
                 }
-            }
+            });
 
             const activeDiv = document.getElementById(`staffFormStep${step}`);
             const activeBtn = document.getElementById(`staffStepBtn${step}`);
@@ -2226,79 +2132,88 @@
             }
         }
 
-        function addYoutubeInputRow(url = '', title = '') {
-            const list = document.getElementById('youtubeInputsList');
-            const rowId = Date.now() + Math.random().toString(36).substring(2, 5);
+        function addYoutubeInputRow(title = '', url = '') {
+            const container = document.getElementById('youtubeInputsList');
+            if (!container) return;
 
             const div = document.createElement('div');
-            div.className = "flex items-center space-x-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200";
-            div.id = `yt_row_${rowId}`;
-
+            div.className = "youtube-input-row flex flex-col sm:flex-row gap-2 items-center bg-slate-50 p-3 rounded-xl border border-slate-200";
             div.innerHTML = `
-                <div class="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <input type="url" placeholder="YouTube URL (เช่น https://www.youtube.com/watch?v=...)" value="${escapeHtml(url)}" class="yt-url-input px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-amber-500 bg-white">
-                    <input type="text" placeholder="ชื่อ/ตอนของวิดีโอ (ไม่ระบุได้)" value="${escapeHtml(title)}" class="yt-title-input px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-amber-500 bg-white">
-                </div>
-                <button type="button" onclick="document.getElementById('yt_row_${rowId}').remove()" class="p-2 text-rose-600 hover:text-rose-800 text-xs">
-                    <i class="fa-solid fa-trash"></i>
+                <input type="text" placeholder="ชื่อคลิป/ตอนที่" value="${escapeHtml(title)}" class="video-title-input w-full sm:w-1/3 px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                <input type="url" placeholder="URL วิดีโอ YouTube" value="${escapeHtml(url)}" class="video-url-input w-full sm:w-2/3 px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                <button type="button" onclick="removeYoutubeInputRow(this)" class="p-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg text-xs flex-shrink-0 transition">
+                    <i class="fa-solid fa-trash-can"></i>
                 </button>
             `;
-            list.appendChild(div);
+            container.appendChild(div);
         }
 
-        function addQuestion(type, qData = null) {
-            const container = document.getElementById(type === 'pretest' ? 'staffPretestContainer' : 'staffPosttestContainer');
-            const qArr = (type === 'pretest') ? staffPretestQuestions : staffPosttestQuestions;
-            
-            const qObj = qData || {
-                question: '',
-                choices: ['', '', '', ''],
-                correct_answer: 0
-            };
-            qArr.push(qObj);
+        function removeYoutubeInputRow(btn) {
+            const row = btn.closest('.youtube-input-row');
+            if (row) row.remove();
+        }
+
+        function addQuestion(type) {
+            const newQ = { q: '', choices: ['', '', '', ''], answer: 0 };
+            if (type === 'pretest') staffPretestQuestions.push(newQ);
+            else staffPosttestQuestions.push(newQ);
+            renderStaffQuestions(type);
+        }
+
+        function removeQuestion(type, index) {
+            if (type === 'pretest') staffPretestQuestions.splice(index, 1);
+            else staffPosttestQuestions.splice(index, 1);
             renderStaffQuestions(type);
         }
 
         function copyPretestToPosttest() {
             staffPosttestQuestions = JSON.parse(JSON.stringify(staffPretestQuestions));
             renderStaffQuestions('posttest');
-            showNotificationModal("คัดลอกสำเร็จ", "คัดลอกข้อสอบจาก Pre-test มายัง Post-test เรียบร้อยแล้ว", "success");
+            showNotificationModal("สำเร็จ", "คัดลอกข้อสอบ Pre-test ไปยัง Post-test เรียบร้อยแล้ว", "success");
         }
 
         function renderStaffQuestions(type) {
             const container = document.getElementById(type === 'pretest' ? 'staffPretestContainer' : 'staffPosttestContainer');
-            const qArr = (type === 'pretest') ? staffPretestQuestions : staffPosttestQuestions;
+            if (!container) return;
             container.innerHTML = '';
 
-            if (qArr.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">ยังไม่มีข้อสอบ กดปุ่มด้านบนเพื่อเพิ่มข้อสอบ</p>`;
+            const questions = (type === 'pretest') ? staffPretestQuestions : staffPosttestQuestions;
+
+            if (questions.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-slate-200">
+                        <p class="text-xs">ยังไม่มีข้อสอบในส่วนนี้ กดปุ่ม "+ เพิ่มข้อสอบ" ด้านบนเพื่อเริ่มสร้าง</p>
+                    </div>`;
                 return;
             }
 
-            qArr.forEach((qObj, index) => {
+            questions.forEach((q, qIndex) => {
                 const card = document.createElement('div');
-                card.className = "bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 relative";
+                card.className = "bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3";
 
                 let choicesHtml = '';
-                qObj.choices.forEach((cText, cIdx) => {
+                (q.choices || ['', '', '', '']).forEach((c, cIndex) => {
+                    const isCorrect = (parseInt(q.answer, 10) === cIndex);
                     choicesHtml += `
                         <div class="flex items-center space-x-2">
-                            <input type="radio" name="${type}_ans_${index}" value="${cIdx}" ${Number(qObj.correct_answer) === cIdx ? 'checked' : ''} onchange="${type}Questions[${index}].correct_answer = ${cIdx}" class="text-amber-600 focus:ring-amber-500">
-                            <input type="text" value="${escapeHtml(cText)}" oninput="${type}Questions[${index}].choices[${cIdx}] = this.value" placeholder="ตัวเลือกที่ ${cIdx + 1}" class="flex-grow px-3 py-1.5 rounded-lg border border-slate-300 text-xs bg-white">
+                            <input type="radio" name="${type}_staff_ans_${qIndex}" ${isCorrect ? 'checked' : ''} onchange="updateStaffAnswer('${type}', ${qIndex}, ${cIndex})" class="w-4 h-4 text-amber-600 focus:ring-amber-500 border-slate-300">
+                            <input type="text" placeholder="ตัวเลือกที่ ${cIndex + 1}" value="${escapeHtml(c)}" oninput="updateStaffChoice('${type}', ${qIndex}, ${cIndex}, this.value)" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
                         </div>
                     `;
                 });
 
                 card.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-slate-700">ข้อที่ ${index + 1}</span>
-                        <button type="button" onclick="${type}Questions.splice(${index}, 1); renderStaffQuestions('${type}');" class="text-xs text-red-600 hover:underline">ลบข้อนี้</button>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-700">คำถามข้อที่ ${qIndex + 1}</span>
+                        <button type="button" onclick="removeQuestion('${type}', ${qIndex})" class="text-xs text-rose-600 hover:text-rose-800">
+                            <i class="fa-solid fa-trash-can mr-1"></i> ลบข้อนี้
+                        </button>
                     </div>
                     <div>
-                        <input type="text" value="${escapeHtml(qObj.question)}" oninput="${type}Questions[${index}].question = this.value" placeholder="กรอกโจทย์คำถาม..." class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-semibold bg-white">
+                        <input type="text" placeholder="โจทย์คำถาม..." value="${escapeHtml(q.q)}" oninput="updateStaffQuestion('${type}', ${qIndex}, this.value)" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none">
                     </div>
                     <div class="space-y-2 pt-1">
-                        <label class="block text-[11px] font-semibold text-slate-500">ตัวเลือก (เลือกปุ่มวิทยุหน้าข้อที่เป็นเฉลยถูกต้อง):</label>
+                        <span class="text-[11px] font-semibold text-slate-500 block">ตัวเลือกคำตอบ (เลือกปุ่มวิทยุเพื่อระบุข้อที่ถูกต้อง):</span>
                         ${choicesHtml}
                     </div>
                 `;
@@ -2306,12 +2221,27 @@
             });
         }
 
+        function updateStaffQuestion(type, qIndex, val) {
+            const questions = (type === 'pretest') ? staffPretestQuestions : staffPosttestQuestions;
+            if (questions[qIndex]) questions[qIndex].q = val;
+        }
+
+        function updateStaffChoice(type, qIndex, cIndex, val) {
+            const questions = (type === 'pretest') ? staffPretestQuestions : staffPosttestQuestions;
+            if (questions[qIndex] && questions[qIndex].choices) questions[qIndex].choices[cIndex] = val;
+        }
+
+        function updateStaffAnswer(type, qIndex, cIndex) {
+            const questions = (type === 'pretest') ? staffPretestQuestions : staffPosttestQuestions;
+            if (questions[qIndex]) questions[qIndex].answer = cIndex;
+        }
+
         async function editUnit(unitId) {
             const unit = allUnits.find(u => String(u.id) === String(unitId));
             if (!unit) return;
 
-            openUnitFormModal(unitId);
-
+            openUnitFormModal();
+            document.getElementById('staffFormModalTitle').innerText = 'แก้ไขบทเรียน';
             document.getElementById('editingUnitId').value = unit.id;
             document.getElementById('unitCodeInput').value = unit.unit_code || '';
             document.getElementById('unitTitleInput').value = unit.title || '';
@@ -2319,121 +2249,39 @@
             document.getElementById('unitCoverInput').value = unit.cover_url || '';
             document.getElementById('unitDescriptionInput').value = unit.description || '';
 
-            const ytList = document.getElementById('youtubeInputsList');
-            ytList.innerHTML = '';
+            document.getElementById('youtubeInputsList').innerHTML = '';
             if (unit.videos && unit.videos.length > 0) {
-                unit.videos.forEach(v => addYoutubeInputRow(v.url, v.title));
+                unit.videos.forEach(v => addYoutubeInputRow(v.title, v.url));
             } else if (unit.youtube_url) {
-                addYoutubeInputRow(unit.youtube_url, '');
+                addYoutubeInputRow('ตอนที่ 1', unit.youtube_url);
             } else {
                 addYoutubeInputRow('', '');
             }
 
-            staffPretestQuestions = (unit.pre_test || []).map(q => ({
-                question: q.q,
-                choices: [...q.choices],
-                correct_answer: q.answer
-            }));
-
-            staffPosttestQuestions = (unit.post_test || []).map(q => ({
-                question: q.q,
-                choices: [...q.choices],
-                correct_answer: q.answer
-            }));
+            if ((!unit.pre_test || unit.pre_test.length === 0) || (!unit.post_test || unit.post_test.length === 0)) {
+                const fetched = await loadUnitQuestionsDirectly(unit.id);
+                staffPretestQuestions = fetched.pre.map(q => ({ q: q.q, choices: q.choices, answer: q.answer }));
+                staffPosttestQuestions = fetched.post.map(q => ({ q: q.q, choices: q.choices, answer: q.answer }));
+            } else {
+                staffPretestQuestions = (unit.pre_test || []).map(q => ({ q: q.q, choices: q.choices, answer: q.answer }));
+                staffPosttestQuestions = (unit.post_test || []).map(q => ({ q: q.q, choices: q.choices, answer: q.answer }));
+            }
 
             renderStaffQuestions('pretest');
             renderStaffQuestions('posttest');
         }
 
-        async function handleSaveUnit(event) {
-            event.preventDefault();
-            if (!supabaseClient) return;
-
-            const editingId = document.getElementById('editingUnitId').value;
-            const unitCode = document.getElementById('unitCodeInput').value.trim();
-            const title = document.getElementById('unitTitleInput').value.trim();
-            const category = document.getElementById('unitCategoryInput').value.trim();
-            const coverUrl = document.getElementById('unitCoverInput').value.trim();
-            const description = document.getElementById('unitDescriptionInput').value.trim();
-
-            const ytRows = document.querySelectorAll('#youtubeInputsList > div');
-            const videoData = [];
-            ytRows.forEach(row => {
-                const url = row.querySelector('.yt-url-input')?.value.trim();
-                const vTitle = row.querySelector('.yt-title-input')?.value.trim();
-                if (url) {
-                    videoData.push({ video_url: url, title: vTitle || title });
-                }
-            });
-
-            try {
-                let unitId = editingId;
-
-                const unitPayload = {
-                    unit_code: unitCode,
-                    title: title,
-                    category: category,
-                    cover_url: coverUrl,
-                    description: description
-                };
-
-                if (editingId) {
-                    await supabaseClient.from('units').update(unitPayload).eq('id', editingId);
-                } else {
-                    const { data: newUnit, error } = await supabaseClient.from('units').insert(unitPayload).select().single();
-                    if (error) throw error;
-                    unitId = newUnit.id;
-                }
-
-                // Delete old child records and re-insert
-                if (unitId) {
-                    await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
-                    if (videoData.length > 0) {
-                        const vInserts = videoData.map(v => ({ ...v, unit_id: unitId }));
-                        await supabaseClient.from('unit_videos').insert(vInserts);
-                    }
-
-                    await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
-                    if (staffPretestQuestions.length > 0) {
-                        const preInserts = staffPretestQuestions.map(q => ({
-                            unit_id: unitId,
-                            question: q.question,
-                            options: q.choices,
-                            correct_answer: q.correct_answer
-                        }));
-                        await supabaseClient.from('pre_test_questions').insert(preInserts);
-                    }
-
-                    await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
-                    if (staffPosttestQuestions.length > 0) {
-                        const postInserts = staffPosttestQuestions.map(q => ({
-                            unit_id: unitId,
-                            question: q.question,
-                            options: q.choices,
-                            correct_answer: q.correct_answer
-                        }));
-                        await supabaseClient.from('post_test_questions').insert(postInserts);
-                    }
-                }
-
-                closeUnitFormModal();
-                await fetchUnitsData();
-                showNotificationModal("บันทึกสำเร็จ", "บันทึกข้อมูลบทเรียนลง Supabase เรียบร้อยแล้ว", "success");
-
-            } catch (err) {
-                console.error("Save unit error:", err);
-                showNotificationModal("บันทึกไม่สำเร็จ", "เกิดข้อผิดพลาดในการบันทึกข้อมูลบทเรียน", "error");
-            }
-        }
-
         async function deleteUnit(unitId) {
+            const unit = allUnits.find(u => String(u.id) === String(unitId));
+            const unitTitle = unit ? unit.title : 'บทเรียนนี้';
+
             showConfirmModal(
                 "ยืนยันการลบบทเรียน",
-                "คุณต้องการลบบทเรียนนี้ออกจากระบบใช่หรือไม่? ข้อมูลแบบทดสอบและวิดีโอที่เกี่ยวข้องจะถูกลบออกทั้งหมด",
-                "fa-solid fa-trash-can text-2xl",
-                "bg-rose-100 text-rose-600 border border-rose-200",
+                `คุณแน่ใจหรือไม่ว่าต้องการลบ "${unitTitle}"? ข้อมูลทั้งหมดในบทเรียนนี้จะถูกลบถาวร`,
+                "fa-solid fa-trash-can text-2xl text-rose-600",
+                "bg-rose-100",
                 "bg-rose-600 hover:bg-rose-500",
-                "ยืนยันลบ",
+                "ลบข้อมูล",
                 async () => {
                     if (!supabaseClient) return;
                     try {
@@ -2442,16 +2290,95 @@
                         await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
                         await supabaseClient.from('user_quiz_scores').delete().eq('unit_id', unitId);
                         await supabaseClient.from('quiz_results').delete().eq('unit_id', unitId);
-                        await supabaseClient.from('units').delete().eq('id', unitId);
+
+                        const { error } = await supabaseClient.from('units').delete().eq('id', unitId);
+                        if (error) throw error;
 
                         await fetchUnitsData();
-                        showNotificationModal("ลบสำเร็จ", "ลบบทเรียนออกจากระบบเรียบร้อยแล้ว", "success");
+                        showNotificationModal("สำเร็จ", "ลบบทเรียนเรียบร้อยแล้ว", "success");
                     } catch (err) {
-                        console.error("Delete unit error:", err);
                         showNotificationModal("เกิดข้อผิดพลาด", "ไม่สามารถลบบทเรียนได้", "error");
                     }
                 }
             );
+        }
+
+        async function handleSaveUnit(event) {
+            event.preventDefault();
+            if (!supabaseClient) return;
+
+            const editingId = document.getElementById('editingUnitId').value;
+            const code = document.getElementById('unitCodeInput').value.trim().toUpperCase();
+            const title = document.getElementById('unitTitleInput').value.trim();
+            const category = document.getElementById('unitCategoryInput').value.trim();
+            const cover = document.getElementById('unitCoverInput').value.trim();
+            const description = document.getElementById('unitDescriptionInput').value.trim();
+
+            const videoRows = document.querySelectorAll('.youtube-input-row');
+            const videos = [];
+            videoRows.forEach(row => {
+                const vTitle = row.querySelector('.video-title-input')?.value.trim() || '';
+                const vUrl = row.querySelector('.video-url-input')?.value.trim() || '';
+                if (vUrl) videos.push({ title: vTitle, video_url: vUrl });
+            });
+
+            try {
+                let unitId = editingId;
+                const unitPayload = {
+                    unit_code: code,
+                    title: title,
+                    category: category || 'วิทยาการคอมพิวเตอร์',
+                    cover_url: cover,
+                    description: description
+                };
+
+                if (unitId) {
+                    const { error } = await supabaseClient.from('units').update(unitPayload).eq('id', unitId);
+                    if (error) throw error;
+                } else {
+                    const { data, error } = await supabaseClient.from('units').insert([unitPayload]).select();
+                    if (error) throw error;
+                    unitId = data[0].id;
+                }
+
+                await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
+                if (videos.length > 0) {
+                    const videoInserts = videos.map(v => ({
+                        unit_id: unitId,
+                        title: v.title || 'คลิปบทเรียน',
+                        video_url: v.video_url
+                    }));
+                    await supabaseClient.from('unit_videos').insert(videoInserts);
+                }
+
+                await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
+                if (staffPretestQuestions.length > 0) {
+                    const preInserts = staffPretestQuestions.map(q => ({
+                        unit_id: unitId,
+                        question: q.q,
+                        options: JSON.stringify(q.choices || []),
+                        correct_answer: parseInt(q.answer, 10) || 0
+                    }));
+                    await supabaseClient.from('pre_test_questions').insert(preInserts);
+                }
+
+                await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
+                if (staffPosttestQuestions.length > 0) {
+                    const postInserts = staffPosttestQuestions.map(q => ({
+                        unit_id: unitId,
+                        question: q.q,
+                        options: JSON.stringify(q.choices || []),
+                        correct_answer: parseInt(q.answer, 10) || 0
+                    }));
+                    await supabaseClient.from('post_test_questions').insert(postInserts);
+                }
+
+                closeUnitFormModal();
+                await fetchUnitsData();
+                showNotificationModal("สำเร็จ", "บันทึกข้อมูลบทเรียนเรียบร้อยแล้ว", "success");
+            } catch (err) {
+                showNotificationModal("เกิดข้อผิดพลาด", err.message || "ไม่สามารถบันทึกข้อมูลบทเรียนได้", "error");
+            }
         }
     </script>
 </body>
