@@ -1989,6 +1989,9 @@
             const submitBtn = document.getElementById(`${quizType}SubmitBtn`);
             if (submitBtn) submitBtn.classList.remove('hidden');
 
+            const isPretestDone = (quizType === 'pretest' && currentUnitScoreRecord && currentUnitScoreRecord.pre_score !== null && currentUnitScoreRecord.pre_score !== undefined);
+            const savedAnswers = isPretestDone ? (currentUnitScoreRecord.pre_answers || []) : [];
+
             questions.forEach((qObj, idx) => {
                 const qCard = document.createElement('div');
                 qCard.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3";
@@ -2003,13 +2006,21 @@
                 const choices = qObj.choices || [];
                 choices.forEach((choiceText, cIdx) => {
                     const choiceLabel = document.createElement('label');
-                    choiceLabel.className = "flex items-center space-x-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs sm:text-sm text-slate-700 transition";
+                    choiceLabel.className = `flex items-center space-x-3 p-3 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-700 transition ${isPretestDone ? 'bg-slate-50 cursor-not-allowed opacity-80' : 'hover:bg-slate-50 cursor-pointer'}`;
 
                     const radio = document.createElement('input');
                     radio.type = 'radio';
                     radio.name = `${quizType}_q_${idx}`;
                     radio.value = cIdx;
                     radio.className = "w-4 h-4 text-amber-600 focus:ring-amber-500 border-slate-300";
+
+                    if (isPretestDone) {
+                        radio.disabled = true;
+                        if (savedAnswers[idx] !== undefined && parseInt(savedAnswers[idx], 10) === cIdx) {
+                            radio.checked = true;
+                            choiceLabel.classList.add('bg-blue-50', 'border-blue-300', 'font-semibold', 'text-blue-900');
+                        }
+                    }
 
                     const spanText = document.createElement('span');
                     spanText.textContent = choiceText;
@@ -2028,14 +2039,25 @@
         function checkAndApplyPretestLock() {
             const preBadge = document.getElementById('pretestScoreBadge');
             const postBadge = document.getElementById('posttestScoreBadge');
+            const preSubmitBtn = document.getElementById('pretestSubmitBtn');
 
             if (currentUnitScoreRecord && currentUnitScoreRecord.pre_score !== null && currentUnitScoreRecord.pre_score !== undefined) {
                 if (preBadge) {
                     preBadge.classList.remove('hidden');
                     preBadge.textContent = `ทำแล้ว: ${currentUnitScoreRecord.pre_score}/${currentUnitScoreRecord.pre_max_score || 0} คะแนน`;
                 }
-            } else if (preBadge) {
-                preBadge.classList.add('hidden');
+                if (preSubmitBtn) {
+                    preSubmitBtn.disabled = true;
+                    preSubmitBtn.textContent = 'ทำแบบทดสอบก่อนเรียนแล้ว (ล็อกการส่งซ้ำ)';
+                    preSubmitBtn.className = "w-full py-3 bg-slate-400 text-white font-semibold rounded-xl text-sm shadow-inner cursor-not-allowed opacity-80";
+                }
+            } else {
+                if (preBadge) preBadge.classList.add('hidden');
+                if (preSubmitBtn) {
+                    preSubmitBtn.disabled = false;
+                    preSubmitBtn.textContent = 'ส่งแบบทดสอบก่อนเรียน';
+                    preSubmitBtn.className = "w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm shadow-md transition";
+                }
             }
 
             if (currentUnitScoreRecord && currentUnitScoreRecord.post_score !== null && currentUnitScoreRecord.post_score !== undefined) {
@@ -2056,6 +2078,11 @@
 
             if (!activeUnitForViewer) {
                 showNotificationModal("เกิดข้อผิดพลาด", "ไม่พบข้อมูลบทเรียนที่ใช้งานอยู่", "error");
+                return;
+            }
+
+            if (quizType === 'pretest' && currentUnitScoreRecord && currentUnitScoreRecord.pre_score !== null && currentUnitScoreRecord.pre_score !== undefined) {
+                showNotificationModal("แจ้งเตือน", "ท่านทำแบบทดสอบก่อนเรียนไปแล้ว ไม่สามารถทำซ้ำได้", "warning");
                 return;
             }
 
@@ -2184,6 +2211,7 @@
                 }
 
                 currentUnitScoreRecord = savedRecord;
+                renderQuizForm('pretest', activeUnitForViewer.pre_test || []);
                 checkAndApplyPretestLock();
                 renderScoreTabContent();
 
@@ -2198,7 +2226,7 @@
                 console.error("Error in gradeQuiz:", err);
                 showNotificationModal("เกิดข้อผิดพลาด", err.message || "ไม่สามารถประมวลผลการตรวจข้อสอบได้", "error");
             } finally {
-                if (submitBtn) {
+                if (submitBtn && quizType !== 'pretest') {
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
@@ -2255,20 +2283,35 @@
                 if (postPercent) postPercent.textContent = "ยังไม่ได้ทำแบบทดสอบหลังเรียน";
             }
 
-            // 3. Gain score calculation
+            // 3. Gain score calculation (Normalized Gain Score / Relative Gain)
             if (preP !== null && postP !== null) {
-                const diffScore = rec.post_score - rec.pre_score;
-                const diffPercent = postP - preP;
-
-                if (diffScore > 0) {
-                    if (gainDisplay) gainDisplay.textContent = `+${diffScore} คะแนน (+${diffPercent.toFixed(2)}%)`;
-                    if (gainText) gainText.textContent = "พัฒนาการระดับดีเยี่ยม เพิ่มขึ้นจากเดิม";
-                } else if (diffScore === 0) {
-                    if (gainDisplay) gainDisplay.textContent = `0 คะแนน (0.00%)`;
-                    if (gainText) gainText.textContent = "คะแนนเท่าเดิม ทบทวนเนื้อหาเพิ่มเติมได้";
+                let normalizedGain = 0;
+                
+                if (preP >= 100) {
+                    if (postP >= 100) {
+                        normalizedGain = 100;
+                    } else {
+                        normalizedGain = postP - preP;
+                    }
                 } else {
-                    if (gainDisplay) gainDisplay.textContent = `${diffScore} คะแนน (${diffPercent.toFixed(2)}%)`;
-                    if (gainText) gainText.textContent = "คะแนนลดลง ควรเปิดดูวิดีโอบทเรียนซ้ำ";
+                    normalizedGain = ((postP - preP) / (100 - preP)) * 100;
+                }
+
+                if (gainDisplay) {
+                    const prefix = normalizedGain > 0 ? '+' : '';
+                    gainDisplay.textContent = `${prefix}${normalizedGain.toFixed(2)}%`;
+                }
+
+                if (gainText) {
+                    if (normalizedGain >= 70) {
+                        gainText.textContent = "พัฒนาการระดับสูงมาก (High Gain)";
+                    } else if (normalizedGain >= 30) {
+                        gainText.textContent = "พัฒนาการระดับปานกลาง (Medium Gain)";
+                    } else if (normalizedGain >= 0) {
+                        gainText.textContent = "พัฒนาการระดับน้อย (Low Gain)";
+                    } else {
+                        gainText.textContent = "คะแนนลดลง ควรทบทวนวิดีโอบทเรียนเพิ่มเติม";
+                    }
                 }
             } else {
                 if (gainDisplay) gainDisplay.textContent = "-";
