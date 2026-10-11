@@ -1742,7 +1742,7 @@
             switchTab('unitDetailView');
         }
 
-        // Lock Pre-test UI when user has already completed pre-test
+        // Lock Pre-test UI when user has already completed pre-test and restore pre_answers
         function checkAndApplyPretestLock() {
             const preSubmitBtn = document.getElementById('pretestSubmitBtn');
             const preSubTitleText = document.getElementById('pretestSubTitleText');
@@ -1750,6 +1750,22 @@
             const record = currentUnitScoreRecord;
 
             const hasCompletedPre = record && (record.pre_attempts > 0 || (record.pre_score !== null && record.pre_score !== undefined));
+
+            // Restore saved pre_answers if available
+            if (record && record.pre_answers) {
+                let savedAnswers = record.pre_answers;
+                if (typeof savedAnswers === 'string') {
+                    try { savedAnswers = JSON.parse(savedAnswers); } catch(e) {}
+                }
+                if (Array.isArray(savedAnswers)) {
+                    savedAnswers.forEach((choiceIdx, qIdx) => {
+                        if (choiceIdx !== null && choiceIdx !== undefined && choiceIdx !== '') {
+                            const radio = document.getElementById(`pretest_q_${qIdx}_opt_${choiceIdx}`);
+                            if (radio) radio.checked = true;
+                        }
+                    });
+                }
+            }
 
             if (hasCompletedPre) {
                 if (preSubmitBtn) {
@@ -1918,7 +1934,7 @@
         }
 
         // ==========================================
-        // GRADE QUIZ FUNCTION - SAVES TO user_quiz_scores WITH ATTEMPTS COUNT
+        // GRADE QUIZ FUNCTION - SAVES TO user_quiz_scores WITH ATTEMPTS COUNT & PRE_ANSWERS
         // ==========================================
         async function gradeQuiz(type) {
             if (!currentUser) {
@@ -1947,15 +1963,19 @@
             let score = 0;
             const total = questions.length;
             let answeredCount = 0;
+            let selectedAnswers = [];
 
             questions.forEach((q, qIndex) => {
                 const selected = document.querySelector(`input[name="${type}_q_${qIndex}"]:checked`);
                 if (selected) {
                     answeredCount++;
                     const userChoiceIndex = parseInt(selected.value, 10);
+                    selectedAnswers.push(userChoiceIndex);
                     if (userChoiceIndex === parseInt(q.answer, 10)) {
                         score++;
                     }
+                } else {
+                    selectedAnswers.push(null);
                 }
             });
 
@@ -1999,6 +2019,7 @@
             let postScore = null;
             let postMaxScore = null;
             let postAttempts = 0;
+            let preAnswers = null;
 
             if (currentUnitScoreRecord) {
                 preScore = currentUnitScoreRecord.pre_score ?? null;
@@ -2007,12 +2028,14 @@
                 postScore = currentUnitScoreRecord.post_score ?? null;
                 postMaxScore = currentUnitScoreRecord.post_max_score ?? null;
                 postAttempts = currentUnitScoreRecord.post_attempts ?? 0;
+                preAnswers = currentUnitScoreRecord.pre_answers ?? null;
             }
 
             if (type === 'pretest') {
                 preScore = score;
                 preMaxScore = total;
                 preAttempts = 1; // Strict lock to 1 attempt
+                preAnswers = selectedAnswers;
             } else {
                 postScore = score;
                 postMaxScore = total;
@@ -2028,6 +2051,7 @@
                         pre_score: preScore,
                         pre_max_score: preMaxScore,
                         pre_attempts: preAttempts,
+                        pre_answers: preAnswers,
                         post_score: postScore,
                         post_max_score: postMaxScore,
                         post_attempts: postAttempts,
@@ -2053,6 +2077,7 @@
                     pre_score: preScore,
                     pre_max_score: preMaxScore,
                     pre_attempts: preAttempts,
+                    pre_answers: preAnswers,
                     post_score: postScore,
                     post_max_score: postMaxScore,
                     post_attempts: postAttempts,
