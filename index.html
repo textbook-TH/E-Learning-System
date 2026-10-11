@@ -283,13 +283,13 @@
                         <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-xs sm:text-sm text-blue-800 flex justify-between items-center">
                             <div>
                                 <span class="font-bold">📝 แบบทดสอบก่อนเรียน (Pre-test)</span>
-                                <p class="text-xs text-blue-600 mt-0.5">ตอบคำถามเพื่อวัดความรู้พื้นฐานก่อนเข้าสู่เนื้อหา</p>
+                                <p class="text-xs text-blue-600 mt-0.5" id="pretestSubTitleText">ตอบคำถามเพื่อวัดความรู้พื้นฐานก่อนเข้าสู่เนื้อหา</p>
                             </div>
                             <div id="pretestScoreBadge" class="hidden px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold"></div>
                         </div>
                         <form id="pretestForm" class="space-y-6">
                             <div id="pretestQuestionsContainer" class="space-y-6"></div>
-                            <button type="button" onclick="gradeQuiz('pretest')" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm shadow-md transition">
+                            <button type="button" id="pretestSubmitBtn" onclick="gradeQuiz('pretest')" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm shadow-md transition">
                                 ส่งแบบทดสอบก่อนเรียน
                             </button>
                         </form>
@@ -306,7 +306,7 @@
                         </div>
                         <form id="posttestForm" class="space-y-6">
                             <div id="posttestQuestionsContainer" class="space-y-6"></div>
-                            <button type="button" onclick="gradeQuiz('posttest')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm shadow-md transition">
+                            <button type="button" id="posttestSubmitBtn" onclick="gradeQuiz('posttest')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm shadow-md transition">
                                 ส่งแบบทดสอบหลังเรียน
                             </button>
                         </form>
@@ -1728,19 +1728,79 @@
                 document.getElementById('detailActiveVideoTitle').innerText = 'ไม่มีวิดีโอในบทเรียนนี้';
             }
 
+            currentUnitScoreRecord = await fetchUserQuizScores(unit.id);
+
             renderQuizForm('pretest', unit.pre_test || []);
             renderQuizForm('posttest', unit.post_test || []);
 
-            const preBadge = document.getElementById('pretestScoreBadge');
-            const postBadge = document.getElementById('posttestScoreBadge');
-            if (preBadge) preBadge.classList.add('hidden');
-            if (postBadge) postBadge.classList.add('hidden');
+            // Lock Pre-test UI if user already attempted Pre-test
+            checkAndApplyPretestLock();
 
-            currentUnitScoreRecord = await fetchUserQuizScores(unit.id);
             renderScoreTabContent();
 
             switchViewerTab('video');
             switchTab('unitDetailView');
+        }
+
+        // Lock Pre-test UI when user has already completed pre-test
+        function checkAndApplyPretestLock() {
+            const preSubmitBtn = document.getElementById('pretestSubmitBtn');
+            const preSubTitleText = document.getElementById('pretestSubTitleText');
+            const preBadge = document.getElementById('pretestScoreBadge');
+            const record = currentUnitScoreRecord;
+
+            const hasCompletedPre = record && (record.pre_attempts > 0 || (record.pre_score !== null && record.pre_score !== undefined));
+
+            if (hasCompletedPre) {
+                if (preSubmitBtn) {
+                    preSubmitBtn.disabled = true;
+                    preSubmitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+                    preSubmitBtn.classList.add('bg-slate-400', 'cursor-not-allowed', 'opacity-70');
+                    preSubmitBtn.innerText = 'ท่านได้ส่งแบบทดสอบก่อนเรียนเรียบร้อยแล้ว (จำกัด 1 ครั้ง)';
+                }
+
+                if (preSubTitleText) {
+                    preSubTitleText.innerText = 'คุณได้ทำแบบทดสอบก่อนเรียนไปแล้ว (อนุญาตให้ทำได้เพียง 1 ครั้งเท่านั้น)';
+                }
+
+                // Disable all radio inputs for pretest
+                const preInputs = document.querySelectorAll('#pretestQuestionsContainer input[type="radio"]');
+                preInputs.forEach(input => input.disabled = true);
+
+                // Show Badge Score
+                if (preBadge && record.pre_score !== null && record.pre_score !== undefined) {
+                    const total = record.pre_max_score || (activeUnitForViewer?.pre_test?.length || 1);
+                    const pct = Math.round((record.pre_score / total) * 100);
+                    preBadge.innerText = `คะแนนที่ได้: ${record.pre_score} / ${total} (${pct}%)`;
+                    preBadge.classList.remove('hidden');
+                }
+            } else {
+                if (preSubmitBtn) {
+                    preSubmitBtn.disabled = false;
+                    preSubmitBtn.classList.remove('bg-slate-400', 'cursor-not-allowed', 'opacity-70');
+                    preSubmitBtn.classList.add('bg-blue-600', 'hover:bg-blue-500');
+                    preSubmitBtn.innerText = 'ส่งแบบทดสอบก่อนเรียน';
+                }
+
+                if (preSubTitleText) {
+                    preSubTitleText.innerText = 'ตอบคำถามเพื่อวัดความรู้พื้นฐานก่อนเข้าสู่เนื้อหา';
+                }
+
+                if (preBadge) preBadge.classList.add('hidden');
+            }
+
+            // Post-test score badge initial hide if not taken
+            const postBadge = document.getElementById('posttestScoreBadge');
+            if (postBadge) {
+                if (record && record.post_score !== null && record.post_score !== undefined) {
+                    const total = record.post_max_score || (activeUnitForViewer?.post_test?.length || 1);
+                    const pct = Math.round((record.post_score / total) * 100);
+                    postBadge.innerText = `คะแนนที่ได้: ${record.post_score} / ${total} (${pct}%)`;
+                    postBadge.classList.remove('hidden');
+                } else {
+                    postBadge.classList.add('hidden');
+                }
+            }
         }
 
         function switchActiveVideo(vItem, index, activeBtn) {
@@ -1871,6 +1931,13 @@
                 return;
             }
 
+            // Lock check for Pre-test
+            if (type === 'pretest' && currentUnitScoreRecord && (currentUnitScoreRecord.pre_attempts > 0 || (currentUnitScoreRecord.pre_score !== null && currentUnitScoreRecord.pre_score !== undefined))) {
+                showNotificationModal("ไม่สามารถทำรายการได้", "ท่านได้ส่งแบบทดสอบก่อนเรียนเรียบร้อยแล้ว และสามารถทำได้เพียง 1 ครั้งเท่านั้น", "warning");
+                checkAndApplyPretestLock();
+                return;
+            }
+
             const questions = (type === 'pretest') ? activeUnitForViewer.pre_test : activeUnitForViewer.post_test;
             if (!questions || questions.length === 0) {
                 showNotificationModal("แจ้งเตือน", "ไม่มีแบบทดสอบในหัวข้อนี้", "warning");
@@ -1901,7 +1968,7 @@
             const typeTitle = (type === 'pretest') ? 'ก่อนเรียน (Pre-test)' : 'หลังเรียน (Post-test)';
             const testTypeVal = (type === 'pretest') ? 'pretest' : 'posttest';
 
-            // 1. Save Log Entry into `quiz_results` Table (ถ้าเปิดใช้งาน)
+            // 1. Save Log Entry into `quiz_results` Table
             if (supabaseClient) {
                 try {
                     const quizResultPayload = {
@@ -1945,7 +2012,7 @@
             if (type === 'pretest') {
                 preScore = score;
                 preMaxScore = total;
-                preAttempts += 1;
+                preAttempts = 1; // Strict lock to 1 attempt
             } else {
                 postScore = score;
                 postMaxScore = total;
@@ -1993,13 +2060,8 @@
                 };
             }
 
-            // Update UI Score Badge
-            const badgeEl = document.getElementById(`${type}ScoreBadge`);
-            if (badgeEl) {
-                badgeEl.innerText = `คะแนน: ${score} / ${total} (${percentage}%)`;
-                badgeEl.classList.remove('hidden');
-            }
-
+            // Update UI Score Badge & Apply Pre-test Lock
+            checkAndApplyPretestLock();
             renderScoreTabContent();
 
             showNotificationModal(
@@ -2010,6 +2072,40 @@
                     switchViewerTab('score');
                 }
             );
+        }
+
+        // Standardized Relative Gain Percentage Calculation
+        function calculateGainScorePercentage(preScore, preMax, postScore, postMax) {
+            if (preScore === null || preScore === undefined || postScore === null || postScore === undefined) {
+                return null;
+            }
+
+            const maxPossible = Math.max(preMax || 0, postMax || 0, 1);
+            const prePct = (preScore / maxPossible) * 100;
+            const postPct = (postScore / maxPossible) * 100;
+
+            const scoreDiff = postScore - preScore;
+            const maxGainPossible = maxPossible - preScore;
+
+            if (maxGainPossible <= 0) {
+                // If Pre-test was 100% full
+                if (postScore >= maxPossible) {
+                    return { percentage: 100, diff: scoreDiff, text: "คงระดับความรู้เต็ม 100%" };
+                } else {
+                    const dropPct = Math.round(prePct - postPct);
+                    return { percentage: -dropPct, diff: scoreDiff, text: `ระดับความรู้ลดลง ${dropPct}%` };
+                }
+            }
+
+            if (scoreDiff >= 0) {
+                // Standard Relative Gain Ratio: (Post - Pre) / (Max - Pre) * 100
+                const relativeGainPct = Math.round((scoreDiff / maxGainPossible) * 100);
+                return { percentage: relativeGainPct, diff: scoreDiff, text: `ระดับพัฒนาการเพิ่มขึ้น ${relativeGainPct}%` };
+            } else {
+                // Score Decreased
+                const dropPct = Math.round(((preScore - postScore) / preScore) * 100);
+                return { percentage: -dropPct, diff: scoreDiff, text: `ระดับคะแนนลดลง ${dropPct}%` };
+            }
         }
 
         function renderScoreTabContent() {
@@ -2053,20 +2149,24 @@
                 postPercent.innerText = `ยังไม่มีข้อมูลการทดสอบ`;
             }
 
-            // Gain Score Display
+            // Gain Score Display (Updated Formula)
             if (preScoreVal !== null && preScoreVal !== undefined && postScoreVal !== null && postScoreVal !== undefined) {
-                const gainPoints = postScoreVal - preScoreVal;
-                const gainPct = Math.round(((postScoreVal - preScoreVal) / Math.max(preMaxVal, postMaxVal)) * 100);
+                const gainResult = calculateGainScorePercentage(preScoreVal, preMaxVal, postScoreVal, postMaxVal);
+                
+                if (gainResult) {
+                    const gainPts = gainResult.diff;
+                    const gainPct = gainResult.percentage;
 
-                if (gainPoints > 0) {
-                    gainDisplay.innerText = `+${gainPoints} คะแนน (${gainPct > 0 ? '+' : ''}${gainPct}%)`;
-                    gainText.innerText = `ระดับพัฒนาการเพิ่มขึ้น ${gainPct}%`;
-                } else if (gainPoints === 0) {
-                    gainDisplay.innerText = `0 คะแนน (0%)`;
-                    gainText.innerText = `ระดับคะแนนเท่าเดิม`;
-                } else {
-                    gainDisplay.innerText = `${gainPoints} คะแนน (${gainPct}%)`;
-                    gainText.innerText = `ระดับคะแนนลดลง ${gainPct}%`;
+                    if (gainPts > 0) {
+                        gainDisplay.innerText = `+${gainPts} คะแนน (+${gainPct}%)`;
+                        gainText.innerText = gainResult.text;
+                    } else if (gainPts === 0) {
+                        gainDisplay.innerText = `0 คะแนน (0%)`;
+                        gainText.innerText = `ระดับคะแนนเท่าเดิม`;
+                    } else {
+                        gainDisplay.innerText = `${gainPts} คะแนน (${gainPct}%)`;
+                        gainText.innerText = gainResult.text;
+                    }
                 }
             } else {
                 gainDisplay.innerText = `-`;
