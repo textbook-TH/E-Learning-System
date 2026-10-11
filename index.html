@@ -350,6 +350,10 @@
                                 <span>วันที่ทำแบบทดสอบล่าสุด:</span>
                                 <span id="scoreLastUpdated" class="font-semibold text-slate-800">-</span>
                             </div>
+                            <div class="flex justify-between border-b border-slate-200 pb-2 text-slate-600 pt-1">
+                                <span>จำนวนครั้งที่ทำแบบทดสอบ:</span>
+                                <span id="scoreAttemptsCount" class="font-semibold text-slate-800">ก่อนเรียน 0 ครั้ง | หลังเรียน 0 ครั้ง</span>
+                            </div>
                             <div class="flex justify-between text-slate-600 pt-1">
                                 <span>คำแนะนำเพิ่มเติม:</span>
                                 <span id="scoreRecommendation" class="font-semibold text-amber-700">ควรทำแบบทดสอบให้ครบถ้วนเพื่อดูผลพัฒนาการ</span>
@@ -1854,7 +1858,7 @@
         }
 
         // ==========================================
-        // GRADE QUIZ FUNCTION - SAVES TO BOTH TABLES
+        // GRADE QUIZ FUNCTION - SAVES TO user_quiz_scores WITH ATTEMPTS COUNT
         // ==========================================
         async function gradeQuiz(type) {
             if (!currentUser) {
@@ -1897,7 +1901,7 @@
             const typeTitle = (type === 'pretest') ? 'ก่อนเรียน (Pre-test)' : 'หลังเรียน (Post-test)';
             const testTypeVal = (type === 'pretest') ? 'pretest' : 'posttest';
 
-            // 1. Save Log Entry into `quiz_results` Table
+            // 1. Save Log Entry into `quiz_results` Table (ถ้าเปิดใช้งาน)
             if (supabaseClient) {
                 try {
                     const quizResultPayload = {
@@ -1921,25 +1925,31 @@
                 }
             }
 
-            // Fetch existing record from `user_quiz_scores` to merge scores
+            // Fetch existing record from `user_quiz_scores` to merge scores & attempts
             let preScore = null;
             let preMaxScore = null;
+            let preAttempts = 0;
             let postScore = null;
             let postMaxScore = null;
+            let postAttempts = 0;
 
             if (currentUnitScoreRecord) {
                 preScore = currentUnitScoreRecord.pre_score ?? null;
                 preMaxScore = currentUnitScoreRecord.pre_max_score ?? null;
+                preAttempts = currentUnitScoreRecord.pre_attempts ?? 0;
                 postScore = currentUnitScoreRecord.post_score ?? null;
                 postMaxScore = currentUnitScoreRecord.post_max_score ?? null;
+                postAttempts = currentUnitScoreRecord.post_attempts ?? 0;
             }
 
             if (type === 'pretest') {
                 preScore = score;
                 preMaxScore = total;
+                preAttempts += 1;
             } else {
                 postScore = score;
                 postMaxScore = total;
+                postAttempts += 1;
             }
 
             // 2. Upsert Summary Record into `user_quiz_scores` Table
@@ -1950,8 +1960,10 @@
                         unit_id: activeUnitForViewer.id,
                         pre_score: preScore,
                         pre_max_score: preMaxScore,
+                        pre_attempts: preAttempts,
                         post_score: postScore,
                         post_max_score: postMaxScore,
+                        post_attempts: postAttempts,
                         updated_at: new Date().toISOString()
                     };
 
@@ -1973,8 +1985,10 @@
                 currentUnitScoreRecord = {
                     pre_score: preScore,
                     pre_max_score: preMaxScore,
+                    pre_attempts: preAttempts,
                     post_score: postScore,
                     post_max_score: postMaxScore,
+                    post_attempts: postAttempts,
                     updated_at: new Date().toISOString()
                 };
             }
@@ -2006,6 +2020,7 @@
             const gainDisplay = document.getElementById('scoreDisplayGain');
             const gainText = document.getElementById('scoreGainText');
             const lastUpdated = document.getElementById('scoreLastUpdated');
+            const attemptsCount = document.getElementById('scoreAttemptsCount');
             const recommendation = document.getElementById('scoreRecommendation');
 
             if (!preDisplay || !postDisplay || !gainDisplay) return;
@@ -2013,8 +2028,10 @@
             const record = currentUnitScoreRecord;
             let preScoreVal = record ? record.pre_score : null;
             let preMaxVal = record ? (record.pre_max_score || 1) : 1;
+            let preAttemptsVal = record ? (record.pre_attempts || 0) : 0;
             let postScoreVal = record ? record.post_score : null;
             let postMaxVal = record ? (record.post_max_score || 1) : 1;
+            let postAttemptsVal = record ? (record.post_attempts || 0) : 0;
 
             // Pre-test Display
             if (preScoreVal !== null && preScoreVal !== undefined) {
@@ -2066,6 +2083,11 @@
                 }
             } else {
                 lastUpdated.innerText = `-`;
+            }
+
+            // Display Attempts Count
+            if (attemptsCount) {
+                attemptsCount.innerText = `ก่อนเรียน ${preAttemptsVal} ครั้ง | หลังเรียน ${postAttemptsVal} ครั้ง`;
             }
 
             // Recommendations
