@@ -203,8 +203,8 @@
                         <thead>
                             <tr class="bg-slate-100/80 text-slate-700 text-xs uppercase tracking-wider border-b border-slate-200">
                                 <th class="py-3.5 px-4 font-semibold whitespace-nowrap">รหัสบทเรียน</th>
-                                <th class="py-3.5 px-4 font-semibold whitespace-nowrap">ชื่อบทเรียน</th>
-                                <th class="py-3.5 px-4 font-semibold whitespace-nowrap">หมวดหมู่</th>
+                                <th class="py-3.5 px-4 font-semibold whitespace-nowrap hidden sm:table-cell">ชื่อบทเรียน</th>
+                                <th class="py-3.5 px-4 font-semibold whitespace-nowrap hidden sm:table-cell">หมวดหมู่</th>
                                 <th class="py-3.5 px-4 font-semibold text-center whitespace-nowrap">วิดีโอ</th>
                                 <th class="py-3.5 px-4 font-semibold text-center whitespace-nowrap">จัดการ</th>
                             </tr>
@@ -1630,8 +1630,8 @@
 
                 tr.innerHTML = `
                     <td class="py-3.5 px-4 font-bold text-amber-700 whitespace-nowrap">${escapeHtml(unit.unit_code)}</td>
-                    <td class="py-3.5 px-4 font-semibold text-slate-800">${escapeHtml(unit.title)}</td>
-                    <td class="py-3.5 px-4 text-slate-600 whitespace-nowrap">
+                    <td class="py-3.5 px-4 font-semibold text-slate-800 hidden sm:table-cell">${escapeHtml(unit.title)}</td>
+                    <td class="py-3.5 px-4 text-slate-600 whitespace-nowrap hidden sm:table-cell">
                         <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md text-xs font-medium border border-slate-200">${escapeHtml(unit.category)}</span>
                     </td>
                     <td class="py-3.5 px-4 text-center whitespace-nowrap">
