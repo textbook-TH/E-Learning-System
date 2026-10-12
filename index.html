@@ -1864,20 +1864,16 @@
                 }
 
                 if (rec.pre_score !== null && rec.post_score !== null && (rec.pre_max_score || 0) > 0 && (rec.post_max_score || 0) > 0) {
-                    // =============================================================
-                    // [แก้ไขเฉพาะส่วนนี้] คำนวณ %พัฒนาการ และเกณฑ์การพิจารณา ตาม Code1.js
-                    // =============================================================
                     const preScore = Number(rec.pre_score);
                     const postScore = Number(rec.post_score);
                     const maxScore = Number(rec.post_max_score || rec.pre_max_score);
 
-                    const possibleGain = maxScore - preScore; // ศักยภาพที่พัฒนาได้
-                    const actualGain = postScore - preScore;   // คะแนนที่เปลี่ยนจริง
+                    const possibleGain = maxScore - preScore;
+                    const actualGain = postScore - preScore;
 
                     let rawGainPct = 0;
                     let statusText = "";
 
-                    // 1. กรณีคะแนนก่อนเรียนเต็มตั้งแต่แรก (Pre-test เต็ม)
                     if (preScore >= maxScore) {
                         if (postScore >= maxScore) {
                             rawGainPct = 100;
@@ -1886,14 +1882,10 @@
                             rawGainPct = ((postScore - maxScore) / maxScore) * 100;
                             statusText = "คะแนนหลังเรียนลดลงจากเดิม";
                         }
-                    } 
-                    // 2. กรณีคะแนนก่อนเรียนยังไม่เต็ม (Pre-test < Max)
-                    else {
+                    } else {
                         if (actualGain > 0) {
-                            // คำนวณ Normalized Gain (Hake Gain)
                             rawGainPct = possibleGain > 0 ? (actualGain / possibleGain) * 100 : 0;
 
-                            // เกณฑ์การพิจารณาพัฒนาการ
                             if (rawGainPct >= 70) {
                                 statusText = "พัฒนาการอยู่ในระดับสูง (High Gain)";
                             } else if (rawGainPct >= 30) {
@@ -1902,7 +1894,6 @@
                                 statusText = "พัฒนาการอยู่ในระดับต่ำ (Low Gain)";
                             }
                         } else if (actualGain < 0) {
-                            // ป้องกัน Division by zero หาก preScore = 0 ให้สลับไปใช้ maxScore เป็นฐาน
                             const baseScore = preScore > 0 ? preScore : maxScore;
                             rawGainPct = (actualGain / baseScore) * 100;
                             statusText = "คะแนนหลังเรียนลดลง";
@@ -1918,7 +1909,6 @@
                     if (scoreRecommendation) {
                         scoreRecommendation.textContent = statusText;
                     }
-                    // =============================================================
                 } else {
                     scoreDisplayGain.textContent = "-";
                     scoreGainText.textContent = "ต้องทำทั้งก่อนและหลังเรียนเพื่อคำนวณ";
@@ -2273,7 +2263,16 @@
                 }
             } catch (err) {
                 console.error("Auth error:", err);
-                showNotificationModal("เกิดข้อผิดพลาด", err.message || "ไม่สามารถดำเนินการได้", "error");
+                let customMsg = err.message || "ไม่สามารถดำเนินการได้";
+
+                // เปลี่ยนแปลงข้อความแจ้งเตือนตามคำสั่งเท่านั้น
+                if (err.message && err.message.includes("User already registered")) {
+                    customMsg = "มีอีเมลคุณอยู่ในระบบแล้ว";
+                } else if (err.message && err.message.includes("Invalid login credentials")) {
+                    customMsg = "อีเมลหรือรหัสผ่านเข้าสู่ระบบไม่ถูกต้อง";
+                }
+
+                showNotificationModal("เกิดข้อผิดพลาด", customMsg, "error");
             }
         }
 
@@ -2367,7 +2366,7 @@
                     currentUser = null;
                     updateUserInterface();
                     await switchTab('publicHome');
-                    showNotificationModal("ออกจากระบบสำเร็จ", "คุณได้ออกจากระบบเรียบร้อยแล้ว", "info");
+                    // เอาการแสดงแจ้งเตือนออกจากส่วนนี้ตามสั่ง
                 }
             );
         }
