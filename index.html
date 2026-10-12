@@ -1825,6 +1825,7 @@
             const scoreGainText = document.getElementById('scoreGainText');
             const scoreLastUpdated = document.getElementById('scoreLastUpdated');
             const scoreAttemptsCount = document.getElementById('scoreAttemptsCount');
+            const scoreRecommendation = document.getElementById('scoreRecommendation');
 
             const preBadge = document.getElementById('pretestScoreBadge');
             const postBadge = document.getElementById('posttestScoreBadge');
@@ -1863,23 +1864,67 @@
                 }
 
                 if (rec.pre_score !== null && rec.post_score !== null && (rec.pre_max_score || 0) > 0 && (rec.post_max_score || 0) > 0) {
-                    const prePct = (rec.pre_score / rec.pre_max_score) * 100;
-                    const postPct = (rec.post_score / rec.post_max_score) * 100;
-                    const gainPct = (postPct - prePct).toFixed(1);
+                    // =============================================================
+                    // [แก้ไขเฉพาะส่วนนี้] คำนวณ %พัฒนาการ และเกณฑ์การพิจารณา ตาม Code1.js
+                    // =============================================================
+                    const preScore = Number(rec.pre_score);
+                    const postScore = Number(rec.post_score);
+                    const maxScore = Number(rec.post_max_score || rec.pre_max_score);
 
-                    if (gainPct > 0) {
-                        scoreDisplayGain.textContent = `+${gainPct}%`;
-                        scoreGainText.textContent = "พัฒนาการดีขึ้นอย่างเห็นได้ชัด";
-                    } else if (gainPct == 0) {
-                        scoreDisplayGain.textContent = `0%`;
-                        scoreGainText.textContent = "คะแนนทรงตัว";
-                    } else {
-                        scoreDisplayGain.textContent = `${gainPct}%`;
-                        scoreGainText.textContent = "ควรทบทวนคลิปวิดีโอเพิ่มเติม";
+                    const possibleGain = maxScore - preScore; // ศักยภาพที่พัฒนาได้
+                    const actualGain = postScore - preScore;   // คะแนนที่เปลี่ยนจริง
+
+                    let rawGainPct = 0;
+                    let statusText = "";
+
+                    // 1. กรณีคะแนนก่อนเรียนเต็มตั้งแต่แรก (Pre-test เต็ม)
+                    if (preScore >= maxScore) {
+                        if (postScore >= maxScore) {
+                            rawGainPct = 100;
+                            statusText = "รักษามาตรฐานได้ดีเยี่ยม (คะแนนเต็มทั้งสองครั้ง)";
+                        } else {
+                            rawGainPct = ((postScore - maxScore) / maxScore) * 100;
+                            statusText = "คะแนนหลังเรียนลดลงจากเดิม";
+                        }
+                    } 
+                    // 2. กรณีคะแนนก่อนเรียนยังไม่เต็ม (Pre-test < Max)
+                    else {
+                        if (actualGain > 0) {
+                            // คำนวณ Normalized Gain (Hake Gain)
+                            rawGainPct = possibleGain > 0 ? (actualGain / possibleGain) * 100 : 0;
+
+                            // เกณฑ์การพิจารณาพัฒนาการ
+                            if (rawGainPct >= 70) {
+                                statusText = "พัฒนาการอยู่ในระดับสูง (High Gain)";
+                            } else if (rawGainPct >= 30) {
+                                statusText = "พัฒนาการอยู่ในระดับปานกลาง (Medium Gain)";
+                            } else {
+                                statusText = "พัฒนาการอยู่ในระดับต่ำ (Low Gain)";
+                            }
+                        } else if (actualGain < 0) {
+                            // ป้องกัน Division by zero หาก preScore = 0 ให้สลับไปใช้ maxScore เป็นฐาน
+                            const baseScore = preScore > 0 ? preScore : maxScore;
+                            rawGainPct = (actualGain / baseScore) * 100;
+                            statusText = "คะแนนหลังเรียนลดลง";
+                        } else {
+                            rawGainPct = 0;
+                            statusText = "คะแนนหลังเรียนเท่ากับก่อนเรียน";
+                        }
                     }
+
+                    const formattedGain = rawGainPct.toFixed(1);
+                    scoreDisplayGain.textContent = `${rawGainPct > 0 ? '+' : ''}${formattedGain}%`;
+                    scoreGainText.textContent = statusText;
+                    if (scoreRecommendation) {
+                        scoreRecommendation.textContent = statusText;
+                    }
+                    // =============================================================
                 } else {
                     scoreDisplayGain.textContent = "-";
                     scoreGainText.textContent = "ต้องทำทั้งก่อนและหลังเรียนเพื่อคำนวณ";
+                    if (scoreRecommendation) {
+                        scoreRecommendation.textContent = "ควรทำแบบทดสอบให้ครบถ้วนเพื่อดูผลพัฒนาการ";
+                    }
                 }
 
                 if (rec.updated_at || rec.created_at) {
@@ -1901,6 +1946,9 @@
                 scoreGainText.textContent = "ต้องทำทั้งก่อนและหลังเรียนเพื่อคำนวณ";
                 scoreLastUpdated.textContent = "-";
                 scoreAttemptsCount.textContent = "ก่อนเรียน 0 ครั้ง | หลังเรียน 0 ครั้ง";
+                if (scoreRecommendation) {
+                    scoreRecommendation.textContent = "ควรทำแบบทดสอบให้ครบถ้วนเพื่อดูผลพัฒนาการ";
+                }
                 if (preBadge) preBadge.classList.add('hidden');
                 if (postBadge) postBadge.classList.add('hidden');
             }
