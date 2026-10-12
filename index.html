@@ -881,12 +881,11 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            await initAuthCheck();
-            await fetchUnitsData();
-
-            if (window.location.hash && window.location.hash.includes('type=recovery')) {
+             if (window.location.hash && window.location.hash.includes('type=recovery')) {
                 openResetPasswordModal();
             }
+            await initAuthCheck();
+            await fetchUnitsData();
 
             if (currentUser && currentUser.role === 'student') {
                 await switchTab('studentView');
