@@ -2281,7 +2281,10 @@
                 if (err.message && err.message.includes("User already registered")) {
                     errorMsg = "อีเมลนี้ถูกลงทะเบียนในระบบเรียบร้อยแล้ว";
                 }
-                
+                // 2. กรณีเข้าสู่ระบบผิด (อีเมล/รหัสผ่านไม่ถูกต้อง)
+                else if (err.message && err.message.includes("Invalid login credentials")) {
+                errorMsg = "อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง";
+                }
                 showNotificationModal("เกิดข้อผิดพลาด", errorMsg, "error");
             }
         }
