@@ -2275,7 +2275,14 @@
                 }
             } catch (err) {
                 console.error("Auth error:", err);
-                showNotificationModal("เกิดข้อผิดพลาด", err.message || "ไม่สามารถดำเนินการได้", "error");
+                let errorMsg = err.message || "ไม่สามารถดำเนินการได้";
+                
+                // แปลงข้อความ User already registered เป็นภาษาไทย
+                if (err.message && err.message.includes("User already registered")) {
+                    errorMsg = "อีเมลนี้ถูกลงทะเบียนในระบบเรียบร้อยแล้ว";
+                }
+                
+                showNotificationModal("เกิดข้อผิดพลาด", errorMsg, "error");
             }
         }
 
