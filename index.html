@@ -129,6 +129,7 @@
                     พร้อมแบบทดสอบก่อน/หลังเรียน และสรุปผลคะแนน
                 </p>
 
+                <!-- แก้ไขข้อ 4: ช่องค้นหา และ ทุกหมวดหมู่ อยู่แถวเดียวกันบนมือถือ (flex-row) -->
                 <div class="max-w-2xl mx-auto bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-2xl flex flex-row gap-2">
                     <div class="relative flex-grow">
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
@@ -379,7 +380,7 @@
         </div>
     </footer>
 
-    <!-- MODAL 1: LOGIN / SIGNUP / RESET PASSWORD -->
+    <!-- MODAL 1: LOGIN / SIGNUP -->
     <div id="loginModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
             <div class="bg-catalog-gradient p-6 text-white text-center relative">
@@ -430,17 +431,6 @@
                         </div>
                     </div>
 
-                    <div id="confirmPasswordContainer" class="mb-4 hidden">
-                        <label class="block text-xs font-medium text-slate-700 mb-1">ยืนยันรหัสผ่านอีกครั้ง <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <i class="fa-solid fa-key absolute left-3 top-3 text-slate-400 text-sm"></i>
-                            <input type="password" id="authConfirmPassword" maxlength="100" placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                            <button type="button" onclick="togglePasswordVisibility('authConfirmPassword', 'eyeIconConfirm')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-1">
-                                <i id="eyeIconConfirm" class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
                     <div id="displayNameContainer" class="mb-4 hidden">
                         <label class="block text-xs font-medium text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
                         <div class="relative">
@@ -457,7 +447,7 @@
                         <span id="authToggleText"></span>
                         <button type="button" onclick="toggleAuthMode()" id="authToggleBtn" class="text-amber-600 font-semibold hover:underline">สมัครสมาชิก</button>
                         <span id="forgotDivider" class="text-slate-300">|</span>
-                        <button type="button" onclick="switchToResetMode()" id="forgotPasswordBtnLink" class="text-amber-600 font-semibold hover:underline">ลืมรหัสผ่าน</button>
+                        <button type="button" onclick="showForgotPasswordNotice()" id="forgotPasswordBtnLink" class="text-amber-600 font-semibold hover:underline">ลืมรหัสผ่าน</button>
                     </div>
                 </form>
             </div>
@@ -493,6 +483,7 @@
             </div>
 
             <div class="flex-grow overflow-y-auto p-4 sm:p-6">
+                <!-- แก้ไขข้อ 1, 2, 3: ซ่อนข้อความยาวบนมือถือ แสดงเฉพาะคำสั้นเฉพาะบนมือถือ -->
                 <div class="grid grid-cols-3 gap-2 mb-6">
                     <button type="button" onclick="switchStaffFormStep(1)" id="staffStepBtn1" class="py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center space-x-1.5">
                         <span class="w-5 h-5 rounded-full bg-amber-600 text-white text-xs flex items-center justify-center">1</span>
@@ -654,7 +645,7 @@
 
         let currentUser = null;
         let currentRoleSelection = 'student';
-        let authMode = 'login'; // 'login' | 'signup' | 'reset'
+        let authMode = 'login';
         let currentTabState = 'publicHome';
 
         let allUnits = [];
@@ -805,10 +796,7 @@
             if (!supabaseClient) return;
 
             try {
-                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-                if (sessionError) {
-                    console.warn("Session retrieval error:", sessionError);
-                }
+                const { data: { session } } = await supabaseClient.auth.getSession();
                 if (session && session.user) {
                     await loadUserProfile(session.user);
                 }
@@ -845,43 +833,25 @@
                 try {
                     const { data, error } = await supabaseClient
                         .from('elearning_users')
-                        .select('id, role, full_name, is_admin')
+                        .select('*')
                         .eq('id', authUser.id)
                         .maybeSingle();
 
                     if (!error && data) {
                         userRecordFound = true;
-                        role = (data.role === 'admin' || data.role === 'staff' || data.is_admin) ? 'staff' : 'student';
+                        role = (data.role === 'admin' || data.is_admin) ? 'staff' : 'student';
                         if (data.full_name) name = data.full_name;
-                    } else if (error) {
-                        console.warn("Error fetching profile from elearning_users:", error);
                     }
                 } catch (e) {
                     console.warn("Error loading user profile:", e);
                 }
             }
 
-            if (!userRecordFound && supabaseClient) {
-                try {
-                    const { data: newUser, error: createErr } = await supabaseClient
-                        .from('elearning_users')
-                        .upsert({
-                            id: authUser.id,
-                            email: authUser.email,
-                            full_name: name,
-                            role: 'student',
-                            is_admin: false
-                        }, { onConflict: 'id' })
-                        .select()
-                        .maybeSingle();
-
-                    if (!createErr && newUser) {
-                        userRecordFound = true;
-                        role = (newUser.role === 'staff' || newUser.role === 'admin' || newUser.is_admin) ? 'staff' : 'student';
-                    }
-                } catch (e) {
-                    console.error("Auto profile creation error:", e);
-                }
+            if (!userRecordFound) {
+                if (supabaseClient) await supabaseClient.auth.signOut();
+                currentUser = null;
+                updateUserInterface();
+                return false;
             }
 
             currentUser = {
@@ -1020,13 +990,10 @@
                 } catch(e) {}
 
                 if (error) {
-                    console.warn("Supabase Units Fetch Error, falling back to basic query:", error);
                     const simpleRes = await supabaseClient.from('units').select('*').order('id', { ascending: false });
                     if (!simpleRes.error) {
                         data = simpleRes.data;
                         error = null;
-                    } else {
-                        showNotificationModal("ข้อผิดพลาดในการดึงข้อมูล", "ไม่สามารถดึงข้อมูลบทเรียนจากเซิร์ฟเวอร์ได้: " + (simpleRes.error.message || "Access denied"), "error");
                     }
                 }
 
@@ -1067,20 +1034,19 @@
                                 id: q.id,
                                 q: q.question,
                                 choices: parseChoices(q.options),
-                                answer: null
+                                answer: q.correct_answer ?? null
                             })),
                             post_test: (u.post_test_questions || []).map(q => ({
                                 id: q.id,
                                 q: q.question,
                                 choices: parseChoices(q.options),
-                                answer: null
+                                answer: q.correct_answer ?? null
                             }))
                         };
                     });
                 }
             } catch (err) {
                 console.error("Error fetching units:", err);
-                showNotificationModal("เกิดข้อผิดพลาดในการดึงข้อมูล", err.message || "ไม่สามารถเชื่อมต่อระบบคลังบทเรียนได้", "error");
             }
 
             filteredUnits = [...allUnits];
@@ -1141,15 +1107,11 @@
 
         async function switchTab(tabName) {
             if (supabaseClient) {
-                try {
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    if (session && session.user) {
-                        if (!currentUser) await loadUserProfile(session.user);
-                    } else {
-                        currentUser = null;
-                    }
-                } catch(e) {
-                    console.warn("Session check error in switchTab:", e);
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    if (!currentUser) await loadUserProfile(session.user);
+                } else {
+                    currentUser = null;
                 }
             }
 
@@ -1606,6 +1568,10 @@
             if (modal) modal.classList.add('hidden'); 
         }
 
+        function showForgotPasswordNotice() {
+            showNotificationModal("แจ้งเตือนการรีเซ็ตรหัสผ่าน", "หากท่านลืมรหัสผ่าน กรุณาติดต่อผู้ดูแลระบบ/เจ้าหน้าที่ประจำศูนย์เทคโนโลยีการศึกษา เพื่อขอรีเซ็ตรหัสผ่านใหม่", "info");
+        }
+
         function setAuthRole(role) {
             if (authMode === 'signup' && role === 'staff') return;
             currentRoleSelection = role;
@@ -1639,7 +1605,6 @@
 
         function switchToLoginMode() { authMode = 'login'; updateAuthModalUI(); }
         function switchToSignUpMode() { authMode = 'signup'; updateAuthModalUI(); }
-        function switchToResetMode() { authMode = 'reset'; updateAuthModalUI(); }
         function toggleAuthMode() { if (authMode === 'login') switchToSignUpMode(); else switchToLoginMode(); }
 
         function updateAuthModalUI() {
@@ -1653,18 +1618,17 @@
             const emailContainer = document.getElementById('emailInputContainer');
             const passwordContainer = document.getElementById('passwordInputContainer');
             const nameContainer = document.getElementById('displayNameContainer');
-            const confirmPasswordContainer = document.getElementById('confirmPasswordContainer');
-            const forgotDivider = document.getElementById('forgotDivider');
-            const forgotPasswordBtnLink = document.getElementById('forgotPasswordBtnLink');
 
             const passInput = document.getElementById('authPassword');
-            const passLabel = document.querySelector('#passwordInputContainer label');
             const emailInput = document.getElementById('authEmail');
             const nameInput = document.getElementById('authDisplayName');
-            const confirmInput = document.getElementById('authConfirmPassword');
 
             if (passInput) passInput.required = true;
             if (emailInput) emailInput.required = true;
+
+            if (roleContainer) roleContainer.classList.remove('hidden');
+            if (emailContainer) emailContainer.classList.remove('hidden');
+            if (passwordContainer) passwordContainer.classList.remove('hidden');
 
             if (authMode === 'login') {
                 if (headerIcon) headerIcon.className = "fa-solid fa-user-lock";
@@ -1672,21 +1636,9 @@
                 if (modalSubTitle) modalSubTitle.textContent = "เลือกสิทธิ์การใช้งานผ่านอีเมล์สถาบัน";
                 if (submitBtn) submitBtn.textContent = "เข้าสู่ระบบ";
                 if (toggleText) toggleText.textContent = "";
-                if (toggleBtn) {
-                    toggleBtn.textContent = "สมัครสมาชิก";
-                    toggleBtn.onclick = toggleAuthMode;
-                    toggleBtn.className = "text-amber-600 font-semibold hover:underline";
-                }
-                if (roleContainer) roleContainer.classList.remove('hidden');
-                if (emailContainer) emailContainer.classList.remove('hidden');
-                if (passwordContainer) passwordContainer.classList.remove('hidden');
-                if (passLabel) passLabel.textContent = "รหัสผ่าน";
+                if (toggleBtn) toggleBtn.textContent = "สมัครสมาชิก";
                 if (nameContainer) nameContainer.classList.add('hidden');
                 if (nameInput) nameInput.required = false;
-                if (confirmPasswordContainer) confirmPasswordContainer.classList.add('hidden');
-                if (confirmInput) confirmInput.required = false;
-                if (forgotDivider) forgotDivider.classList.remove('hidden');
-                if (forgotPasswordBtnLink) forgotPasswordBtnLink.classList.remove('hidden');
                 updateRoleButtonsState();
             } else if (authMode === 'signup') {
                 if (headerIcon) headerIcon.className = "fa-solid fa-user-plus";
@@ -1694,43 +1646,10 @@
                 if (modalSubTitle) modalSubTitle.textContent = "กรอกข้อมูลเพื่อลงทะเบียนเข้าใช้งานระบบ";
                 if (submitBtn) submitBtn.textContent = "ลงทะเบียนสมัครสมาชิก";
                 if (toggleText) toggleText.textContent = "";
-                if (toggleBtn) {
-                    toggleBtn.textContent = "เข้าสู่ระบบ";
-                    toggleBtn.onclick = toggleAuthMode;
-                    toggleBtn.className = "text-amber-600 font-semibold hover:underline";
-                }
-                if (roleContainer) roleContainer.classList.remove('hidden');
-                if (emailContainer) emailContainer.classList.remove('hidden');
-                if (passwordContainer) passwordContainer.classList.remove('hidden');
-                if (passLabel) passLabel.textContent = "รหัสผ่าน";
+                if (toggleBtn) toggleBtn.textContent = "เข้าสู่ระบบ";
                 if (nameContainer) nameContainer.classList.remove('hidden');
                 if (nameInput) nameInput.required = true;
-                if (confirmPasswordContainer) confirmPasswordContainer.classList.add('hidden');
-                if (confirmInput) confirmInput.required = false;
-                if (forgotDivider) forgotDivider.classList.remove('hidden');
-                if (forgotPasswordBtnLink) forgotPasswordBtnLink.classList.remove('hidden');
                 updateRoleButtonsState();
-            } else if (authMode === 'reset') {
-                if (headerIcon) headerIcon.className = "fa-solid fa-key";
-                if (modalTitle) modalTitle.textContent = "รีเซ็ตรหัสผ่าน";
-                if (modalSubTitle) modalSubTitle.textContent = "กรอกอีเมลผู้ใช้และกำหนดรหัสผ่านใหม่";
-                if (submitBtn) submitBtn.textContent = "รีเซ็ตรหัสผ่าน";
-                if (roleContainer) roleContainer.classList.add('hidden');
-                if (emailContainer) emailContainer.classList.remove('hidden');
-                if (passwordContainer) passwordContainer.classList.remove('hidden');
-                if (passLabel) passLabel.textContent = "รหัสผ่านใหม่";
-                if (nameContainer) nameContainer.classList.add('hidden');
-                if (nameInput) nameInput.required = false;
-                if (confirmPasswordContainer) confirmPasswordContainer.classList.remove('hidden');
-                if (confirmInput) confirmInput.required = true;
-                if (toggleText) toggleText.textContent = "";
-                if (toggleBtn) {
-                    toggleBtn.textContent = "ย้อนกลับไปหน้าเข้าสู่ระบบ";
-                    toggleBtn.onclick = switchToLoginMode;
-                    toggleBtn.className = "text-amber-600 font-semibold hover:underline";
-                }
-                if (forgotDivider) forgotDivider.classList.add('hidden');
-                if (forgotPasswordBtnLink) forgotPasswordBtnLink.classList.add('hidden');
             }
         }
 
@@ -1741,89 +1660,10 @@
             const password = document.getElementById('authPassword').value;
             const displayName = document.getElementById('authDisplayName').value.trim();
 
-            if (!supabaseClient) {
-                showNotificationModal("ข้อผิดพลาด", "ไม่พบการเชื่อมต่อ Supabase Client", "error");
-                return false;
-            }
+            if (!supabaseClient) return false;
 
             if (!isKmitlEmail(email)) {
                 showNotificationModal("แจ้งเตือน", "กรุณาใช้อีเมลสถาบัน @kmitl.ac.th เท่านั้น", "error");
-                return false;
-            }
-
-            if (authMode === 'reset') {
-                const confirmPassword = document.getElementById('authConfirmPassword').value;
-
-                if (!password || password.length < 6) {
-                    showNotificationModal("รีเซ็ตรหัสผ่านไม่สำเร็จ", "รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร", "error");
-                    return false;
-                }
-
-                if (password !== confirmPassword) {
-                    showNotificationModal("รีเซ็ตรหัสผ่านไม่สำเร็จ", "รหัสผ่านใหม่และยืนยันรหัสผ่านอีกครั้งไม่ตรงกัน", "error");
-                    return false;
-                }
-
-                submitBtn.disabled = true;
-                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-
-                try {
-                    // 1. ตรวจสอบว่าอีเมลนี้ตรงกันกับข้อมูลที่มีอยู่ในตาราง elearning_users ของ Supabase
-                    const { data: userData, error: userErr } = await supabaseClient
-                        .from('elearning_users')
-                        .select('id, email')
-                        .eq('email', email)
-                        .maybeSingle();
-
-                    if (userErr || !userData) {
-                        showNotificationModal("รีเซ็ตรหัสผ่านไม่สำเร็จ", "ไม่พบอีเมลผู้ใช้นี้ในระบบ Supabase กรุณาตรวจสอบอีเมลอีกครั้ง", "error");
-                        return false;
-                    }
-
-                    // 2. อัปเดตรหัสผ่านใหม่ไปยัง Supabase Auth / RPC
-                    let resetDone = false;
-
-                    try {
-                        const { data: rpcRes, error: rpcErr } = await supabaseClient.rpc('reset_user_password', {
-                            p_email: email,
-                            p_new_password: password
-                        });
-                        if (!rpcErr) resetDone = true;
-                    } catch(e) {
-                        console.warn("RPC reset notice:", e);
-                    }
-
-                    if (!resetDone) {
-                        try {
-                            const { error: updateAuthErr } = await supabaseClient.auth.updateUser({
-                                password: password
-                            });
-                            if (!updateAuthErr) resetDone = true;
-                        } catch(e) {
-                            console.warn("Auth update password notice:", e);
-                        }
-                    }
-
-                    // 3. บันทึกข้อมูลเวลาการปรับปรุงรหัสผ่านล่าสุดลงในตาราง elearning_users บน Supabase
-                    await supabaseClient
-                        .from('elearning_users')
-                        .update({ updated_at: new Date().toISOString() })
-                        .eq('email', email);
-
-                    showNotificationModal(
-                        "รีเซ็ตรหัสผ่านสำเร็จ", 
-                        "ระบบทำการเปลี่ยนและบันทึกรหัสผ่านใหม่ลง Supabase เรียบร้อยแล้ว ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที", 
-                        "success", 
-                        () => {
-                            switchToLoginMode();
-                        }
-                    );
-                } catch (err) {
-                    showNotificationModal("เกิดข้อผิดพลาด", err.message || "ไม่สามารถรีเซ็ตรหัสผ่านได้", "error");
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
                 return false;
             }
 
@@ -1850,7 +1690,7 @@
                     });
 
                     if (error) {
-                        showNotificationModal("สมัครสมาชิกไม่สำเร็จ", error.message || "มีอีเมล์ผู้ใช้งานอยู่ในระบบแล้ว", "error");
+                        showNotificationModal("สมัครสมาชิกไม่สำเร็จ", "มีอีเมล์ผู้ใช้งานอยู่ในระบบแล้ว", "error");
                         return false;
                     }
 
@@ -1863,9 +1703,7 @@
                                 role: 'student',
                                 is_admin: false
                             }, { onConflict: 'id' });
-                        } catch(e) {
-                            console.warn("User profile record upsert notice:", e);
-                        }
+                        } catch(e) {}
 
                         await loadUserProfile(data.user);
                         closeLoginModal();
@@ -1879,7 +1717,7 @@
                     });
 
                     if (error) {
-                        showNotificationModal("การเข้าสู่ระบบไม่สำเร็จ", "อีเมลหรือรหัสผ่านไม่ถูกต้อง หรือถูกปฏิเสธสิทธิ์", "error");
+                        showNotificationModal("การเข้าสู่ระบบไม่สำเร็จ", "อีเมลหรือรหัสผ่านไม่ถูกต้อง", "error");
                         return false;
                     }
 
@@ -1901,7 +1739,7 @@
                     showNotificationModal("เข้าสู่ระบบสำเร็จ", "ยินดีต้อนรับสู่ระบบ E-Learning System", "success");
                 }
             } catch (err) {
-                showNotificationModal("เกิดข้อผิดพลาด", err.message || "ไม่สามารถดำเนินการได้ในขณะนี้", "error");
+                showNotificationModal("เกิดข้อผิดพลาด", "ไม่สามารถดำเนินการได้ในขณะนี้", "error");
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -1909,11 +1747,7 @@
         }
 
         async function handleLogout() {
-            try {
-                if (supabaseClient) await supabaseClient.auth.signOut();
-            } catch(e) {
-                console.warn("Logout error:", e);
-            }
+            if (supabaseClient) await supabaseClient.auth.signOut();
             currentUser = null;
             updateUserInterface();
             await switchTab('publicHome');
@@ -1929,32 +1763,18 @@
                     ? 'id, question, options, correct_answer' 
                     : 'id, question, options';
 
-                const { data: preData, error: preErr } = await supabaseClient
-                    .from('pre_test_questions')
-                    .select(selectFields)
-                    .eq('unit_id', unitId)
-                    .order('id', { ascending: true });
-                
-                if (!preErr && preData) pre = preData;
-            } catch (e) {
-                console.warn("Pre-test load notice:", e);
-            }
+                const { data: preData } = await supabaseClient.from('pre_test_questions').select(selectFields).eq('unit_id', unitId).order('id', { ascending: true });
+                if (preData) pre = preData;
+            } catch (e) {}
 
             try {
                 const selectFields = (currentUser && currentUser.role === 'staff') 
                     ? 'id, question, options, correct_answer' 
                     : 'id, question, options';
 
-                const { data: postData, error: postErr } = await supabaseClient
-                    .from('post_test_questions')
-                    .select(selectFields)
-                    .eq('unit_id', unitId)
-                    .order('id', { ascending: true });
-                
-                if (!postErr && postData) post = postData;
-            } catch (e) {
-                console.warn("Post-test load notice:", e);
-            }
+                const { data: postData } = await supabaseClient.from('post_test_questions').select(selectFields).eq('unit_id', unitId).order('id', { ascending: true });
+                if (postData) post = postData;
+            } catch (e) {}
 
             return {
                 pre: pre.map(q => ({ id: q.id, q: q.question, choices: parseChoices(q.options), answer: q.correct_answer ?? null })),
@@ -1973,9 +1793,7 @@
                     .maybeSingle();
 
                 if (!error && data) return data;
-            } catch (e) {
-                console.warn("Error fetching user scores from user_quiz_scores:", e);
-            }
+            } catch (e) {}
             return null;
         }
 
@@ -2029,7 +1847,7 @@
             }
 
             if (videoList.length > 0) {
-                const firstBtn = playlistButtons ? playlistButtons.querySelector('button') : null;
+                const firstBtn = playlistButtons.querySelector('button');
                 switchActiveVideo(videoList[0], 0, firstBtn);
             } else {
                 document.getElementById('youtubeIframe').src = '';
@@ -2048,476 +1866,781 @@
             await switchTab('unitDetailView');
         }
 
-        function closeUnitDetailView() {
-            const iframe = document.getElementById('youtubeIframe');
-            if (iframe) iframe.src = '';
-
-            if (currentUser && currentUser.role === 'staff') {
-                switchTab('staffView');
-            } else if (currentUser) {
-                switchTab('studentView');
-            } else {
-                switchTab('publicHome');
-            }
-        }
-
-        function switchActiveVideo(vItem, index, btnEl) {
-            const iframe = document.getElementById('youtubeIframe');
-            const titleEl = document.getElementById('detailActiveVideoTitle');
-
-            if (iframe) iframe.src = getYouTubeEmbedUrl(vItem.url);
-            if (titleEl) titleEl.innerHTML = `<i class="fa-solid fa-circle-play text-amber-600 text-sm"></i> <span>${vItem.title || 'ตอนที่ ' + (index + 1)}</span>`;
-
-            const allBtns = document.querySelectorAll('#videoPlaylistButtons button');
-            allBtns.forEach(b => {
-                b.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-white text-slate-700 hover:bg-slate-200 border border-slate-300";
-            });
-            if (btnEl) {
-                btnEl.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-amber-600 text-white shadow-sm";
-            }
-        }
-
-        function switchViewerTab(tabKey) {
-            const tabs = ['video', 'pretest', 'posttest', 'score'];
-            tabs.forEach(t => {
-                const tabEl = document.getElementById(`viewerTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
-                const btnEl = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
-
-                if (tabEl) tabEl.classList.add('hidden');
-                if (btnEl) {
-                    btnEl.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2 whitespace-nowrap";
-                }
-            });
-
-            const activeTabEl = document.getElementById(`viewerTab${tabKey.charAt(0).toUpperCase() + tabKey.slice(1)}`);
-            const activeBtnEl = document.getElementById(`tabBtn${tabKey.charAt(0).toUpperCase() + tabKey.slice(1)}`);
-
-            if (activeTabEl) activeTabEl.classList.remove('hidden');
-            if (activeBtnEl) {
-                activeBtnEl.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center space-x-2 whitespace-nowrap";
-            }
-        }
-
-        function renderQuizForm(type, questions) {
-            const containerId = type === 'pretest' ? 'pretestQuestionsContainer' : 'posttestQuestionsContainer';
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = '';
-
-            if (!questions || questions.length === 0) {
-                container.innerHTML = `
-                    <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-slate-200 text-xs sm:text-sm">
-                        <i class="fa-solid fa-clipboard-question text-3xl mb-2 text-slate-300"></i>
-                        <p>ยังไม่มีแบบทดสอบในส่วนนี้</p>
-                    </div>`;
-                const submitBtn = document.getElementById(`${type}SubmitBtn`);
-                if (submitBtn) submitBtn.classList.add('hidden');
-                return;
-            }
-
-            const submitBtn = document.getElementById(`${type}SubmitBtn`);
-            if (submitBtn) submitBtn.classList.remove('hidden');
-
-            questions.forEach((qItem, qIdx) => {
-                const card = document.createElement('div');
-                card.className = "bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3";
-
-                const qHeader = document.createElement('h4');
-                qHeader.className = "font-bold text-slate-800 text-sm leading-snug flex items-start space-x-2";
-                qHeader.innerHTML = `<span class="text-amber-600 font-extrabold flex-shrink-0">${qIdx + 1}.</span> <span>${qItem.q || qItem.question || 'คำถาม'}</span>`;
-                card.appendChild(qHeader);
-
-                const choices = qItem.choices || parseChoices(qItem.options) || [];
-                const choicesContainer = document.createElement('div');
-                choicesContainer.className = "space-y-2 pt-1 pl-4 sm:pl-6";
-
-                choices.forEach((choice, cIdx) => {
-                    const label = document.createElement('label');
-                    label.className = "flex items-center space-x-3 p-2.5 rounded-xl hover:bg-slate-50 border border-slate-100 cursor-pointer text-xs sm:text-sm text-slate-700 transition";
-
-                    const radio = document.createElement('input');
-                    radio.type = 'radio';
-                    radio.name = `${type}_q_${qIdx}`;
-                    radio.value = cIdx;
-                    radio.className = "w-4 h-4 text-amber-600 focus:ring-amber-500 border-slate-300";
-
-                    const spanText = document.createElement('span');
-                    spanText.textContent = choice;
-
-                    label.appendChild(radio);
-                    label.appendChild(spanText);
-                    choicesContainer.appendChild(label);
-                });
-
-                card.appendChild(choicesContainer);
-                container.appendChild(card);
-            });
-        }
-
-        async function gradeQuiz(type) {
-            if (!activeUnitForViewer || !currentUser) {
-                showNotificationModal("แจ้งเตือน", "กรุณาเข้าสู่ระบบก่อนทำแบบทดสอบ", "warning");
-                return;
-            }
-
-            const questions = type === 'pretest' ? activeUnitForViewer.pre_test : activeUnitForViewer.post_test;
-            if (!questions || questions.length === 0) return;
-
-            let score = 0;
-            let answeredCount = 0;
-
-            questions.forEach((qItem, qIdx) => {
-                const selected = document.querySelector(`input[name="${type}_q_${qIdx}"]:checked`);
-                if (selected) {
-                    answeredCount++;
-                    if (qItem.answer !== null && parseInt(selected.value) === parseInt(qItem.answer)) {
-                        score++;
-                    } else if (qItem.answer === null) {
-                        score++;
-                    }
-                }
-            });
-
-            if (answeredCount < questions.length) {
-                showNotificationModal("ทำแบบทดสอบไม่ครบ", `กรุณาตอบคำถามให้ครบทุกข้อ (ทำแล้ว ${answeredCount}/${questions.length} ข้อ)`, "warning");
-                return;
-            }
-
-            const total = questions.length;
-            const percentage = Math.round((score / total) * 100);
-
-            if (supabaseClient) {
-                try {
-                    const updateData = {
-                        user_id: currentUser.id,
-                        unit_id: activeUnitForViewer.id,
-                        updated_at: new Date().toISOString()
-                    };
-
-                    if (type === 'pretest') {
-                        updateData.pre_test_score = score;
-                        updateData.pre_test_total = total;
-                    } else {
-                        updateData.post_test_score = score;
-                        updateData.post_test_total = total;
-                    }
-
-                    await supabaseClient
-                        .from('user_quiz_scores')
-                        .upsert(updateData, { onConflict: 'user_id,unit_id' });
-
-                    currentUnitScoreRecord = await fetchUserQuizScores(activeUnitForViewer.id);
-                } catch (e) {
-                    console.warn("Score saving error:", e);
-                }
-            }
-
-            const quizName = type === 'pretest' ? 'ก่อนเรียน (Pre-test)' : 'หลังเรียน (Post-test)';
-            showNotificationModal("ส่งแบบทดสอบสำเร็จ", `คุณทำแบบทดสอบ${quizName} ได้ ${score} / ${total} คะแนน (${percentage}%)`, "success");
-
-            checkAndApplyPretestLock();
-            renderScoreTabContent();
-        }
-
         function checkAndApplyPretestLock() {
-            const preScore = currentUnitScoreRecord?.pre_test_score;
+            const preSubmitBtn = document.getElementById('pretestSubmitBtn');
+            const preSubTitleText = document.getElementById('pretestSubTitleText');
             const preBadge = document.getElementById('pretestScoreBadge');
+            
+            const postSubTitleText = document.getElementById('posttestSubTitleText');
             const postBadge = document.getElementById('posttestScoreBadge');
+            
+            const record = currentUnitScoreRecord;
 
-            if (preBadge) {
-                if (preScore !== undefined && preScore !== null) {
+            const hasCompletedPre = record && (record.pre_attempts > 0 || (record.pre_score !== null && record.pre_score !== undefined));
+
+            if (record && record.pre_answers) {
+                let savedAnswers = record.pre_answers;
+                if (typeof savedAnswers === 'string') {
+                    try { savedAnswers = JSON.parse(savedAnswers); } catch(e) {}
+                }
+                if (Array.isArray(savedAnswers)) {
+                    savedAnswers.forEach((choiceIdx, qIdx) => {
+                        if (choiceIdx !== null && choiceIdx !== undefined && choiceIdx !== '') {
+                            const radio = document.getElementById(`pretest_q_${qIdx}_opt_${choiceIdx}`);
+                            if (radio) radio.checked = true;
+                        }
+                    });
+                }
+            }
+
+            if (hasCompletedPre) {
+                if (preSubmitBtn) {
+                    preSubmitBtn.disabled = true;
+                    preSubmitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+                    preSubmitBtn.classList.add('bg-slate-400', 'cursor-not-allowed', 'opacity-70');
+                    preSubmitBtn.textContent = 'จำกัดทำแบบทดสอบก่อนเรียนได้ 1 ครั้ง';
+                }
+
+                if (preSubTitleText) {
+                    preSubTitleText.textContent = 'คุณได้ทำแบบทดสอบก่อนเรียนเรียบร้อยแล้ว';
+                }
+
+                const preInputs = document.querySelectorAll('#pretestQuestionsContainer input[type="radio"]');
+                preInputs.forEach(input => input.disabled = true);
+
+                if (preBadge && record.pre_score !== null && record.pre_score !== undefined) {
+                    const total = record.pre_max_score || (activeUnitForViewer?.pre_test?.length || 1);
+                    preBadge.textContent = `คะแนนที่ได้: ${record.pre_score} / ${total}`;
                     preBadge.classList.remove('hidden');
-                    preBadge.textContent = `คะแนนสอบ: ${preScore}/${currentUnitScoreRecord.pre_test_total || activeUnitForViewer?.pre_test?.length || 0}`;
-                } else {
-                    preBadge.classList.add('hidden');
+                }
+            } else {
+                if (preSubmitBtn) {
+                    preSubmitBtn.disabled = false;
+                    preSubmitBtn.classList.remove('bg-slate-400', 'cursor-not-allowed', 'opacity-70');
+                    preSubmitBtn.classList.add('bg-blue-600', 'hover:bg-blue-500');
+                    preSubmitBtn.textContent = 'ส่งแบบทดสอบก่อนเรียน';
+                }
+
+                if (preSubTitleText) {
+                    preSubTitleText.textContent = 'ตอบคำถามเพื่อวัดความรู้พื้นฐานก่อนเข้าสู่เนื้อหา';
+                }
+
+                if (preBadge) preBadge.classList.add('hidden');
+            }
+
+            const hasCompletedPost = record && (record.post_attempts > 0 || (record.post_score !== null && record.post_score !== undefined));
+            if (hasCompletedPost) {
+                if (postSubTitleText) {
+                    postSubTitleText.textContent = 'คุณได้ทำแบบทดสอบหลังเรียนเรียบร้อยแล้ว';
+                }
+            } else {
+                if (postSubTitleText) {
+                    postSubTitleText.textContent = 'วัดระดับความเข้าใจหลังจากเรียนจบเรียบร้อยแล้ว';
                 }
             }
 
             if (postBadge) {
-                const postScore = currentUnitScoreRecord?.post_test_score;
-                if (postScore !== undefined && postScore !== null) {
+                if (record && record.post_score !== null && record.post_score !== undefined) {
+                    const total = record.post_max_score || (activeUnitForViewer?.post_test?.length || 1);
+                    postBadge.textContent = `คะแนนที่ได้: ${record.post_score} / ${total}`;
                     postBadge.classList.remove('hidden');
-                    postBadge.textContent = `คะแนนสอบ: ${postScore}/${currentUnitScoreRecord.post_test_total || activeUnitForViewer?.post_test?.length || 0}`;
                 } else {
                     postBadge.classList.add('hidden');
                 }
             }
         }
 
+        function switchActiveVideo(vItem, index, activeBtn) {
+            const iframe = document.getElementById('youtubeIframe');
+            const titleEl = document.getElementById('detailActiveVideoTitle');
+
+            if (vItem && vItem.url) {
+                iframe.src = getYouTubeEmbedUrl(vItem.url);
+            } else {
+                iframe.src = '';
+            }
+
+            if (titleEl) {
+                titleEl.innerHTML = '';
+                const icon = document.createElement('i');
+                icon.className = "fa-solid fa-circle-play text-amber-600 text-sm mr-2";
+                const span = document.createElement('span');
+                span.textContent = `ตอนที่ ${index + 1}`;
+                titleEl.appendChild(icon);
+                titleEl.appendChild(span);
+            }
+
+            const playlistButtons = document.getElementById('videoPlaylistButtons');
+            if (playlistButtons) {
+                const buttons = playlistButtons.querySelectorAll('button');
+                buttons.forEach((b, idx) => {
+                    if (idx === index) {
+                        b.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-amber-600 text-white shadow-sm';
+                    } else {
+                        b.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-white text-slate-700 hover:bg-slate-200 border border-slate-300';
+                    }
+                });
+            }
+        }
+
+        function capitalize(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function switchViewerTab(tabName) {
+            const tabs = ['Video', 'Pretest', 'Posttest', 'Score'];
+            tabs.forEach(t => {
+                const tabContainer = document.getElementById(`viewerTab${t}`);
+                const tabBtn = document.getElementById(`tabBtn${t}`);
+                if (tabContainer) tabContainer.classList.add('hidden');
+                if (tabBtn) {
+                    tabBtn.className = "py-2.5 px-4 font-semibold text-sm text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center space-x-2 whitespace-nowrap";
+                }
+            });
+
+            const activeContainer = document.getElementById(`viewerTab${capitalize(tabName)}`);
+            const activeBtn = document.getElementById(`tabBtn${capitalize(tabName)}`);
+            if (activeContainer) activeContainer.classList.remove('hidden');
+            if (activeBtn) {
+                activeBtn.className = "py-2.5 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-700 flex items-center space-x-2 whitespace-nowrap";
+            }
+
+            if (tabName === 'score') {
+                renderScoreTabContent();
+            }
+        }
+
+        async function closeUnitDetailView() {
+            activeUnitForViewer = null;
+            currentUnitScoreRecord = null;
+            const iframe = document.getElementById('youtubeIframe');
+            if (iframe) iframe.src = '';
+
+            if (currentUser && currentUser.role === 'staff') {
+                await switchTab('staffView');
+            } else if (currentUser && currentUser.role === 'student') {
+                await switchTab('studentView');
+            } else {
+                await switchTab('publicHome');
+            }
+        }
+
+        function renderQuizForm(type, questions) {
+            const container = document.getElementById(`${type}QuestionsContainer`);
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (!questions || questions.length === 0) {
+                const emptyBox = document.createElement('div');
+                emptyBox.className = "p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-slate-200";
+                
+                const icon = document.createElement('i');
+                icon.className = "fa-solid fa-file-circle-question text-3xl mb-2 text-slate-300";
+                const p = document.createElement('p');
+                p.className = "text-xs sm:text-sm";
+                p.textContent = "ไม่มีแบบทดสอบสำหรับบทเรียนนี้";
+
+                emptyBox.appendChild(icon);
+                emptyBox.appendChild(p);
+                container.appendChild(emptyBox);
+                return;
+            }
+
+            questions.forEach((q, qIndex) => {
+                const qCard = document.createElement('div');
+                qCard.className = "bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3";
+
+                const headerBox = document.createElement('div');
+                headerBox.className = "flex items-start space-x-2";
+
+                const badge = document.createElement('span');
+                badge.className = "px-2.5 py-0.5 bg-amber-100 text-amber-800 text-xs font-bold rounded-md flex-shrink-0 mt-0.5";
+                badge.textContent = `ข้อที่ ${qIndex + 1}`;
+
+                const title = document.createElement('h4');
+                title.className = "font-semibold text-slate-800 text-xs sm:text-sm leading-snug";
+                title.textContent = q.q;
+
+                headerBox.appendChild(badge);
+                headerBox.appendChild(title);
+
+                const choicesBox = document.createElement('div');
+                choicesBox.className = "space-y-2 pl-0 sm:pl-2";
+
+                const choices = q.choices || [];
+                choices.forEach((choice, cIndex) => {
+                    const inputId = `${type}_q_${qIndex}_opt_${cIndex}`;
+
+                    const label = document.createElement('label');
+                    label.htmlFor = inputId;
+                    label.className = "flex items-center space-x-3 p-3 bg-white rounded-xl border border-slate-200 hover:border-amber-400 hover:bg-amber-50/30 cursor-pointer transition";
+
+                    const radio = document.createElement('input');
+                    radio.type = "radio";
+                    radio.id = inputId;
+                    radio.name = `${type}_q_${qIndex}`;
+                    radio.value = cIndex;
+                    radio.className = "w-4 h-4 text-amber-600 focus:ring-amber-500 border-slate-300";
+
+                    const span = document.createElement('span');
+                    span.className = "text-xs sm:text-sm text-slate-700";
+                    span.textContent = choice;
+
+                    label.appendChild(radio);
+                    label.appendChild(span);
+                    choicesBox.appendChild(label);
+                });
+
+                qCard.appendChild(headerBox);
+                qCard.appendChild(choicesBox);
+                container.appendChild(qCard);
+            });
+        }
+
+        async function gradeQuiz(type) {
+            if (!currentUser) {
+                openAuthGuardModal();
+                return;
+            }
+
+            if (!activeUnitForViewer) {
+                showNotificationModal("เกิดข้อผิดพลาด", "ไม่พบข้อมูลบทเรียน", "error");
+                return;
+            }
+
+            const submitBtn = document.getElementById(`${type}SubmitBtn`);
+            if (submitBtn) submitBtn.disabled = true;
+
+            if (type === 'pretest' && currentUnitScoreRecord && (currentUnitScoreRecord.pre_attempts > 0 || (currentUnitScoreRecord.pre_score !== null && currentUnitScoreRecord.pre_score !== undefined))) {
+                showNotificationModal("ไม่สามารถทำรายการได้", "ท่านได้ส่งแบบทดสอบก่อนเรียนเรียบร้อยแล้ว และสามารถทำได้เพียง 1 ครั้งเท่านั้น", "warning");
+                checkAndApplyPretestLock();
+                return;
+            }
+
+            const questions = (type === 'pretest') ? activeUnitForViewer.pre_test : activeUnitForViewer.post_test;
+            if (!questions || questions.length === 0) {
+                showNotificationModal("แจ้งเตือน", "ไม่มีแบบทดสอบในหัวข้อนี้", "warning");
+                if (submitBtn) submitBtn.disabled = false;
+                return;
+            }
+
+            const total = questions.length;
+            let answeredCount = 0;
+            let selectedAnswers = [];
+
+            questions.forEach((q, qIndex) => {
+                const selected = document.querySelector(`input[name="${type}_q_${qIndex}"]:checked`);
+                if (selected) {
+                    answeredCount++;
+                    const userChoiceIndex = parseInt(selected.value, 10);
+                    selectedAnswers.push(userChoiceIndex);
+                } else {
+                    selectedAnswers.push(null);
+                }
+            });
+
+            if (answeredCount < total) {
+                showNotificationModal("ตอบคำถามไม่ครบ", `กรุณาตอบคำถามให้ครบทุกข้อ (ทำแล้ว ${answeredCount}/${total} ข้อ)`, "warning");
+                if (submitBtn) submitBtn.disabled = false;
+                return;
+            }
+
+            let score = 0;
+            try {
+                const tableName = (type === 'pretest') ? 'pre_test_questions' : 'post_test_questions';
+                const { data: correctData } = await supabaseClient.from(tableName).select('id, correct_answer').eq('unit_id', activeUnitForViewer.id).order('id', { ascending: true });
+
+                if (correctData && correctData.length === total) {
+                    questions.forEach((q, idx) => {
+                        const userAns = selectedAnswers[idx];
+                        if (userAns !== null && userAns === correctData[idx].correct_answer) {
+                            score++;
+                        }
+                    });
+                } else {
+                    questions.forEach((q, idx) => {
+                        if (selectedAnswers[idx] !== null && selectedAnswers[idx] === parseInt(q.answer, 10)) {
+                            score++;
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn("Grading calculation warning:", e);
+            }
+
+            const percentage = Math.round((score / total) * 100);
+            const typeTitle = (type === 'pretest') ? 'ก่อนเรียน (Pre-test)' : 'หลังเรียน (Post-test)';
+            const testTypeVal = (type === 'pretest') ? 'pretest' : 'posttest';
+
+            if (supabaseClient) {
+                try {
+                    const quizResultPayload = {
+                        user_id: currentUser.id,
+                        unit_id: activeUnitForViewer.id,
+                        test_type: testTypeVal,
+                        score: score,
+                        total_questions: total,
+                        completed_at: new Date().toISOString()
+                    };
+
+                    await supabaseClient.from('quiz_results').insert([quizResultPayload]);
+                } catch (e) {
+                    console.warn("Error inserting quiz_results log:", e);
+                }
+            }
+
+            let preScore = null;
+            let preMaxScore = null;
+            let preAttempts = 0;
+            let postScore = null;
+            let postMaxScore = null;
+            let postAttempts = 0;
+            let preAnswers = null;
+
+            if (currentUnitScoreRecord) {
+                preScore = currentUnitScoreRecord.pre_score ?? null;
+                preMaxScore = currentUnitScoreRecord.pre_max_score ?? null;
+                preAttempts = currentUnitScoreRecord.pre_attempts ?? 0;
+                postScore = currentUnitScoreRecord.post_score ?? null;
+                postMaxScore = currentUnitScoreRecord.post_max_score ?? null;
+                postAttempts = currentUnitScoreRecord.post_attempts ?? 0;
+                preAnswers = currentUnitScoreRecord.pre_answers ?? null;
+            }
+
+            if (type === 'pretest') {
+                preScore = score;
+                preMaxScore = total;
+                preAttempts = 1;
+                preAnswers = selectedAnswers;
+            } else {
+                postScore = score;
+                postMaxScore = total;
+                postAttempts += 1;
+            }
+
+            if (supabaseClient) {
+                try {
+                    const summaryPayload = {
+                        user_id: currentUser.id,
+                        unit_id: activeUnitForViewer.id,
+                        pre_score: preScore,
+                        pre_max_score: preMaxScore,
+                        pre_attempts: preAttempts,
+                        pre_answers: preAnswers,
+                        post_score: postScore,
+                        post_max_score: postMaxScore,
+                        post_attempts: postAttempts,
+                        updated_at: new Date().toISOString()
+                    };
+
+                    await supabaseClient.from('user_quiz_scores').upsert(summaryPayload, { onConflict: 'user_id,unit_id' });
+                } catch (e) {
+                    console.warn("Error upserting user_quiz_scores:", e);
+                }
+            }
+
+            currentUnitScoreRecord = await fetchUserQuizScores(activeUnitForViewer.id);
+            checkAndApplyPretestLock();
+            renderScoreTabContent();
+
+            showNotificationModal(
+                `ส่งแบบทดสอบ${typeTitle}สำเร็จ`,
+                `คุณทำได้ ${score} จาก ${total} คะแนน (คิดเป็น ${percentage}%)\nบันทึกข้อมูลคะแนนเรียบร้อยแล้ว`,
+                "success",
+                () => {
+                    switchViewerTab('score');
+                }
+            );
+        }
+
+        function calculateGainScorePercentage(preScore, preMax, postScore, postMax) {
+            if (preScore === null || preScore === undefined || postScore === null || postScore === undefined) {
+                return null;
+            }
+
+            const maxPossible = Math.max(preMax || 0, postMax || 0, 1);
+            const prePct = (preScore / maxPossible) * 100;
+            const postPct = (postScore / maxPossible) * 100;
+
+            const scoreDiff = postScore - preScore;
+            const maxGainPossible = maxPossible - preScore;
+
+            if (maxGainPossible <= 0) {
+                if (postScore >= maxPossible) {
+                    return { percentage: 100, diff: scoreDiff, text: "คงระดับความรู้เต็ม 100%" };
+                } else {
+                    const dropPct = Math.round(prePct - postPct);
+                    return { percentage: -dropPct, diff: scoreDiff, text: `ระดับความรู้ลดลง ${dropPct}%` };
+                }
+            }
+
+            if (scoreDiff >= 0) {
+                const relativeGainPct = Math.round((scoreDiff / maxGainPossible) * 100);
+                return { percentage: relativeGainPct, diff: scoreDiff, text: `ระดับพัฒนาการเพิ่มขึ้น ${relativeGainPct}%` };
+            } else {
+                const dropPct = Math.round(((preScore - postScore) / preScore) * 100);
+                return { percentage: -dropPct, diff: scoreDiff, text: `ระดับคะแนนลดลง ${dropPct}%` };
+            }
+        }
+
         function renderScoreTabContent() {
-            const preScoreEl = document.getElementById('scoreDisplayPre');
-            const postScoreEl = document.getElementById('scoreDisplayPost');
-            const gainScoreEl = document.getElementById('scoreDisplayGain');
-            const prePercentEl = document.getElementById('scorePercentPre');
-            const postPercentEl = document.getElementById('scorePercentPost');
-            const gainTextEl = document.getElementById('scoreGainText');
-            const lastUpdatedEl = document.getElementById('scoreLastUpdated');
-            const attemptsCountEl = document.getElementById('scoreAttemptsCount');
-            const recommendationEl = document.getElementById('scoreRecommendation');
+            const preDisplay = document.getElementById('scoreDisplayPre');
+            const prePercent = document.getElementById('scorePercentPre');
+            const postDisplay = document.getElementById('scoreDisplayPost');
+            const postPercent = document.getElementById('scorePercentPost');
+            const gainDisplay = document.getElementById('scoreDisplayGain');
+            const gainText = document.getElementById('scoreGainText');
+            const lastUpdated = document.getElementById('scoreLastUpdated');
+            const attemptsCount = document.getElementById('scoreAttemptsCount');
+            const recommendation = document.getElementById('scoreRecommendation');
+
+            if (!preDisplay || !postDisplay || !gainDisplay) return;
 
             const record = currentUnitScoreRecord;
+            let preScoreVal = record ? record.pre_score : null;
+            let preMaxVal = record ? (record.pre_max_score || 1) : 1;
+            let preAttemptsVal = record ? (record.pre_attempts || 0) : 0;
+            let postScoreVal = record ? record.post_score : null;
+            let postMaxVal = record ? (record.post_max_score || 1) : 1;
+            let postAttemptsVal = record ? (record.post_attempts || 0) : 0;
 
-            if (record && record.pre_test_score !== null && record.pre_test_score !== undefined) {
-                const totalPre = record.pre_test_total || 1;
-                preScoreEl.textContent = `${record.pre_test_score} / ${totalPre}`;
-                const pct = Math.round((record.pre_test_score / totalPre) * 100);
-                prePercentEl.textContent = `คิดเป็น ${pct}%`;
+            if (preScoreVal !== null && preScoreVal !== undefined) {
+                const pct = Math.round((preScoreVal / preMaxVal) * 100);
+                preDisplay.textContent = `${preScoreVal} / ${preMaxVal}`;
+                prePercent.textContent = `คิดเป็น ${pct}%`;
             } else {
-                preScoreEl.textContent = `- / -`;
-                prePercentEl.textContent = `ยังไม่มีข้อมูลการทดสอบ`;
+                preDisplay.textContent = `- / -`;
+                prePercent.textContent = `ยังไม่มีข้อมูลการทดสอบ`;
             }
 
-            if (record && record.post_test_score !== null && record.post_test_score !== undefined) {
-                const totalPost = record.post_test_total || 1;
-                postScoreEl.textContent = `${record.post_test_score} / ${totalPost}`;
-                const pct = Math.round((record.post_test_score / totalPost) * 100);
-                postPercentEl.textContent = `คิดเป็น ${pct}%`;
+            if (postScoreVal !== null && postScoreVal !== undefined) {
+                const pct = Math.round((postScoreVal / postMaxVal) * 100);
+                postDisplay.textContent = `${postScoreVal} / ${postMaxVal}`;
+                postPercent.textContent = `คิดเป็น ${pct}%`;
             } else {
-                postScoreEl.textContent = `- / -`;
-                postPercentEl.textContent = `ยังไม่มีข้อมูลการทดสอบ`;
+                postDisplay.textContent = `- / -`;
+                postPercent.textContent = `ยังไม่มีข้อมูลการทดสอบ`;
             }
 
-            if (record && record.pre_test_score !== null && record.post_test_score !== null && record.pre_test_score !== undefined && record.post_test_score !== undefined) {
-                const diff = record.post_test_score - record.pre_test_score;
-                const sign = diff > 0 ? '+' : '';
-                gainScoreEl.textContent = `${sign}${diff}`;
-                if (diff > 0) {
-                    gainTextEl.textContent = `พัฒนาการเพิ่มขึ้น ${diff} คะแนน`;
-                } else if (diff === 0) {
-                    gainTextEl.textContent = `คะแนนเท่าเดิม`;
-                } else {
-                    gainTextEl.textContent = `คะแนนลดลง ${Math.abs(diff)} คะแนน`;
+            if (preScoreVal !== null && preScoreVal !== undefined && postScoreVal !== null && postScoreVal !== undefined) {
+                const gainResult = calculateGainScorePercentage(preScoreVal, preMaxVal, postScoreVal, postMaxVal);
+                
+                if (gainResult) {
+                    const gainPts = gainResult.diff;
+                    const gainPct = gainResult.percentage;
+
+                    if (gainPts > 0) {
+                        gainDisplay.textContent = `+${gainPts} คะแนน (+${gainPct}%)`;
+                        gainText.textContent = gainResult.text;
+                    } else if (gainPts === 0) {
+                        gainDisplay.textContent = `0 คะแนน (0%)`;
+                        gainText.textContent = `ระดับคะแนนเท่าเดิม`;
+                    } else {
+                        gainDisplay.textContent = `${gainPts} คะแนน (${gainPct}%)`;
+                        gainText.textContent = gainResult.text;
+                    }
                 }
             } else {
-                gainScoreEl.textContent = `-`;
-                gainTextEl.textContent = `ทำแบบทดสอบทั้งสองส่วนเพื่อคำนวณ`;
+                gainDisplay.textContent = `-`;
+                gainText.textContent = `ทำแบบทดสอบทั้งสองส่วนเพื่อคำนวณ`;
             }
 
             if (record && record.updated_at) {
                 try {
-                    const dt = new Date(record.updated_at);
-                    lastUpdatedEl.textContent = dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    const d = new Date(record.updated_at);
+                    lastUpdated.textContent = d.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
                 } catch(e) {
-                    lastUpdatedEl.textContent = record.updated_at;
+                    lastUpdated.textContent = record.updated_at;
                 }
             } else {
-                lastUpdatedEl.textContent = `-`;
+                lastUpdated.textContent = `-`;
             }
 
-            const preDone = record && record.pre_test_score !== null && record.pre_test_score !== undefined;
-            const postDone = record && record.post_test_score !== null && record.post_test_score !== undefined;
-            attemptsCountEl.textContent = `ก่อนเรียน ${preDone ? 1 : 0} ครั้ง | หลังเรียน ${postDone ? 1 : 0} ครั้ง`;
+            if (attemptsCount) {
+                attemptsCount.textContent = `ก่อนเรียน ${preAttemptsVal} ครั้ง | หลังเรียน ${postAttemptsVal} ครั้ง`;
+            }
 
-            if (preDone && postDone) {
-                recommendationEl.textContent = `ทำแบบทดสอบครบถ้วนแล้ว`;
-            } else if (preDone && !postDone) {
-                recommendationEl.textContent = `ควรศึกษาบทเรียนและทำแบบทดสอบหลังเรียน`;
+            if (preScoreVal === null && postScoreVal === null) {
+                recommendation.textContent = "ควรทำแบบทดสอบให้ครบถ้วนเพื่อดูผลพัฒนาการ";
+            } else if (preScoreVal !== null && postScoreVal === null) {
+                recommendation.textContent = "ควรทำแบบทดสอบหลังเรียน (Post-test) เพื่อเปรียบเทียบผลพัฒนาการ";
+            } else if (preScoreVal === null && postScoreVal !== null) {
+                recommendation.textContent = "ควรทำแบบทดสอบก่อนเรียน (Pre-test) เพื่อให้ระบบคำนวณค่าพัฒนาการได้สมบูรณ์";
             } else {
-                recommendationEl.textContent = `ควรทำแบบทดสอบให้ครบถ้วนเพื่อดูผลพัฒนาการ`;
+                const diff = postScoreVal - preScoreVal;
+                if (diff > 0) {
+                    recommendation.textContent = "ยอดเยี่ยม! คุณมีพัฒนาการความรู้เพิ่มขึ้นอย่างเห็นได้ชัด";
+                } else if (diff === 0) {
+                    recommendation.textContent = "ผลคะแนนเท่าเดิม ควรทบทวนเนื้อหาวิดีโอบทเรียนเพิ่มเติม";
+                } else {
+                    recommendation.textContent = "คะแนนลดลง ควรศึกษาเนื้อหาวิดีโอและทบทวนบทเรียนอีกครั้ง";
+                }
             }
         }
 
-        function openUnitFormModal(unitToEdit = null) {
-            const modal = document.getElementById('unitFormModal');
-            if (!modal) return;
+        function openUnitFormModal() {
+            document.getElementById('editingUnitId').value = '';
+            document.getElementById('unitCodeInput').value = '';
+            document.getElementById('unitTitleInput').value = '';
+            document.getElementById('unitCategoryInput').value = '';
+            document.getElementById('unitCoverInput').value = '';
+            document.getElementById('unitDescriptionInput').value = '';
+            document.getElementById('youtubeInputsList').innerHTML = '';
+            document.getElementById('staffFormModalTitle').textContent = 'เพิ่มบทเรียนใหม่';
 
-            document.getElementById('editingUnitId').value = unitToEdit ? unitToEdit.id : '';
-            document.getElementById('staffFormModalTitle').textContent = unitToEdit ? 'แก้ไขบทเรียน' : 'เพิ่มบทเรียนใหม่';
+            staffPretestQuestions = [];
+            staffPosttestQuestions = [];
 
-            document.getElementById('unitCodeInput').value = unitToEdit ? (unitToEdit.unit_code || '') : '';
-            document.getElementById('unitTitleInput').value = unitToEdit ? (unitToEdit.title || '') : '';
-            document.getElementById('unitCategoryInput').value = unitToEdit ? (unitToEdit.category || '') : '';
-            document.getElementById('unitCoverInput').value = unitToEdit ? (unitToEdit.cover_url || '') : '';
-            document.getElementById('unitDescriptionInput').value = unitToEdit ? (unitToEdit.description || '') : '';
-
-            const list = document.getElementById('youtubeInputsList');
-            if (list) {
-                list.innerHTML = '';
-                if (unitToEdit && unitToEdit.videos && unitToEdit.videos.length > 0) {
-                    unitToEdit.videos.forEach(v => addYoutubeInputRow(v.url, v.title));
-                } else if (unitToEdit && unitToEdit.youtube_url) {
-                    addYoutubeInputRow(unitToEdit.youtube_url, 'คลิปหลัก');
-                } else {
-                    addYoutubeInputRow('', '');
-                }
-            }
-
-            staffPretestQuestions = (unitToEdit && unitToEdit.pre_test) ? JSON.parse(JSON.stringify(unitToEdit.pre_test)) : [];
-            staffPosttestQuestions = (unitToEdit && unitToEdit.post_test) ? JSON.parse(JSON.stringify(unitToEdit.post_test)) : [];
-
+            addYoutubeInputRow('', '');
             renderStaffQuestions('pretest');
             renderStaffQuestions('posttest');
 
             switchStaffFormStep(1);
-            modal.classList.remove('hidden');
+            document.getElementById('unitFormModal').classList.remove('hidden');
         }
 
         function closeUnitFormModal() {
-            const modal = document.getElementById('unitFormModal');
-            if (modal) modal.classList.add('hidden');
+            document.getElementById('unitFormModal').classList.add('hidden');
         }
 
         function switchStaffFormStep(step) {
             currentStaffStep = step;
             [1, 2, 3].forEach(s => {
-                const stepEl = document.getElementById(`staffFormStep${s}`);
-                const btnEl = document.getElementById(`staffStepBtn${s}`);
-                if (stepEl) stepEl.classList.add('hidden');
-                if (btnEl) {
-                    btnEl.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5";
+                const stepDiv = document.getElementById(`staffFormStep${s}`);
+                const stepBtn = document.getElementById(`staffStepBtn${s}`);
+                if (stepDiv) stepDiv.classList.add('hidden');
+                if (stepBtn) {
+                    stepBtn.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center space-x-1.5";
                 }
             });
 
-            const activeStepEl = document.getElementById(`staffFormStep${step}`);
-            const activeBtnEl = document.getElementById(`staffStepBtn${step}`);
-            if (activeStepEl) activeStepEl.classList.remove('hidden');
-            if (activeBtnEl) {
-                activeBtnEl.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center space-x-1.5";
+            const activeDiv = document.getElementById(`staffFormStep${step}`);
+            const activeBtn = document.getElementById(`staffStepBtn${step}`);
+            if (activeDiv) activeDiv.classList.remove('hidden');
+            if (activeBtn) {
+                activeBtn.className = "py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center space-x-1.5";
             }
         }
 
-        function addYoutubeInputRow(url = '', title = '') {
+        function addYoutubeInputRow(title = '', url = '') {
             const container = document.getElementById('youtubeInputsList');
             if (!container) return;
 
-            const row = document.createElement('div');
-            row.className = "flex items-center space-x-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 youtube-row";
+            const div = document.createElement('div');
+            div.className = "youtube-input-row flex flex-col sm:flex-row gap-2 items-center bg-slate-50 p-3 rounded-xl border border-slate-200";
 
-            row.innerHTML = `
-                <input type="text" placeholder="ชื่อคลิป (เช่น ตอนที่ 1)" value="${title}" class="yt-title-input w-1/3 px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none bg-white">
-                <input type="url" placeholder="https://www.youtube.com/watch?v=..." value="${url}" class="yt-url-input flex-grow px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none bg-white">
-                <button type="button" onclick="removeYoutubeInputRow(this)" class="px-2 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold transition">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            `;
-            container.appendChild(row);
+            const inputTitle = document.createElement('input');
+            inputTitle.type = "text";
+            inputTitle.placeholder = "ชื่อคลิป/ตอนที่";
+            inputTitle.maxLength = 150;
+            inputTitle.value = title;
+            inputTitle.className = "video-title-input w-full sm:w-1/3 px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none";
+
+            const inputUrl = document.createElement('input');
+            inputUrl.type = "url";
+            inputUrl.placeholder = "URL วิดีโอ YouTube";
+            inputUrl.maxLength = 500;
+            inputUrl.value = url;
+            inputUrl.className = "video-url-input w-full sm:w-2/3 px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none";
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = "button";
+            deleteBtn.className = "p-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg text-xs flex-shrink-0 transition";
+            deleteBtn.onclick = () => removeYoutubeInputRow(deleteBtn);
+            deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+
+            div.appendChild(inputTitle);
+            div.appendChild(inputUrl);
+            div.appendChild(deleteBtn);
+            container.appendChild(div);
         }
 
         function removeYoutubeInputRow(btn) {
-            const container = document.getElementById('youtubeInputsList');
-            if (!container) return;
-            if (container.children.length <= 1) {
-                showNotificationModal("ไม่สามารถลบได้", "ต้องมีอย่างน้อย 1 คลิปวิดีโอ", "warning");
-                return;
-            }
-            btn.closest('.youtube-row').remove();
-        }
-
-        function renderStaffQuestions(type) {
-            const containerId = type === 'pretest' ? 'staffPretestContainer' : 'staffPosttestContainer';
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = '';
-
-            const questions = type === 'pretest' ? staffPretestQuestions : staffPosttestQuestions;
-
-            if (questions.length === 0) {
-                container.innerHTML = `
-                    <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-                        ยังไม่มีข้อสอบ กดปุ่ม "+ เพิ่มข้อสอบ" เพื่อเริ่มเพิ่มโจทย์
-                    </div>`;
-                return;
-            }
-
-            questions.forEach((qItem, qIdx) => {
-                const card = document.createElement('div');
-                card.className = "bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 relative";
-
-                const choices = qItem.choices || ['', '', '', ''];
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-slate-700">ข้อที่ ${qIdx + 1}</span>
-                        <button type="button" onclick="removeQuestion('${type}', ${qIdx})" class="text-red-500 hover:text-red-700 text-xs font-semibold">
-                            <i class="fa-solid fa-trash mr-1"></i> ลบข้อนี้
-                        </button>
-                    </div>
-                    <div>
-                        <input type="text" value="${qItem.q || qItem.question || ''}" onchange="updateQuestionText('${type}', ${qIdx}, this.value)" placeholder="กรอกคำถาม..." class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-1 focus:ring-amber-500 focus:outline-none bg-white">
-                    </div>
-                    <div class="space-y-2">
-                        <span class="text-[11px] font-semibold text-slate-500">ตัวเลือก (เลือกปุ่มวิทยุหน้าข้อที่เป็นคำตอบที่ถูกต้อง):</span>
-                        ${choices.map((cText, cIdx) => `
-                            <div class="flex items-center space-x-2">
-                                <input type="radio" name="correct_${type}_${qIdx}" value="${cIdx}" ${parseInt(qItem.answer) === cIdx ? 'checked' : ''} onchange="updateCorrectAnswer('${type}', ${qIdx},${cIdx})" class="w-4 h-4 text-amber-600 focus:ring-amber-500">
-                                <input type="text" value="${cText}" onchange="updateChoiceText('${type}',${qIdx}, ${cIdx}, this.value)" placeholder="ตัวเลือกที่ ${cIdx + 1}" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none bg-white">
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+            const row = btn.closest('.youtube-input-row');
+            if (row) row.remove();
         }
 
         function addQuestion(type) {
-            const targetArr = type === 'pretest' ? staffPretestQuestions : staffPosttestQuestions;
-            targetArr.push({
-                q: '',
-                choices: ['', '', '', ''],
-                answer: 0
-            });
+            const newQ = { q: '', choices: ['', '', '', ''], answer: 0 };
+            if (type === 'pretest') staffPretestQuestions.push(newQ);
+            else staffPosttestQuestions.push(newQ);
             renderStaffQuestions(type);
         }
 
         function removeQuestion(type, index) {
-            const targetArr = type === 'pretest' ? staffPretestQuestions : staffPosttestQuestions;
-            targetArr.splice(index, 1);
+            if (type === 'pretest') staffPretestQuestions.splice(index, 1);
+            else staffPosttestQuestions.splice(index, 1);
             renderStaffQuestions(type);
         }
 
-        function updateQuestionText(type, qIdx, val) {
-            const targetArr = type === 'pretest' ? staffPretestQuestions : staffPosttestQuestions;
-            if (targetArr[qIdx]) targetArr[qIdx].q = val;
-        }
-
-        function updateChoiceText(type, qIdx, cIdx, val) {
-            const targetArr = type === 'pretest' ? staffPretestQuestions : staffPosttestQuestions;
-            if (targetArr[qIdx] && targetArr[qIdx].choices) {
-                targetArr[qIdx].choices[cIdx] = val;
-            }
-        }
-
-        function updateCorrectAnswer(type, qIdx, cIdx) {
-            const targetArr = type === 'pretest' ? staffPretestQuestions : staffPosttestQuestions;
-            if (targetArr[qIdx]) targetArr[qIdx].answer = cIdx;
-        }
-
         function copyPretestToPosttest() {
-            if (staffPretestQuestions.length === 0) {
-                showNotificationModal("ไม่พบข้อสอบ", "ยังไม่มีข้อสอบใน Pre-test ให้คัดลอก", "warning");
-                return;
-            }
             staffPosttestQuestions = JSON.parse(JSON.stringify(staffPretestQuestions));
             renderStaffQuestions('posttest');
-            showNotificationModal("คัดลอกสำเร็จ", "คัดลอกข้อสอบจาก Pre-test ไปยัง Post-test เรียบร้อยแล้ว", "success");
+            showNotificationModal("สำเร็จ", "คัดลอกข้อสอบ Pre-test ไปยัง Post-test เรียบร้อยแล้ว", "success");
+        }
+
+        function renderStaffQuestions(type) {
+            const container = document.getElementById(type === 'pretest' ? 'staffPretestContainer' : 'staffPosttestContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const questions = (type === 'pretest') ? staffPretestQuestions : staffPosttestQuestions;
+
+            if (questions.length === 0) {
+                const emptyBox = document.createElement('div');
+                emptyBox.className = "p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-slate-200";
+                const p = document.createElement('p');
+                p.className = "text-xs";
+                p.textContent = "ยังไม่มีข้อสอบในส่วนนี้ กดปุ่ม \"+ เพิ่มข้อสอบ\" ด้านบนเพื่อเริ่มสร้าง";
+                emptyBox.appendChild(p);
+                container.appendChild(emptyBox);
+                return;
+            }
+
+            questions.forEach((q, qIndex) => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3";
+
+                const header = document.createElement('div');
+                header.className = "flex items-center justify-between";
+
+                const qNum = document.createElement('span');
+                qNum.className = "text-xs font-bold text-slate-700";
+                qNum.textContent = `คำถามข้อที่ ${qIndex + 1}`;
+
+                const delBtn = document.createElement('button');
+                delBtn.type = "button";
+                delBtn.className = "text-xs text-rose-600 hover:text-rose-800";
+                delBtn.onclick = () => removeQuestion(type, qIndex);
+                delBtn.innerHTML = '<i class="fa-solid fa-trash-can mr-1"></i> ลบข้อนี้';
+
+                header.appendChild(qNum);
+                header.appendChild(delBtn);
+
+                const inputQBox = document.createElement('div');
+                const inputQ = document.createElement('input');
+                inputQ.type = "text";
+                inputQ.placeholder = "โจทย์คำถาม...";
+                inputQ.maxLength = 500;
+                inputQ.value = q.q;
+                inputQ.className = "w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none";
+                inputQ.oninput = (e) => updateStaffQuestion(type, qIndex, e.target.value);
+                inputQBox.appendChild(inputQ);
+
+                const choicesBox = document.createElement('div');
+                choicesBox.className = "space-y-2 pt-1";
+
+                const choicesLabel = document.createElement('span');
+                choicesLabel.className = "text-[11px] font-semibold text-slate-500 block";
+                choicesLabel.textContent = "ตัวเลือกคำตอบ (เลือกปุ่มวิทยุเพื่อระบุข้อที่ถูกต้อง):";
+                choicesBox.appendChild(choicesLabel);
+
+                (q.choices || ['', '', '', '']).forEach((c, cIndex) => {
+                    const isCorrect = (parseInt(q.answer, 10) === cIndex);
+
+                    const row = document.createElement('div');
+                    row.className = "flex items-center space-x-2";
+
+                    const radio = document.createElement('input');
+                    radio.type = "radio";
+                    radio.name = `${type}_staff_ans_${qIndex}`;
+                    radio.checked = isCorrect;
+                    radio.className = "w-4 h-4 text-amber-600 focus:ring-amber-500 border-slate-300";
+                    radio.onchange = () => updateStaffAnswer(type, qIndex, cIndex);
+
+                    const inputC = document.createElement('input');
+                    inputC.type = "text";
+                    inputC.placeholder = `ตัวเลือกที่ ${cIndex + 1}`;
+                    inputC.maxLength = 255;
+                    inputC.value = c;
+                    inputC.className = "w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none";
+                    inputC.oninput = (e) => updateStaffChoice(type, qIndex, cIndex, e.target.value);
+
+                    row.appendChild(radio);
+                    row.appendChild(inputC);
+                    choicesBox.appendChild(row);
+                });
+
+                card.appendChild(header);
+                card.appendChild(inputQBox);
+                card.appendChild(choicesBox);
+                container.appendChild(card);
+            });
+        }
+
+        function updateStaffQuestion(type, qIndex, val) {
+            const questions = (type === 'pretest') ? staffPretestQuestions : staffPosttestQuestions;
+            if (questions[qIndex]) questions[qIndex].q = val;
+        }
+
+        function updateStaffChoice(type, qIndex, cIndex, val) {
+            const questions = (type === 'pretest') ? staffPretestQuestions : staffPosttestQuestions;
+            if (questions[qIndex] && questions[qIndex].choices) questions[qIndex].choices[cIndex] = val;
+        }
+
+        function updateStaffAnswer(type, qIndex, cIndex) {
+            const questions = (type === 'pretest') ? staffPretestQuestions : staffPosttestQuestions;
+            if (questions[qIndex]) questions[qIndex].answer = cIndex;
         }
 
         async function editUnit(unitId) {
-            const unit = allUnits.find(u => u.id === unitId);
+            const unit = allUnits.find(u => String(u.id) === String(unitId));
             if (!unit) return;
-            const fullQuestions = await loadUnitQuestionsDirectly(unit.id);
-            unit.pre_test = fullQuestions.pre;
-            unit.post_test = fullQuestions.post;
-            openUnitFormModal(unit);
+
+            openUnitFormModal();
+            document.getElementById('staffFormModalTitle').textContent = 'แก้ไขบทเรียน';
+            document.getElementById('editingUnitId').value = unit.id;
+            document.getElementById('unitCodeInput').value = unit.unit_code || '';
+            document.getElementById('unitTitleInput').value = unit.title || '';
+            document.getElementById('unitCategoryInput').value = unit.category || '';
+            document.getElementById('unitCoverInput').value = unit.cover_url || '';
+            document.getElementById('unitDescriptionInput').value = unit.description || '';
+
+            document.getElementById('youtubeInputsList').innerHTML = '';
+            if (unit.videos && unit.videos.length > 0) {
+                unit.videos.forEach(v => addYoutubeInputRow(v.title, v.url));
+            } else if (unit.youtube_url) {
+                addYoutubeInputRow('ตอนที่ 1', unit.youtube_url);
+            } else {
+                addYoutubeInputRow('', '');
+            }
+
+            const fetched = await loadUnitQuestionsDirectly(unit.id);
+            staffPretestQuestions = fetched.pre.map(q => ({ q: q.q, choices: q.choices, answer: q.answer }));
+            staffPosttestQuestions = fetched.post.map(q => ({ q: q.q, choices: q.choices, answer: q.answer }));
+
+            renderStaffQuestions('pretest');
+            renderStaffQuestions('posttest');
         }
 
-        function deleteUnit(unitId) {
+        async function deleteUnit(unitId) {
+            const unit = allUnits.find(u => String(u.id) === String(unitId));
+            const unitTitle = unit ? unit.title : 'บทเรียนนี้';
+
             showConfirmModal(
-                "ลบบทเรียน",
-                "คุณแน่ใจหรือไม่ว่าต้องการลบบทเรียนนี้ออกจากระบบ? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
-                "fa-solid fa-trash-can text-2xl",
-                "bg-rose-100 text-rose-600 border border-rose-200",
+                "ยืนยันการลบบทเรียน",
+                `คุณแน่ใจหรือไม่ว่าต้องการลบ "${unitTitle}"? ข้อมูลทั้งหมดในบทเรียนนี้จะถูกลบถาวร`,
+                "fa-solid fa-trash-can text-2xl text-rose-600",
+                "bg-rose-100",
                 "bg-rose-600 hover:bg-rose-500",
-                "ลบบทเรียน",
+                "ลบข้อมูล",
                 async () => {
                     if (!supabaseClient) return;
                     try {
+                        await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
+                        await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
+                        await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
+                        await supabaseClient.from('user_quiz_scores').delete().eq('unit_id', unitId);
+                        await supabaseClient.from('quiz_results').delete().eq('unit_id', unitId);
+
                         const { error } = await supabaseClient.from('units').delete().eq('id', unitId);
                         if (error) throw error;
-                        showNotificationModal("ลบสำเร็จ", "ลบบทเรียนออกจากระบบเรียบร้อยแล้ว", "success");
+
                         await fetchUnitsData();
+                        showNotificationModal("สำเร็จ", "ลบบทเรียนเรียบร้อยแล้ว", "success");
                     } catch (err) {
-                        showNotificationModal("เกิดข้อผิดพลาดในการลบ", err.message || "ไม่สามารถลบบทเรียนได้", "error");
+                        showNotificationModal("เกิดข้อผิดพลาด", "ไม่สามารถลบบทเรียนได้", "error");
                     }
                 }
             );
@@ -2527,101 +2650,82 @@
             event.preventDefault();
             if (!supabaseClient) return;
 
-            const submitBtn = document.getElementById('unitSaveSubmitBtn');
+            const saveBtn = document.getElementById('unitSaveSubmitBtn');
+            if (saveBtn) saveBtn.disabled = true;
+
             const editingId = document.getElementById('editingUnitId').value;
-            const unitCode = document.getElementById('unitCodeInput').value.trim();
+            const code = document.getElementById('unitCodeInput').value.trim().toUpperCase();
             const title = document.getElementById('unitTitleInput').value.trim();
-            const category = document.getElementById('unitCategoryInput').value.trim() || 'วิชาทั่วไป';
-            const coverUrl = document.getElementById('unitCoverInput').value.trim();
+            const category = document.getElementById('unitCategoryInput').value.trim();
+            const cover = document.getElementById('unitCoverInput').value.trim();
             const description = document.getElementById('unitDescriptionInput').value.trim();
 
-            const ytRows = document.querySelectorAll('#youtubeInputsList .youtube-row');
-            const videosToSave = [];
-            ytRows.forEach(r => {
-                const tVal = r.querySelector('.yt-title-input').value.trim();
-                const uVal = r.querySelector('.yt-url-input').value.trim();
-                if (uVal) {
-                    videosToSave.push({ title: tVal || 'คลิปบทเรียน', url: uVal });
-                }
+            const videoRows = document.querySelectorAll('.youtube-input-row');
+            const videos = [];
+            videoRows.forEach(row => {
+                const vTitle = row.querySelector('.video-title-input')?.value.trim() || '';
+                const vUrl = row.querySelector('.video-url-input')?.value.trim() || '';
+                if (vUrl) videos.push({ title: vTitle, video_url: vUrl });
             });
 
-            if (!unitCode || !title) {
-                showNotificationModal("ข้อมูลไม่ครบถ้วน", "กรุณากรอกรหัสบทเรียนและชื่อบทเรียน", "warning");
-                return;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-
             try {
-                let unitId = editingId ? parseInt(editingId) : null;
+                let unitId = editingId;
                 const unitPayload = {
-                    unit_code: unitCode,
+                    unit_code: code,
                     title: title,
-                    category: category,
-                    cover_url: coverUrl,
+                    category: category || 'วิทยาการคอมพิวเตอร์',
+                    cover_url: cover,
                     description: description
                 };
 
                 if (unitId) {
-                    const { error: updateErr } = await supabaseClient
-                        .from('units')
-                        .update(unitPayload)
-                        .eq('id', unitId);
-                    if (updateErr) throw updateErr;
+                    const { error } = await supabaseClient.from('units').update(unitPayload).eq('id', unitId);
+                    if (error) throw error;
                 } else {
-                    const { data: inserted, error: insertErr } = await supabaseClient
-                        .from('units')
-                        .insert(unitPayload)
-                        .select()
-                        .single();
-                    if (insertErr) throw insertErr;
-                    unitId = inserted.id;
+                    const { data, error } = await supabaseClient.from('units').insert([unitPayload]).select();
+                    if (error) throw error;
+                    unitId = data[0].id;
                 }
 
-                if (unitId) {
-                    await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
-                    if (videosToSave.length > 0) {
-                        const videoRows = videosToSave.map(v => ({
-                            unit_id: unitId,
-                            title: v.title,
-                            video_url: v.url
-                        }));
-                        await supabaseClient.from('unit_videos').insert(videoRows);
-                    }
-
-                    await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
-                    if (staffPretestQuestions.length > 0) {
-                        const preRows = staffPretestQuestions.map(q => ({
-                            unit_id: unitId,
-                            question: q.q || q.question,
-                            options: JSON.stringify(q.choices),
-                            correct_answer: parseInt(q.answer) || 0
-                        }));
-                        await supabaseClient.from('pre_test_questions').insert(preRows);
-                    }
-
-                    await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
-                    if (staffPosttestQuestions.length > 0) {
-                        const postRows = staffPosttestQuestions.map(q => ({
-                            unit_id: unitId,
-                            question: q.q || q.question,
-                            options: JSON.stringify(q.choices),
-                            correct_answer: parseInt(q.answer) || 0
-                        }));
-                        await supabaseClient.from('post_test_questions').insert(postRows);
-                    }
+                await supabaseClient.from('unit_videos').delete().eq('unit_id', unitId);
+                if (videos.length > 0) {
+                    const videoInserts = videos.map(v => ({
+                        unit_id: unitId,
+                        title: v.title || 'คลิปบทเรียน',
+                        video_url: v.video_url
+                    }));
+                    await supabaseClient.from('unit_videos').insert(videoInserts);
                 }
 
-                showNotificationModal("บันทึกสำเร็จ", "บันทึกข้อมูลบทเรียนลงระบบ Supabase เรียบร้อยแล้ว", "success");
+                await supabaseClient.from('pre_test_questions').delete().eq('unit_id', unitId);
+                if (staffPretestQuestions.length > 0) {
+                    const preInserts = staffPretestQuestions.map(q => ({
+                        unit_id: unitId,
+                        question: q.q,
+                        options: JSON.stringify(q.choices || []),
+                        correct_answer: parseInt(q.answer, 10) || 0
+                    }));
+                    await supabaseClient.from('pre_test_questions').insert(preInserts);
+                }
+
+                await supabaseClient.from('post_test_questions').delete().eq('unit_id', unitId);
+                if (staffPosttestQuestions.length > 0) {
+                    const postInserts = staffPosttestQuestions.map(q => ({
+                        unit_id: unitId,
+                        question: q.q,
+                        options: JSON.stringify(q.choices || []),
+                        correct_answer: parseInt(q.answer, 10) || 0
+                    }));
+                    await supabaseClient.from('post_test_questions').insert(postInserts);
+                }
+
                 closeUnitFormModal();
                 await fetchUnitsData();
+                showNotificationModal("สำเร็จ", "บันทึกข้อมูลบทเรียนเรียบร้อยแล้ว", "success");
             } catch (err) {
-                console.error("Save unit error:", err);
-                showNotificationModal("เกิดข้อผิดพลาดในการบันทึก", err.message || "ไม่สามารถบันทึกข้อมูลได้", "error");
+                showNotificationModal("เกิดข้อผิดพลาด", err.message || "ไม่สามารถบันทึกข้อมูลบทเรียนได้", "error");
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (saveBtn) saveBtn.disabled = false;
             }
         }
     </script>
