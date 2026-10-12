@@ -2129,14 +2129,16 @@
                     showNotificationModal(
                         "ส่งแบบทดสอบก่อนเรียนสำเร็จ",
                         `คุณได้คะแนน ${score} จาก ${totalQuestions} คะแนน (คำตอบถูกบันทึกและล็อกเรียบร้อยแล้ว)`,
-                        "success"
+                        "success",
+                        () => switchViewerTab('score')
                     );
                 } else {
                     renderQuizQuestions('posttest', activeUnitForViewer.post_test);
                     showNotificationModal(
                         "ส่งแบบทดสอบหลังเรียนสำเร็จ",
                         `คุณได้คะแนน ${score} จาก ${totalQuestions} คะแนน`,
-                        "success"
+                        "success",
+                        () => switchViewerTab('score')
                     );
                 }
 
