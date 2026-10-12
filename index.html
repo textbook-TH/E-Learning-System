@@ -2240,6 +2240,8 @@
                     closeLoginModal();
                     await loadUserProfile(data.user);
                     
+                    await fetchUnitsData();
+                    
                     if (currentUser.role === 'staff') {
                         switchTab('staffView');
                     } else {
