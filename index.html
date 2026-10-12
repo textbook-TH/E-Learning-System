@@ -1716,7 +1716,7 @@
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.onclick = () => selectVideo(idx);
-                btn.textContent = `ตอนที่ ${idx + 1}`;
+                btn.innerHTML = `<span class="inline sm:hidden">${idx + 1}</span><span class="hidden sm:inline">ตอนที่ ${idx + 1}</span>`;
 
                 if (idx === currentVideoIndex) {
                     btn.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-600 text-white shadow-md border border-amber-600 transition flex items-center justify-center";
