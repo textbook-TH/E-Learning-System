@@ -282,7 +282,7 @@
                         <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-xs sm:text-sm text-blue-800 flex justify-between items-center">
                             <div>
                                 <span class="font-bold">📝 แบบทดสอบก่อนเรียน (Pre-test)</span>
-                                <p class="text-xs text-blue-600 mt-0.5" id="pretestSubTitleText">ตอบคำถามเพื่อวัดความรู้พื้นฐาน (ทำได้เพียงครั้งเดียวเท่านั้น)</p>
+                                <p class="text-xs text-blue-600 mt-0.5" id="pretestSubTitleText">ตอบคำถามเพื่อวัดความรู้พื้นฐานก่อนเรียน</p>
                             </div>
                             <div id="pretestScoreBadge" class="hidden sm:inline-block px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold"></div>
                         </div>
@@ -299,7 +299,7 @@
                         <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-xs sm:text-sm text-emerald-800 flex justify-between items-center">
                             <div>
                                 <span class="font-bold">🎯 แบบทดสอบหลังเรียน (Post-test)</span>
-                                <p class="text-xs text-emerald-600 mt-0.5" id="posttestSubTitleText">วัดระดับความเข้าใจหลังจากเรียนจบบทเรียน</p>
+                                <p class="text-xs text-emerald-600 mt-0.5" id="posttestSubTitleText">ตอบคำถามเพื่อวัดความรู้พื้นฐานหลังเรียน</p>
                             </div>
                             <div id="posttestScoreBadge" class="hidden sm:inline-block px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold"></div>
                         </div>
@@ -2029,7 +2029,7 @@
                 if (submitBtn) {
                     if (isPreCompleted) {
                         submitBtn.disabled = true;
-                        submitBtn.textContent = "คุณได้ทำแบบทดสอบก่อนเรียนเรียบร้อยแล้ว (ทำได้เพียงครั้งเดียว)";
+                        submitBtn.textContent = "คุณได้ทำแบบทดสอบก่อนเรียนเรียบร้อยแล้ว";
                         submitBtn.className = "w-full py-3 bg-slate-300 text-slate-500 font-semibold rounded-xl text-sm cursor-not-allowed shadow-none";
                     } else {
                         submitBtn.disabled = false;
