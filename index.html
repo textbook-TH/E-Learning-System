@@ -2315,7 +2315,7 @@
                 if (!supabaseClient) throw new Error("Supabase client not initialized");
 
                 const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.href
+                    redirectTo: 'https://textbook-th.github.io/E-Learning-System/'
                 });
 
                 if (error) throw error;
