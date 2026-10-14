@@ -1863,20 +1863,16 @@
                 }
 
                 if (rec.pre_score !== null && rec.post_score !== null && (rec.pre_max_score || 0) > 0 && (rec.post_max_score || 0) > 0) {
-                    // =============================================================
-                    // [แก้ไขเฉพาะส่วนนี้] คำนวณ %พัฒนาการ และเกณฑ์การพิจารณา ตาม Code1.js
-                    // =============================================================
                     const preScore = Number(rec.pre_score);
                     const postScore = Number(rec.post_score);
                     const maxScore = Number(rec.post_max_score || rec.pre_max_score);
 
-                    const possibleGain = maxScore - preScore; // ศักยภาพที่พัฒนาได้
-                    const actualGain = postScore - preScore;   // คะแนนที่เปลี่ยนจริง
+                    const possibleGain = maxScore - preScore;
+                    const actualGain = postScore - preScore;
 
                     let rawGainPct = 0;
                     let statusText = "";
 
-                    // 1. กรณีคะแนนก่อนเรียนเต็มตั้งแต่แรก (Pre-test เต็ม)
                     if (preScore >= maxScore) {
                         if (postScore >= maxScore) {
                             rawGainPct = 100;
@@ -1886,13 +1882,10 @@
                             statusText = "คะแนนหลังเรียนลดลงจากเดิม";
                         }
                     } 
-                    // 2. กรณีคะแนนก่อนเรียนยังไม่เต็ม (Pre-test < Max)
                     else {
                         if (actualGain > 0) {
-                            // คำนวณ Normalized Gain (Hake Gain)
                             rawGainPct = possibleGain > 0 ? (actualGain / possibleGain) * 100 : 0;
 
-                            // เกณฑ์การพิจารณาพัฒนาการ
                             if (rawGainPct >= 70) {
                                 statusText = "พัฒนาการอยู่ในระดับสูง (High Gain)";
                             } else if (rawGainPct >= 30) {
@@ -1901,7 +1894,6 @@
                                 statusText = "พัฒนาการอยู่ในระดับต่ำ (Low Gain)";
                             }
                         } else if (actualGain < 0) {
-                            // ป้องกัน Division by zero หาก preScore = 0 ให้สลับไปใช้ maxScore เป็นฐาน
                             const baseScore = preScore > 0 ? preScore : maxScore;
                             rawGainPct = (actualGain / baseScore) * 100;
                             statusText = "คะแนนหลังเรียนลดลง";
@@ -1917,7 +1909,6 @@
                     if (scoreRecommendation) {
                         scoreRecommendation.textContent = statusText;
                     }
-                    // =============================================================
                 } else {
                     scoreDisplayGain.textContent = "-";
                     scoreGainText.textContent = "ต้องทำทั้งก่อนและหลังเรียนเพื่อคำนวณ";
@@ -1972,7 +1963,7 @@
                 qCard.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3";
 
                 const qTitle = document.createElement('h4');
-               const badgeColor = isPretest 
+                const badgeColor = isPretest 
                     ? 'bg-blue-100 text-blue-800 border border-blue-200' 
                     : 'bg-emerald-100 text-emerald-800 border border-emerald-200';
 
@@ -2163,13 +2154,20 @@
         }
 
         function setAuthRole(role) {
+            // ป้องกันการเลือกบทบาทเจ้าหน้าที่ เมื่ออยู่ในโหมดสมัครสมาชิก (signup)
+            if (authMode === 'signup' && role === 'staff') {
+                return;
+            }
+
             currentRoleSelection = role;
             const btnStudent = document.getElementById('roleStudentBtn');
             const btnStaff = document.getElementById('roleStaffBtn');
 
             if (role === 'student') {
                 btnStudent.className = "py-2 rounded-lg text-sm font-semibold transition bg-white text-amber-700 shadow-sm flex items-center justify-center space-x-1.5";
-                btnStaff.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
+                btnStaff.className = authMode === 'signup' 
+                    ? "py-2 rounded-lg text-sm font-semibold text-slate-400 bg-slate-200 cursor-not-allowed opacity-60 pointer-events-none flex items-center justify-center space-x-1.5 border border-slate-300"
+                    : "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
             } else {
                 btnStaff.className = "py-2 rounded-lg text-sm font-semibold transition bg-white text-amber-700 shadow-sm flex items-center justify-center space-x-1.5";
                 btnStudent.className = "py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5";
@@ -2183,6 +2181,7 @@
             const toggleText = document.getElementById('authToggleText');
             const toggleBtn = document.getElementById('authToggleBtn');
             const nameContainer = document.getElementById('displayNameContainer');
+            const btnStaff = document.getElementById('roleStaffBtn');
 
             if (authMode === 'signup') {
                 title.textContent = 'สมัครสมาชิก';
@@ -2191,6 +2190,13 @@
                 toggleBtn.textContent = 'เข้าสู่ระบบ';
                 nameContainer.classList.remove('hidden');
                 document.getElementById('authDisplayName').required = true;
+
+                // เมื่อเข้าสู่โหมดสมัครสมาชิก ให้ล็อกสิทธิ์สมาชิกเป็นหลัก และปรับปุ่มเจ้าหน้าที่เป็นสีเทากดไม่ได้
+                setAuthRole('student');
+                if (btnStaff) {
+                    btnStaff.disabled = true;
+                    btnStaff.className = "py-2 rounded-lg text-sm font-semibold text-slate-400 bg-slate-200 cursor-not-allowed opacity-60 pointer-events-none flex items-center justify-center space-x-1.5 border border-slate-300";
+                }
             } else {
                 title.textContent = 'เข้าสู่ระบบ';
                 submitBtn.textContent = 'เข้าสู่ระบบ';
@@ -2198,6 +2204,12 @@
                 toggleBtn.textContent = 'สมัครสมาชิก';
                 nameContainer.classList.add('hidden');
                 document.getElementById('authDisplayName').required = false;
+
+                // เมื่อกลับสู่โหมดเข้าสู่ระบบ ปลดล็อกปุ่มเจ้าหน้าที่ให้กดได้ตามปกติ
+                if (btnStaff) {
+                    btnStaff.disabled = false;
+                }
+                setAuthRole(currentRoleSelection);
             }
         }
 
@@ -2253,6 +2265,12 @@
 
                     showNotificationModal("เข้าสู่ระบบสำเร็จ", `ยินดีต้อนรับคุณ ${currentUser.name}`, "success");
                 } else {
+                    // ป้องกันและบล็อกการส่งสมัครเจ้าหน้าที่เข้า Supabase อย่างเด็ดขาด
+                    if (currentRoleSelection === 'staff') {
+                        showNotificationModal("ไม่สามารถดำเนินการได้", "ไม่อนุญาตให้ลงทะเบียนสมัครสมาชิกในบทบาทเจ้าหน้าที่", "error");
+                        return;
+                    }
+
                     const { data, error } = await supabaseClient.auth.signUp({
                         email: email,
                         password: password,
@@ -2268,8 +2286,8 @@
                             id: data.user.id,
                             email: email,
                             full_name: displayName,
-                            role: currentRoleSelection,
-                            is_admin: (currentRoleSelection === 'staff')
+                            role: 'student',
+                            is_admin: false
                         });
                     }
 
@@ -2280,13 +2298,11 @@
                 console.error("Auth error:", err);
                 let errorMsg = err.message || "ไม่สามารถดำเนินการได้";
                 
-                // แปลงข้อความ User already registered เป็นภาษาไทย
                 if (err.message && err.message.includes("User already registered")) {
                     errorMsg = "อีเมลนี้ถูกลงทะเบียนในระบบเรียบร้อยแล้ว";
                 }
-                // 2. กรณีเข้าสู่ระบบผิด (อีเมล/รหัสผ่านไม่ถูกต้อง)
                 else if (err.message && err.message.includes("Invalid login credentials")) {
-                errorMsg = "อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง";
+                    errorMsg = "อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง";
                 }
                 showNotificationModal("เกิดข้อผิดพลาด", errorMsg, "error");
             }
@@ -2382,7 +2398,6 @@
                     currentUser = null;
                     updateUserInterface();
                     await switchTab('publicHome');
-                     //showNotificationModal("ออกจากระบบสำเร็จ", "คุณได้ออกจากระบบเรียบร้อยแล้ว", "info");
                 }
             );
         }
